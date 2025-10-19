@@ -82,19 +82,19 @@ html, body {
 
 /* Nye bilder */
 #artback {
-  background-image: url(./images/background.png);
+  background-image: url(../../../public/images/background.png);
 }
 
 #underlag {
-  background-image: url(./images/underlag.png);
+  background-image: url(../../../public/images/underlag.png);
 }
 
 #port {
-  background-image: url(./images/port.png);
+  background-image: url(../../../public/images/port.png);
 }
 
 #fredrik {
-  background-image: url(./images/fredrik.png);
+  background-image: url(../../../public/images/fredrik.png);
 }
 
 #title {

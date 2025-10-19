@@ -1,7 +1,8 @@
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
-import TextBlock from './textBlock';
+import TextBlock from './TextBlock.tsx';
+import NavigationBar from "../../components/NavigationBar.tsx";
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("");
@@ -32,6 +33,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="App">
+      <NavigationBar />
       <Parallax pages={2} style={{ top: '0', left: '0' }} className="animation">
 
         {/* Bakgrunn */}
