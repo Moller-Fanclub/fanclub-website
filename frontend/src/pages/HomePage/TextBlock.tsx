@@ -20,7 +20,7 @@ function TextBlock() {
                 </p>
             </div>
             <img id="textblock-image" src="/images/sunvalley_fanclub_img.JPG" alt="Sun Valley fanclub" />
-            <footer id='textblock-footer'>Made with 🏔️ by&nbsp;<a id="textblock-devsense" href="https://youtube.com/c/DevSense19">Rory, Ivar og Oskar</a></footer>
+            <footer id='textblock-footer'>Made with 🏔️ by&nbsp;<a id="textblock-devsense" href="https://youtube.com/c/DevSense19">Rory, Ivar, Oskar, Daniel og Bjørge Technologies</a></footer>
         </div>
     );
 }
