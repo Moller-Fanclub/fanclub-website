@@ -1,5 +1,5 @@
 import React from 'react';
-import './RaceCard.css'
+import './styles/RaceCard.css'
 
 interface Race {
     name: string;
