@@ -1,7 +1,7 @@
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
-import TextBlock from './textBlock';
+import TextBlock from './textBlock.tsx';
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("");

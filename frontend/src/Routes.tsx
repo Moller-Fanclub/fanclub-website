@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import HomePage from './components/pages/HomePage/HomePage';
+import HomePage from './pages/HomePage/HomePage';
 
 export const PublicPaths = {
   base: '/',
