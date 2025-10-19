@@ -18,9 +18,9 @@ const NavigationBar: React.FC = () => {
     return (
         <header className="navbar">
             <nav className="navbar-container">
-                <div className="navbar-logo">
+                <NavLink className="navbar-logo" to="/">
                     Møller Fanclub
-                </div>
+                </NavLink>
                 <ul className="navbar-menu">
                     {navItems.map((item) => (
                         <li key={item.path}>
