@@ -10,7 +10,7 @@ interface NavItem {
 const navItems: NavItem[] = [
     { name: 'Hjem', path: '/' },
     { name: 'Kalender', path: '/races' },
-    { name: 'Om Oss', path: '/about' },
+    //{ name: 'Om Oss', path: '/about' },
     { name: 'Merch', path: '/merch' },
 ];
 
