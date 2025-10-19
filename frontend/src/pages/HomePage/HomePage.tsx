@@ -1,7 +1,7 @@
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
-import TextBlock from './textBlock.tsx';
+import TextBlock from './TextBlock.tsx';
 import NavigationBar from "../../components/NavigationBar.tsx";
 
 const HomePage: React.FC = () => {
