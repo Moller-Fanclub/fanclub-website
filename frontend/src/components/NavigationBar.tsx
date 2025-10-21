@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import './styles/NavigationBar.css';
 
@@ -10,18 +10,32 @@ interface NavItem {
 const navItems: NavItem[] = [
     { name: 'Hjem', path: '/' },
     { name: 'Kalender', path: '/races' },
-    //{ name: 'Om Oss', path: '/about' },
     { name: 'Merch', path: '/merch' },
 ];
 
 const NavigationBar: React.FC = () => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
     return (
         <header className="navbar">
             <nav className="navbar-container">
-                <NavLink className="navbar-logo" to="/">
+                <NavLink className="navbar-logo" to="/" onClick={() => setIsMenuOpen(false)}>
                     Møller Fanclub
                 </NavLink>
-                <ul className="navbar-menu">
+                <button
+                    className={`navbar-toggle ${isMenuOpen ? 'open' : ''}`}
+                    onClick={toggleMenu}
+                    aria-label="Toggle navigation menu"
+                >
+                    <span className="navbar-toggle-icon"></span>
+                    <span className="navbar-toggle-icon"></span>
+                    <span className="navbar-toggle-icon"></span>
+                </button>
+                <ul className={`navbar-menu ${isMenuOpen ? 'open' : ''}`}>
                     {navItems.map((item) => (
                         <li key={item.path}>
                             <NavLink
@@ -29,6 +43,7 @@ const NavigationBar: React.FC = () => {
                                 className={({ isActive }) =>
                                     `navbar-link ${isActive ? 'navbar-link-active' : ''}`
                                 }
+                                onClick={() => setIsMenuOpen(false)}
                             >
                                 {item.name}
                             </NavLink>

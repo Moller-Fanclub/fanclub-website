@@ -3,16 +3,29 @@ import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
 import TextBlock from './TextBlock.tsx';
 import NavigationBar from "../../components/NavigationBar.tsx";
+import {type Race, races} from "../../races.ts";
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("");
+  const [nextRace, setNextRace] = useState<Race>({name: "Kitzbühel", imagePath: '/images/austria.png', date: new Date('2026-01-24T00:00:00')});
+
 
   useEffect(() => {
-    const raceDate = new Date("Jan 24, 2026 11:30:00").getTime();
+    const filteredRaces = races
+        .filter((r) => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return r.date.getTime() >= today.getTime();
+        })
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+    setNextRace(filteredRaces[0]);
+  }, []);
 
+
+  useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime();
-      const distance = raceDate - now;
+      const distance = nextRace?.date.getTime() - now;
 
       if (distance < 0) {
         setCountdown("Race Day 🏔️🔥");
@@ -29,7 +42,8 @@ const HomePage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [nextRace]);
+
 
   return (
     <div className="App">
@@ -59,7 +73,7 @@ const HomePage: React.FC = () => {
         {/* Title med nedtelling */}
         <ParallaxLayer offset={0} speed={0.25}>
           <div className="animation_layer parallax" id="title">
-            <h1>Møller fanclub<br/>Kitzbühel 2026</h1>
+            <h1>Møller fanclub<br/>{nextRace?.name}</h1>
             <div id="countdown">{countdown}</div>
           </div>
         </ParallaxLayer>
