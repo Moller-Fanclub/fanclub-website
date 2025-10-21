@@ -11,7 +11,8 @@ const RacePage: React.FC = () => {
             <div className="container">
                 <h1 className="page-title">Kommende Løp</h1>
                 <div className="race-grid">
-                    {races.map((race, index) => (
+                    {races.sort((a, b) => a.date.getTime() - b.date.getTime())
+                        .map((race, index) => (
                         <RaceCard key={index} race={race} />
                     ))}
                 </div>
