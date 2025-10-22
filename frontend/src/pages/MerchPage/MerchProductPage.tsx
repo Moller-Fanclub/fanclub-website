@@ -2,27 +2,12 @@ import React, { useState } from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import './MerchProductPage.css';
 import NavigationBar from "../../components/NavigationBar.tsx";
-
-
-const products = [
-    {
-        id: '1',
-        imageUrls: ['../../../public/images/tour-hoodie.png', '../../../public/images/tour-hoodie.png', '../../../public/images/tour-hoodie.png'],
-        title: 'Stylish T-Shirt',
-        price: '$29.99',
-    },
-    {
-        id: '2',
-        imageUrls: ['../../../public/images/tour-hoodie.png'],
-        title: 'Cool Jacket',
-        price: '$59.99',
-    },
-];
+import {merchProducts} from "../../merch.ts";
 
 const MerchProductPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const product = products.find((p) => p.id === id);
+    const product = merchProducts.find((p) => p.id === id);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!product) {

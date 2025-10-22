@@ -2,21 +2,8 @@ import React from "react";
 import NavigationBar from "../../components/NavigationBar.tsx";
 import "./MerchPage.css";
 import MerchCard from "../../components/MerchCard.tsx";
+import {merchProducts} from "../../merch.ts";
 
-const products = [
-    {
-        id: '1',
-        imageUrl: '../../../public/images/tour-hoodie.png',
-        title: 'Stylish T-Shirt',
-        price: '$29.99',
-    },
-    {
-        id: '2',
-        imageUrl: '../../../public/images/tour-hoodie.png',
-        title: 'Cool Jacket',
-        price: '$59.99',
-    },
-];
 
 const MerchPage: React.FC = () => {
 
@@ -26,11 +13,11 @@ const MerchPage: React.FC = () => {
             <div className="container">
                 <h1 className="page-title">Merch</h1>
                 <div className="merch-grid">
-                    {products.map((product) => (
+                    {merchProducts.map((product) => (
                         <MerchCard
                             key={product.id}
                             id={product.id}
-                            imageUrl={product.imageUrl}
+                            imageUrl={product.imageUrls[0]}
                             title={product.title}
                             price={product.price}
                         />
