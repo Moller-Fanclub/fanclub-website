@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import logo from '../../public/images/MollerFC.png';
 import './styles/NavigationBar.css';
 
 interface NavItem {
@@ -24,7 +25,7 @@ const NavigationBar: React.FC = () => {
         <header className="navbar">
             <nav className="navbar-container">
                 <NavLink className="navbar-logo" to="/" onClick={() => setIsMenuOpen(false)}>
-                    Møller Fanclub
+                    <img src={logo} alt="Møller Fanclub Logo" style={{ height: '50px' }} />
                 </NavLink>
                 <button
                     className={`navbar-toggle ${isMenuOpen ? 'open' : ''}`}
