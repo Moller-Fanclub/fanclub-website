@@ -1,3 +1,28 @@
+# Fanclub Frontend
+
+## Prerequisites
+
+- Node.js **20.19.0** or newer (the repo includes an `.nvmrc` — run `nvm use` to switch).
+- npm (bundled with Node).
+
+If you are already on an older Node LTS, upgrade with:
+
+```bash
+nvm install 20.19.0
+nvm use
+```
+
+## Tailwind + Vite setup
+
+Tailwind CSS v4 is wired in through the official Vite plugin. The entry stylesheet `src/index.css` imports Tailwind while still layering the legacy base styles inside `@layer base` so Incremental migration is possible.
+
+Run the dev server after installing dependencies:
+
+```bash
+npm install
+npm run dev
+```
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
