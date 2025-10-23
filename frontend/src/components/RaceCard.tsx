@@ -1,5 +1,4 @@
 import React from 'react';
-import './styles/RaceCard.css'
 
 interface Race {
     name: string;
@@ -22,15 +21,15 @@ const RaceCard: React.FC<RaceCardProps> = ({ race }) => {
     const daysUntil = Math.round(timeDiff / (1000 * 3600 * 24));
 
     return (
-        <div className="race-card">
+        <div className="mx-auto flex w-full max-w-sm items-center overflow-hidden rounded-lg bg-white shadow-md">
             <img
                 src={race.imagePath}
                 alt={`${race.name} flag`}
-                className="race-image"
+                className="m-4 h-16 w-24 border border-gray-300 object-cover"
             />
-            <div className="race-content">
-                <h2 className="race-name">{race.name}</h2>
-                <p className="race-date">
+            <div className="flex-1 p-4">
+                <h2 className="text-lg font-semibold text-gray-800">{race.name}</h2>
+                <p className="text-sm text-gray-600">
                     {daysUntil > 0
                         ? `Om ${daysUntil} dag${daysUntil !== 1 ? 'er' : ''}`
                         : daysUntil === 0

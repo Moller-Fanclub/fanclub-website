@@ -1,18 +1,17 @@
 import React from "react";
 import NavigationBar from "../../components/NavigationBar.tsx";
-import "./MerchPage.css";
 import MerchCard from "../../components/MerchCard.tsx";
-import {merchProducts} from "../../merch.ts";
+import { merchProducts } from "../../merch.ts";
 
 
 const MerchPage: React.FC = () => {
 
     return (
-        <div className="merch-page">
+        <div className="min-h-screen flex justify-center items-center bg-gray-100 py-8">
             <NavigationBar />
-            <div className="container">
-                <h1 className="page-title">Merch</h1>
-                <div className="merch-grid">
+            <div className="mx-auto max-w-5xl px-4">
+                <h1 className="mt-20 mb-8 text-center text-3xl font-bold text-gray-800">Merch</h1>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                     {merchProducts.map((product) => (
                         <MerchCard
                             key={product.id}
