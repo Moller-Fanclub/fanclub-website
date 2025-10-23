@@ -2,7 +2,6 @@ import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
 import TextBlock from './TextBlock.tsx';
-import NavigationBar from "../../components/NavigationBar.tsx";
 import {type Race, races} from "../../races.ts";
 
 const HomePage: React.FC = () => {
@@ -46,10 +45,9 @@ const HomePage: React.FC = () => {
 
 
   return (
-    <div className="App">
-      <NavigationBar />
-      <Parallax pages={2} style={{ top: '0', left: '0' }} className="animation">
 
+    <main className='min-h-screen'>
+      <Parallax pages={2} style={{ top: '0', left: '0' }} className="animation">
         {/* Bakgrunn */}
         <ParallaxLayer offset={0} speed={0.36}>
           <div className="animation_layer parallax" id="artback"></div>
@@ -82,9 +80,9 @@ const HomePage: React.FC = () => {
         <ParallaxLayer offset={1} speed={0.1}>
           <TextBlock />
         </ParallaxLayer>
-
       </Parallax>
-    </div>
+    </main>
+
   );
 };
 

@@ -7,7 +7,7 @@ import { merchProducts } from "../../merch.ts";
 const MerchPage: React.FC = () => {
 
     return (
-        <div className="min-h-screen flex justify-center items-center bg-gray-100 py-8">
+        <div className="min-h-screen flex justify-center items-center bg-[#FFFAF0] py-8">
             <NavigationBar />
             <div className="mx-auto max-w-5xl px-4">
                 <h1 className="mt-20 mb-8 text-center text-3xl font-bold text-gray-800">Merch</h1>

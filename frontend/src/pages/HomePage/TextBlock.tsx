@@ -1,11 +1,9 @@
-import './HomePage.css';
-
 function TextBlock() {
     return (
-      <div id="textblock">
-        <div id="textblock-container">
-          <h1 id="textblock-title">Kitzbühel World Cup 2026</h1>
-          <p id="textblock-content">
+      <section className="relative flex flex-col items-center pb-16 -mt-28">
+        <div className="mx-auto w-full max-w-3xl px-6 text-center text-gray-900 md:text-left">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Kitzbühel World Cup 2026</h1>
+          <p className="mt-6 text-lg leading-relaxed text-gray-700">
             The year is 2026.
             <br />
             <br />
@@ -27,20 +25,12 @@ function TextBlock() {
           </p>
         </div>
         <img
-          id="textblock-image"
+          className="mt-10 h-auto w-full max-w-3xl rounded-lg shadow-lg"
           src="/images/sunvalley_fanclub_img.JPG"
           alt="Sun Valley fanclub"
         />
-        <footer id="textblock-footer">
-          Made with 🏔️ by&nbsp;
-          <a
-            id="textblock-devsense"
-            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          >
-            Rory, Ivar, Oskar, Daniel og Bjørge Technologies
-          </a>
-        </footer>
-      </div>
+
+      </section>
     );
 }
 

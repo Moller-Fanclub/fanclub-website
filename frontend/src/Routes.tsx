@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import RootLayout from './layout/RootLayout.tsx';
 import HomePage from './pages/HomePage/HomePage';
 import RacePage from "./pages/RacePage/RacePage.tsx";
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
@@ -17,12 +18,14 @@ export function AppRoutes() {
 
   return (
       <Routes location={location}>
-          <Route path={PublicPaths.base} element={<HomePage />} />
-          <Route path={PublicPaths.races} element={<RacePage />} />
-          <Route path={PublicPaths.about} element={<HomePage />} />
-          <Route path={PublicPaths.merch} element={<MerchPage />} />
-          <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
-          <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
+          <Route path={PublicPaths.base} element={<RootLayout />} >
+              <Route path={PublicPaths.base} element={<HomePage />} />
+              <Route path={PublicPaths.races} element={<RacePage />} />
+              <Route path={PublicPaths.about} element={<HomePage />} />
+              <Route path={PublicPaths.merch} element={<MerchPage />} />
+              <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
+              <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
+          </Route>
       </Routes>
   );
 }
