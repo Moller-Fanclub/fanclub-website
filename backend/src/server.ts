@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get('/api/products', (req: Request, res: Response) => {
+app.get('/api/products', (_req: Request, res: Response) => {
     res.json(products);
 });
 
@@ -22,11 +22,11 @@ app.get('/api/products/:id', (req: Request, res: Response) => {
     if (!product) {
         return res.status(404).json({ message: 'Product not found' });
     }
-    res.json(product);
+    return res.json(product);
 });
 
 // Health check
-app.get('/api/health', (req: Request, res: Response) => {
+app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ status: 'ok', message: 'Backend is running' });
 });
 
