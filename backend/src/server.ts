@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { products } from './data/products.js';
+import { shopConfig } from './config/shopConfig.js';
 
 dotenv.config();
 
@@ -30,10 +31,16 @@ app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ status: 'ok', message: 'Backend is running' });
 });
 
+// Shop configuration - just return the dates
+app.get('/api/shop/config', (_req: Request, res: Response) => {
+    res.json(shopConfig);
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📦 API endpoints:`);
     console.log(`   - GET http://localhost:${PORT}/api/products`);
     console.log(`   - GET http://localhost:${PORT}/api/products/:id`);
+    console.log(`   - GET http://localhost:${PORT}/api/shop/config`);
     console.log(`   - GET http://localhost:${PORT}/api/health`);
 });

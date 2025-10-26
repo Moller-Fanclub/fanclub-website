@@ -4,17 +4,22 @@ import './MerchProductPage.css';
 import NavigationBar from "../../components/NavigationBar.tsx";
 import { productService, type Product } from "../../services/productService.ts";
 import { useCart } from '../../contexts/CartContext';
+import { useShopConfig } from '../../hooks/useShopConfig.ts';
 
 const MerchProductPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { addItem } = useCart();
+    const { config, isOpen: shopIsOpen } = useShopConfig();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [addedToCart, setAddedToCart] = useState(false);
+    
+    // Compute opening date from config
+    const openingDate = config ? new Date(config.openingDate) : null;
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -54,7 +59,7 @@ const MerchProductPage: React.FC = () => {
     };
 
     const handleAddToCart = () => {
-        if (!selectedSize || !product) return;
+        if (!selectedSize || !product || !shopIsOpen) return;
         
         const priceNumber = parseFloat(product.price.replace(/[^0-9.]/g, '')) || 0;
         
@@ -154,13 +159,41 @@ const MerchProductPage: React.FC = () => {
                 )}
                 
                 {/* Add to Cart Button */}
-                <button 
-                    onClick={handleAddToCart}
-                    disabled={!selectedSize}
-                    className={`add-to-cart-button ${addedToCart ? 'added' : ''}`}
-                >
-                    {addedToCart ? '✓ Lagt til i handlekurv!' : 'Legg i handlekurv'}
-                </button>
+                {shopIsOpen ? (
+                    <button 
+                        onClick={handleAddToCart}
+                        disabled={!selectedSize}
+                        className={`add-to-cart-button ${addedToCart ? 'added' : ''}`}
+                    >
+                        {addedToCart ? '✓ Lagt til i handlekurv!' : 'Legg i handlekurv'}
+                    </button>
+                ) : (
+                    <div className="shop-closed-notice">
+                        <div style={{
+                            backgroundColor: '#FEE2E2',
+                            border: '2px solid #EF4444',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            marginTop: '16px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                                <svg style={{ width: '24px', height: '24px', color: '#DC2626' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#991B1B', margin: 0 }}>
+                                    Butikken er stengt
+                                </h3>
+                            </div>
+                            <p style={{ color: '#7F1D1D', marginBottom: '12px', fontSize: '14px' }}>
+                                Forhåndsbestillingsperioden er ikke aktiv akkurat nå.
+                            </p>
+                            <p style={{ color: '#7F1D1D', fontSize: '14px', margin: 0 }}>
+                                Neste periode: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

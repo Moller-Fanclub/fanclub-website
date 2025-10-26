@@ -9,7 +9,7 @@ interface NavItem {
 const navItems: NavItem[] = [
     { name: 'Hjem', path: '/' },
     { name: 'Kalender', path: '/races' },
-    { name: 'Merch', path: '/merch' },
+    { name: 'Merch', path: '/kommer-snart' },
 ];
 
 const NavigationBar: React.FC = () => {

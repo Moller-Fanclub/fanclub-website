@@ -7,14 +7,17 @@ import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
 import ContactPage from "./pages/ContactPage/ContactPage.tsx";
 import TermsPage from "./pages/TermsPage/TermsPage.tsx";
+import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
 
 export const PublicPaths = {
     base: '/',
     races: '/races',
     about: '/about',
+    comingSoon: '/kommer-snart',
     merch: '/merch',
     merchProduct: '/merch/:id',
     checkout: '/checkout',
+    
     contact: '/kontakt',
     terms: '/salgsvilkar',
 };
@@ -28,6 +31,7 @@ export function AppRoutes() {
               <Route path={PublicPaths.base} element={<HomePage />} />
               <Route path={PublicPaths.races} element={<RacePage />} />
               <Route path={PublicPaths.about} element={<HomePage />} />
+              <Route path={PublicPaths.comingSoon} element={<ComingSoonPage />} />
               <Route path={PublicPaths.merch} element={<MerchPage />} />
               <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
               <Route path={PublicPaths.checkout} element={<CheckoutPage />} />

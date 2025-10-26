@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
+import { useShopConfig } from '../hooks/useShopConfig';
 import './Cart.css';
 
 interface CartProps {
@@ -9,6 +10,7 @@ interface CartProps {
 
 const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { items, removeItem, updateQuantity, totalPrice, clearCart, totalItems } = useCart();
+  const { isOpen: shopIsOpen } = useShopConfig();
 
   const getItemKey = (item: { id: string; size?: string }) => {
     return `${item.id}-${item.size || 'default'}`;
@@ -112,10 +114,26 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
               <span className="cart-total-price">{totalPrice.toFixed(2)} kr</span>
             </div>
 
-            {items.length > 0 && (
+            {shopIsOpen ? (
               <a href="/checkout" className="cart-checkout-btn">
                 Gå til kassen
               </a>
+            ) : (
+              <div style={{
+                backgroundColor: '#FEE2E2',
+                border: '2px solid #EF4444',
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                marginBottom: '12px'
+              }}>
+                <p style={{ color: '#991B1B', fontSize: '14px', fontWeight: '600', margin: 0 }}>
+                  ⏰ Butikken er stengt
+                </p>
+                <p style={{ color: '#7F1D1D', fontSize: '12px', margin: '4px 0 0 0' }}>
+                  Du kan ikke fullføre kjøp akkurat nå
+                </p>
+              </div>
             )}
             
             <button onClick={clearCart} className="cart-clear-btn">

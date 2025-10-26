@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import { useShopConfig } from '../../hooks/useShopConfig';
 import './CheckoutPage.css';
 
 interface FormData {
@@ -16,6 +17,7 @@ interface FormData {
 const CheckoutPage: React.FC = () => {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
+  const { config, isOpen: shopIsOpen } = useShopConfig();
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -27,6 +29,9 @@ const CheckoutPage: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  // Compute opening date from config
+  const openingDate = config ? new Date(config.openingDate) : null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -91,6 +96,25 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
+  // Prevent checkout if shop is closed
+  if (!shopIsOpen && !submitSuccess) {
+    return (
+      <div className="checkout-empty">
+        <div className="checkout-empty-content">
+          <svg className="checkout-empty-icon" style={{ color: '#DC2626' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h2>Butikken er stengt</h2>
+          <p>Forhåndsbestillingsperioden er ikke aktiv akkurat nå.</p>
+          <p style={{ marginTop: '12px', fontSize: '16px' }}>
+            Neste periode åpner: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+          </p>
+          <a href="/" className="checkout-empty-btn" style={{ marginTop: '24px' }}>Tilbake til forsiden</a>
+        </div>
+      </div>
+    );
+  }
+
   if (submitSuccess) {
     return (
       <div className="checkout-success">
@@ -108,6 +132,33 @@ const CheckoutPage: React.FC = () => {
     <div className="checkout-page">
       <div className="checkout-container">
         <h1 className="checkout-title">Kasse</h1>
+
+        {/* Pre-order Information Banner */}
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '2px solid #3B82F6',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <svg style={{ width: '24px', height: '24px', color: '#2563EB', flexShrink: 0, marginTop: '2px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1E40AF', marginBottom: '8px' }}>
+                📦 Viktig informasjon om forhåndsbestilling
+              </h3>
+              <ul style={{ color: '#1E3A8A', fontSize: '14px', lineHeight: '1.6', marginLeft: '20px', listStyleType: 'disc' }}>
+                <li>Dette er en <strong>forhåndsbestilling</strong> - produktene produseres etter at bestillingsperioden stenger (21. november)</li>
+                <li><strong>Estimert leveringstid:</strong> 2-4 uker etter 21. november</li>
+                <li>Du vil motta e-postoppdateringer om produksjon og utsendelse</li>
+                <li>Alle bestillinger sendes ut samtidig når produktene ankommer oss</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
         <div className="checkout-grid">
           {/* Order Form */}
