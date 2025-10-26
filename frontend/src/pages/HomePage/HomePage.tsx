@@ -1,7 +1,7 @@
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
-import TextBlock from './TextBlock.tsx';
+// import TextBlock from './TextBlock.tsx';
 import {type Race, races} from "../../races.ts";
 
 const HomePage: React.FC = () => {
@@ -77,9 +77,9 @@ const HomePage: React.FC = () => {
         </ParallaxLayer>
 
         {/* Tekstblokk */}
-        <ParallaxLayer offset={1} speed={0.1}>
+        {/* <ParallaxLayer offset={1} speed={0.1}>
           <TextBlock />
-        </ParallaxLayer>
+        </ParallaxLayer> */}
       </Parallax>
     </main>
 
