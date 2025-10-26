@@ -41,27 +41,18 @@ jobs:
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:3001/api' }}
         
-    - name: Deploy backend to server
+    - name: Deploy to server
       uses: easingthemes/ssh-deploy@v5.1.0
       with:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
         REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-        SOURCE: "backend/dist/"
-        TARGET: ${{ secrets.DEPLOY_PATH_BACKEND }}
-        SCRIPT_BEFORE: |
-          cd ${{ secrets.DEPLOY_PATH_BACKEND }}
-          pm2 stop fanclub-backend || true
-        SCRIPT_AFTER: |
-          cd ${{ secrets.DEPLOY_PATH_BACKEND }}
-          npm install --production
-          pm2 start dist/server.js --name fanclub-backend || node dist/server.js &
-        
-    - name: Deploy frontend to server
-      uses: easingthemes/ssh-deploy@v5.1.0
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
-        REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-        SOURCE: "frontend/dist/"
+        SOURCE: "./"
         TARGET: ${{ secrets.DEPLOY_PATH }}
+        EXCLUDE: "/node_modules/, /.git/, /.github/, /frontend/node_modules/, /backend/node_modules/"
+        SCRIPT_AFTER: |
+          cd ${{ secrets.DEPLOY_PATH }}
+          cd backend
+          npm install --production
+          npm run build
+          pm2 restart fanclub-backend || pm2 start dist/server.js --name fanclub-backend
