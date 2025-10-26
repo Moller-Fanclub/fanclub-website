@@ -95,3 +95,18 @@
     text-align: center;
   }
 }
+
+.insta-feeds-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin: 0 auto;
+}
+
+.insta-feed {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+}
