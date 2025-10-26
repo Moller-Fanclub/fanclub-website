@@ -5,6 +5,8 @@ import RacePage from "./pages/RacePage/RacePage.tsx";
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
+import ContactPage from "./pages/ContactPage/ContactPage.tsx";
+import TermsPage from "./pages/TermsPage/TermsPage.tsx";
 
 export const PublicPaths = {
     base: '/',
@@ -13,6 +15,8 @@ export const PublicPaths = {
     merch: '/merch',
     merchProduct: '/merch/:id',
     checkout: '/checkout',
+    contact: '/kontakt',
+    terms: '/salgsvilkar',
 };
 
 export function AppRoutes() {
@@ -27,6 +31,8 @@ export function AppRoutes() {
               <Route path={PublicPaths.merch} element={<MerchPage />} />
               <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
               <Route path={PublicPaths.checkout} element={<CheckoutPage />} />
+              <Route path={PublicPaths.contact} element={<ContactPage />} />
+              <Route path={PublicPaths.terms} element={<TermsPage />} />
               <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
           </Route>
       </Routes>
