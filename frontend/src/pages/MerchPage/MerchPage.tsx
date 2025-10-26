@@ -85,7 +85,7 @@ const MerchPage: React.FC = () => {
 
                     {/* Shop Closed Message */}
                     {shopStatus === 'closed' && (
-                        <div className="mx-auto max-w-3xl mb-8 rounded-xl bg-linear-to-r from-gray-100 to-gray-200 border-2 border-gray-300 p-6 shadow-md">
+                        <div className="mx-auto max-w-3xl mb-8 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 p-6 shadow-md">
                             <div className="flex items-center justify-center mb-3">
                                 <svg className="h-6 w-6 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
