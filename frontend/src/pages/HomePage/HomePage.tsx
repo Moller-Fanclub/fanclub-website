@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
 // import TextBlock from './TextBlock.tsx';
 import {type Race, races} from "../../races.ts";
+import {InstagramEmbed} from "react-social-media-embed";
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("");
@@ -76,10 +77,22 @@ const HomePage: React.FC = () => {
           </div>
         </ParallaxLayer>
 
-        {/* Tekstblokk */}
-        {/* <ParallaxLayer offset={1} speed={0.1}>
-          <TextBlock />
-        </ParallaxLayer> */}
+        <ParallaxLayer offset={1} speed={0.2}>
+          <div className="insta-feeds-container">
+            <div className="insta-feed">
+              <InstagramEmbed
+                  url="https://www.instagram.com/fredrikmoeller/"
+                  width={400}
+              />
+            </div>
+            <div className="insta-feed">
+              <InstagramEmbed
+                  url="https://www.instagram.com/mollerfan.club/"
+                  width={400}
+              />
+            </div>
+          </div>
+        </ParallaxLayer>
       </Parallax>
     </main>
 
