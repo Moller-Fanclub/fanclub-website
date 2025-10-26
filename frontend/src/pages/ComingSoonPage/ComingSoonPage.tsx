@@ -41,7 +41,7 @@ const ComingSoonPage: React.FC = () => {
                                 href="https://www.instagram.com/mollerfan.club"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-linear-to-r from-purple-600 via-pink-600 to-orange-500 px-6 py-3 text-white font-semibold transition-transform hover:scale-105 hover:shadow-lg"
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 px-6 py-3 text-white font-semibold transition-transform hover:scale-105 hover:shadow-lg"
                             >
                                 <svg 
                                     className="h-6 w-6" 
