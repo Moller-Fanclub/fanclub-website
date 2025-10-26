@@ -38,7 +38,7 @@ jobs:
         cd frontend
         npm run build
       env:
-        VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:3001/api' }}
+        VITE_API_URL: /api
         
     - name: Install backend production dependencies only
       run: |
