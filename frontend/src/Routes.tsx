@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage/HomePage';
 import RacePage from "./pages/RacePage/RacePage.tsx";
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
+import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
 
 export const PublicPaths = {
     base: '/',
@@ -11,6 +12,7 @@ export const PublicPaths = {
     about: '/about',
     merch: '/merch',
     merchProduct: '/merch/:id',
+    checkout: '/checkout',
 };
 
 export function AppRoutes() {
@@ -24,6 +26,7 @@ export function AppRoutes() {
               <Route path={PublicPaths.about} element={<HomePage />} />
               <Route path={PublicPaths.merch} element={<MerchPage />} />
               <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
+              <Route path={PublicPaths.checkout} element={<CheckoutPage />} />
               <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
           </Route>
       </Routes>

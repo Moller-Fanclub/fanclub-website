@@ -34,23 +34,28 @@ const NavigationBar: React.FC = () => {
                 <NavLink to="/" onClick={closeMenu} className="shrink-0">
                     <img src={logoSrc} alt="Møller Fanclub Logo" className="h-12 w-auto" />
                 </NavLink>
-                <button
-                    type="button"
-                    className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-md border border-white/40 text-white transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden"
-                    onClick={toggleMenu}
-                    aria-label="Toggle navigation menu"
-                    aria-expanded={isMenuOpen}
-                >
-                    <span
-                        className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-y-2 rotate-45' : ''}`}
-                    ></span>
-                    <span
-                        className={`block h-0.5 w-6 bg-white transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
-                    ></span>
-                    <span
-                        className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? '-translate-y-2 -rotate-45' : ''}`}
-                    ></span>
-                </button>
+                
+                <div className="flex items-center gap-4">
+                    {/* Mobile Menu Button */}
+                    <button
+                        type="button"
+                        className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-md border border-white/40 text-white transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden"
+                        onClick={toggleMenu}
+                        aria-label="Toggle navigation menu"
+                        aria-expanded={isMenuOpen}
+                    >
+                        <span
+                            className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-y-2 rotate-45' : ''}`}
+                        ></span>
+                        <span
+                            className={`block h-0.5 w-6 bg-white transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
+                        ></span>
+                        <span
+                            className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? '-translate-y-2 -rotate-45' : ''}`}
+                        ></span>
+                    </button>
+                </div>
+                
                 <ul
                     className={`${isMenuOpen ? 'flex' : 'hidden'
                         } absolute left-0 right-0 top-full flex-col gap-2 bg-blue-600/95 px-6 py-4 shadow-lg md:static md:flex md:flex-row md:items-center md:gap-8 md:bg-transparent md:px-0 md:py-0 md:shadow-none`}
