@@ -40,6 +40,11 @@ jobs:
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:3001/api' }}
         
+    - name: Install backend production dependencies only
+      run: |
+        cd backend
+        npm ci --production
+        
     - name: Deploy to server
       uses: easingthemes/ssh-deploy@v5.1.0
       with:
@@ -48,10 +53,8 @@ jobs:
         REMOTE_USER: ${{ secrets.DEPLOY_USER }}
         SOURCE: "./"
         TARGET: ${{ secrets.DEPLOY_PATH }}
-        EXCLUDE: "/node_modules/, /.git/, /.github/, /frontend/node_modules/, /backend/node_modules/"
+        EXCLUDE: "/node_modules/, /.git/, /.github/, /frontend/node_modules/, /backend/src/, /backend/tsconfig.json"
         SCRIPT_AFTER: |
-          cd ${{ secrets.DEPLOY_PATH }}
-          cd backend
-          npm install --production
-          npm run build
+          source ~/.nvm/nvm.sh
+          cd ${{ secrets.DEPLOY_PATH }}/backend
           pm2 restart fanclub-backend || pm2 start dist/server.js --name fanclub-backend
