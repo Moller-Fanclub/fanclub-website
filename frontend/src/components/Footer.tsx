@@ -3,7 +3,7 @@ import {Link } from 'react-router-dom';
 const Footer: React.FC = () => {
   
     return (
-      <footer className="relative z-30 bg-linear-to-r from-blue-600 to-indigo-600 py-8 text-center shadow-inner">
+      <footer className="relative z-30 bg-gradient-to-r from-blue-600 to-indigo-600 py-8 text-center shadow-inner">
         <div className="mx-auto max-w-4xl px-4">
 
 
