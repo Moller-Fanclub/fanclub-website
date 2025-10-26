@@ -46,6 +46,11 @@ export const races: Race[] = [
         date: new Date('2026-02-01T00:00:00'),
     },
     {
+        name: 'OL Milano-Cortina',
+        imagePath: '/images/italy.png',
+        date: new Date('2026-02-07T00:00:00'),
+    },
+    {
         name: 'Garmisch Partenkirchen',
         imagePath: '/images/germany.png',
         date: new Date('2026-02-28T00:00:00'),
