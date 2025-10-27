@@ -72,7 +72,7 @@ const HomePage: React.FC = () => {
         {/* Title med nedtelling */}
         <ParallaxLayer offset={0} speed={0.25}>
           <div className="animation_layer parallax" id="title">
-            <h1>Møller fanclub<br/>{nextRace?.name}</h1>
+            <h1>Møller fanclub<br/> Next race: {nextRace?.name}</h1>
             <div id="countdown">{countdown}</div>
           </div>
         </ParallaxLayer>
