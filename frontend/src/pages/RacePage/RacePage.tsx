@@ -1,7 +1,12 @@
 import NavigationBar from "../../components/NavigationBar.tsx";
-import RaceCard from "../../components/RaceCard.tsx";
-import { races } from "../../races.ts";
+import LocationRaceCard from "../../components/LocationRaceCard.tsx";
+import { races, type Race } from "../../races.ts";
 
+interface LocationGroup {
+  location: string;
+  imagePath: string;
+  races: Race[];
+}
 
 const RacePage: React.FC = () => {
   
@@ -28,6 +33,32 @@ const RacePage: React.FC = () => {
     )
     .sort((a, b) => a.date.getTime() - b.date.getTime()); // Soonest first
 
+  // Group races by location
+  const groupRacesByLocation = (racesList: Race[]): LocationGroup[] => {
+    const grouped = new Map<string, LocationGroup>();
+    
+    racesList.forEach(race => {
+      if (!grouped.has(race.name)) {
+        grouped.set(race.name, {
+          location: race.name,
+          imagePath: race.imagePath,
+          races: []
+        });
+      }
+      grouped.get(race.name)!.races.push(race);
+    });
+
+    // Sort races within each location by date
+    grouped.forEach(group => {
+      group.races.sort((a, b) => a.date.getTime() - b.date.getTime());
+    });
+
+    return Array.from(grouped.values());
+  };
+
+  const upcomingGrouped = groupRacesByLocation(upcomingRaces);
+  const pastGrouped = groupRacesByLocation(pastRaces);
+
   return (
     <div className="min-h-screen flex justify-center bg-[#FFFAF0] py-8">
       <NavigationBar />
@@ -38,20 +69,32 @@ const RacePage: React.FC = () => {
           Kommende Renn
         </h1>
         <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
-          {upcomingRaces.map((race) => (
-            <RaceCard key={race.name} race={race} />
+          {upcomingGrouped.map((group) => (
+            <LocationRaceCard 
+              key={group.location}
+              location={group.location}
+              imagePath={group.imagePath}
+              races={group.races}
+              isPast={false}
+            />
           ))}
         </div>
 
         {/* Past Races Section */}
-        {pastRaces.length > 0 && (
+        {pastGrouped.length > 0 && (
           <>
             <h2 className="mt-16 mb-8 text-center text-3xl font-bold text-gray-800">
               Tidligere Renn
             </h2>
             <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
-              {pastRaces.map((race) => (
-                <RaceCard key={race.name} race={race} />
+              {pastGrouped.map((group) => (
+                <LocationRaceCard 
+                  key={group.location}
+                  location={group.location}
+                  imagePath={group.imagePath}
+                  races={group.races}
+                  isPast={true}
+                />
               ))}
             </div>
           </>

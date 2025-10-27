@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "updateRaces": "tsx scripts/updateRaces.ts"
+    "updateRaces": "tsx scripts/updateRaces.ts",
+    "updateRacesFromCalendar": "tsx scripts/updateRacesFromCalendar.ts"
   },
   "keywords": [],
   "author": "",
