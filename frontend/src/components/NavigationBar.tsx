@@ -7,9 +7,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { name: 'Hjem', path: '/' },
-    { name: 'Kalender', path: '/races' },
-    { name: 'Merch', path: '/kommer-snart' },
+  { name: "Hjem", path: "/" },
+  { name: "Kalender", path: "/races" },
+  { name: "Resultater", path: "/resultater" },
+  { name: "Merch", path: "/kommer-snart" },
 ];
 
 const NavigationBar: React.FC = () => {
