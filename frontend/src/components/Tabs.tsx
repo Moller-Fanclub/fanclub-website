@@ -16,6 +16,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
     <div className="flex border-b border-gray-200">
       {tabs.map((tab) => (
         <button
+          type="button"
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`

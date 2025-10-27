@@ -41,7 +41,9 @@ const ResultsPage: React.FC = () => {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:3001/api"}/fis/all`
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:3001/api"
+          }/fis/all`
         );
         const data = await response.json();
 
@@ -68,9 +70,6 @@ const ResultsPage: React.FC = () => {
   // Get available seasons sorted
   const seasons = Object.keys(racesBySeason).sort().reverse();
 
-  // Get the latest race for the selected season
-  const latestRace = racesBySeason[selectedSeason]?.[0] || null;
-
   // Sorting handler
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -82,36 +81,38 @@ const ResultsPage: React.FC = () => {
   };
 
   // Get all races for the selected season and sort them
-  const currentSeasonRaces = (racesBySeason[selectedSeason] || []).sort((a, b) => {
-    let aValue: string | number = a[sortKey];
-    let bValue: string | number = b[sortKey];
+  const currentSeasonRaces = (racesBySeason[selectedSeason] || []).sort(
+    (a, b) => {
+      let aValue: string | number = a[sortKey];
+      let bValue: string | number = b[sortKey];
 
-    // Handle numeric values for position and FIS points
-    if (sortKey === "position" || sortKey === "fisPoints") {
-      // Try to parse as number, fallback to string comparison
-      const aNum = parseFloat(aValue as string);
-      const bNum = parseFloat(bValue as string);
-      if (!isNaN(aNum) && !isNaN(bNum)) {
-        aValue = aNum;
-        bValue = bNum;
+      // Handle numeric values for position and FIS points
+      if (sortKey === "position" || sortKey === "fisPoints") {
+        // Try to parse as number, fallback to string comparison
+        const aNum = parseFloat(aValue as string);
+        const bNum = parseFloat(bValue as string);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          aValue = aNum;
+          bValue = bNum;
+        }
       }
-    }
 
-    // Handle date sorting (format: DD-MM-YYYY)
-    if (sortKey === "date") {
-      const parseDate = (dateStr: string) => {
-        const parts = dateStr.split("-");
-        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-      };
-      aValue = parseDate(aValue as string).getTime();
-      bValue = parseDate(bValue as string).getTime();
-    }
+      // Handle date sorting (format: DD-MM-YYYY)
+      if (sortKey === "date") {
+        const parseDate = (dateStr: string) => {
+          const parts = dateStr.split("-");
+          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        };
+        aValue = parseDate(aValue as string).getTime();
+        bValue = parseDate(bValue as string).getTime();
+      }
 
-    // Compare values
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+      // Compare values
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    }
+  );
 
   return (
     <div className="min-h-screen flex justify-center bg-[#FFFAF0] py-8">
@@ -138,63 +139,6 @@ const ResultsPage: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-          )}
-
-          {/* Latest Race for Selected Season */}
-          {!isLoading && latestRace && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="text-center text-xl">
-                  Siste Løp - {selectedSeason}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">Dato</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.date}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">Sted</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.place}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">
-                      Disiplin
-                    </p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.discipline}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">Plass</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.position || "N/A"}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">
-                      Kategori
-                    </p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.category}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-500">
-                      FIS Poeng
-                    </p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {latestRace.fisPoints || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           )}
 
           {/* Table with races for selected season */}
