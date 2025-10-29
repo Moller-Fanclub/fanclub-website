@@ -9,7 +9,6 @@ export interface Race {
     imagePath: string;
     date: Date;
     discipline: string;
-    fisBioLink: string;
     resultLink: string;
     result?: RaceResult;
 }
