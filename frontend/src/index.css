@@ -4,6 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  html {
+    background: linear-gradient(to bottom right, #111827, #1e293b, #111827);
+    background-attachment: fixed;
+  }
+
   body {
     margin: 0;
     font-family:
@@ -20,7 +25,8 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f5f5f5;
+    background: linear-gradient(to bottom right, #111827, #1e293b, #111827);
+    background-attachment: fixed;
   }
 
   code {

@@ -103,10 +103,24 @@
   gap: 40px;
   flex-wrap: wrap;
   margin: 0 auto;
+  max-width: 100%;
 }
 
 .insta-feed {
   flex: 1;
-  min-width: 300px;
+  min-width: 280px;
   max-width: 400px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .insta-feeds-container {
+    gap: 20px;
+    padding: 0 10px;
+  }
+  
+  .insta-feed {
+    min-width: 100%;
+    max-width: 100%;
+  }
 }
