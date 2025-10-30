@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import NavigationBar from "../../components/NavigationBar.tsx";
 import { type RaceData } from "../../services/raceService.ts";
+import PageContainer from "../../components/PageContainer.tsx";
 import {
   Select,
   SelectContent,
@@ -115,24 +115,21 @@ const ResultsPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex justify-center bg-[#FFFAF0] py-8">
-      <NavigationBar />
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="mt-20 mb-8">
-          <h1 className="mb-8 text-center text-3xl font-bold text-gray-800">
-            Resultater og Historikk
-          </h1>
+    <PageContainer>
+      <h1 className="mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
+        Resultater og Historikk
+      </h1>
 
-          {/* Season Selector */}
-          {!isLoading && (
-            <div className="mb-8 flex justify-center">
+      {/* Season Selector */}
+      {!isLoading && (
+        <div className="mb-8 flex justify-center">
               <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                <SelectTrigger className="w-[250px]">
+                <SelectTrigger className="w-[250px] bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20">
                   <SelectValue placeholder="Velg sesong" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-white/20 text-white">
                   {seasons.map((season) => (
-                    <SelectItem key={season} value={season}>
+                    <SelectItem key={season} value={season} className="text-white hover:bg-white/10 focus:bg-white/20 focus:text-white">
                       {season}
                     </SelectItem>
                   ))}
@@ -143,9 +140,9 @@ const ResultsPage: React.FC = () => {
 
           {/* Table with races for selected season */}
           {!isLoading && currentSeasonRaces.length > 0 && (
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle>
+                <CardTitle className="text-white text-2xl">
                   Alle Løp - {selectedSeason} ({currentSeasonRaces.length})
                 </CardTitle>
               </CardHeader>
@@ -153,9 +150,9 @@ const ResultsPage: React.FC = () => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="border-white/20 hover:bg-white/5">
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("date")}
                         >
                           <div className="flex items-center gap-2">
@@ -166,7 +163,7 @@ const ResultsPage: React.FC = () => {
                           </div>
                         </TableHead>
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("place")}
                         >
                           <div className="flex items-center gap-2">
@@ -177,7 +174,7 @@ const ResultsPage: React.FC = () => {
                           </div>
                         </TableHead>
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("discipline")}
                         >
                           <div className="flex items-center gap-2">
@@ -188,7 +185,7 @@ const ResultsPage: React.FC = () => {
                           </div>
                         </TableHead>
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("category")}
                         >
                           <div className="flex items-center gap-2">
@@ -199,7 +196,7 @@ const ResultsPage: React.FC = () => {
                           </div>
                         </TableHead>
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("position")}
                         >
                           <div className="flex items-center gap-2">
@@ -210,7 +207,7 @@ const ResultsPage: React.FC = () => {
                           </div>
                         </TableHead>
                         <TableHead
-                          className="cursor-pointer select-none hover:bg-gray-100"
+                          className="cursor-pointer select-none hover:bg-white/10 text-white font-semibold"
                           onClick={() => handleSort("fisPoints")}
                         >
                           <div className="flex items-center gap-2">
@@ -224,15 +221,15 @@ const ResultsPage: React.FC = () => {
                     </TableHeader>
                     <TableBody>
                       {currentSeasonRaces.map((race, index) => (
-                        <TableRow key={index} className="hover:bg-gray-50">
-                          <TableCell className="font-medium">
+                        <TableRow key={index} className="border-white/20 hover:bg-white/5 transition-colors">
+                          <TableCell className="font-medium text-white">
                             {race.date}
                           </TableCell>
-                          <TableCell>{race.place}</TableCell>
-                          <TableCell>{race.discipline}</TableCell>
-                          <TableCell>{race.category}</TableCell>
-                          <TableCell>{race.position || "N/A"}</TableCell>
-                          <TableCell>{race.fisPoints || "N/A"}</TableCell>
+                          <TableCell className="text-white/90">{race.place}</TableCell>
+                          <TableCell className="text-white/90">{race.discipline}</TableCell>
+                          <TableCell className="text-white/90">{race.category}</TableCell>
+                          <TableCell className="text-white/90">{race.position || "N/A"}</TableCell>
+                          <TableCell className="text-white/90">{race.fisPoints || "N/A"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -242,14 +239,12 @@ const ResultsPage: React.FC = () => {
             </Card>
           )}
 
-          {isLoading && (
-            <div className="text-center text-gray-600 py-12">
-              <p>Henter løpdata...</p>
-            </div>
-          )}
+      {isLoading && (
+        <div className="text-center text-white py-12">
+          <p className="text-xl">Henter løpdata...</p>
         </div>
-      </div>
-    </div>
+      )}
+    </PageContainer>
   );
 };
 

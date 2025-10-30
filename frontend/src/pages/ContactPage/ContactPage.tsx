@@ -1,23 +1,21 @@
 import React from 'react';
-import NavigationBar from '../../components/NavigationBar';
+import PageContainer from '../../components/PageContainer';
 
 const ContactPage: React.FC = () => {
     return (
-        <div className="min-h-screen bg-[#FFFAF0]">
-            <NavigationBar />
-            <div className="mx-auto max-w-4xl px-4 py-24">
-                <h1 className="mb-8 text-center text-4xl font-bold text-gray-800">
-                    Om oss
-                </h1>
+        <PageContainer maxWidth="4xl">
+            <h1 className="mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
+                Om oss
+            </h1>
 
-                <div className="rounded-xl bg-white p-8 shadow-lg">
+            <div className="rounded-xl bg-white/10 backdrop-blur-md border-2 border-white/20 p-8 shadow-xl">
                     {/* Bedriftsinformasjon */}
                     <section className="mb-8">
-                        <h2 className="mb-4 text-2xl font-semibold text-gray-800">
+                        <h2 className="mb-4 text-2xl font-semibold text-white">
                             Om oss
                         </h2>
                     <section className="mb-6">
-                        <div className="space-y-4 text-gray-700">
+                        <div className="space-y-4 text-white/90">
                             <p>
                                 Vi er en frivillig forening som støtter Fredrik Møller. Vi liker egentlig ikke å drive butikk, men gjør dette for at flest mulig skal få mulighet til å vise sin støtte gjennom våre produkter.
                             </p>
@@ -29,7 +27,7 @@ const ContactPage: React.FC = () => {
                             </p>
                         </div>
                     </section>
-                        <div className="space-y-3 text-gray-700">
+                        <div className="space-y-3 text-white/90">
                             <div className="flex flex-col sm:flex-row">
                                 <span className="font-semibold min-w-[180px]">Organisasjonsnavn:</span>
                                 <span>Møller Fanclub</span>
@@ -44,7 +42,7 @@ const ContactPage: React.FC = () => {
                             </div>
                             <div className="flex flex-col sm:flex-row">
                                 <span className="font-semibold min-w-[180px]">E-post:</span>
-                                <a href="mailto:kontakt@mollerfanclub.no" className="text-blue-600 hover:underline">
+                                <a href="mailto:kontakt@mollerfanclub.no" className="text-blue-400 hover:text-blue-300 hover:underline">
                                     kontakt@mollerfanclub.no
                                 </a>
                             </div>
@@ -53,8 +51,7 @@ const ContactPage: React.FC = () => {
                     </section>
                     
                  </div>
-                  </div>
-        </div>
+        </PageContainer>
     );
 };
 

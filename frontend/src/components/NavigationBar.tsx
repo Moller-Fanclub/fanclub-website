@@ -1,81 +1,95 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
 
-interface NavItem {
-    name: string;
-    path: string;
+interface NavigationBarProps {
+  showBranding?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { name: "Hjem", path: "/" },
-  { name: "Kalender", path: "/races" },
-  { name: "Resultater", path: "/resultater" },
-  { name: "Merch", path: "/kommer-snart" },
-];
+const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-const NavigationBar: React.FC = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+  // Different styling for homepage vs other pages
+  const isHomePage = !showBranding;
+  const menuBgClass = isHomePage 
+    ? "bg-black/70 backdrop-blur-xl" 
+    : "bg-gray-900/95 backdrop-blur-md";
 
-    const closeMenu = () => setIsMenuOpen(false);
+  return (
+    <header className="fixed inset-x-0 top-0 z-50">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        {/* Logo/Brand - Only shown when showBranding is true */}
+        {showBranding ? (
+          <a href="/" className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
+            Møller Fanclub
+          </a>
+        ) : (
+          <div></div>
+        )}
+        
+        {/* Desktop Navigation Links */}
+        <ul className="hidden md:flex items-center gap-8">
+          <li><a href="/races" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</a></li>
+          <li><a href="/resultater" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</a></li>
+          <li><a href="/kommer-snart" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</a></li>
+        </ul>
 
-    const navLinkClasses = ({ isActive }: { isActive: boolean }) => [
-        'relative block px-3 py-2 text-lg font-medium text-white transition-colors duration-200 hover:text-blue-100',
-        isActive ? 'font-semibold after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-white' : '',
-    ].join(' ');
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={toggleMenu}
+          className="md:hidden text-white bg-white/20 backdrop-blur-sm rounded-lg p-2 hover:bg-white/30 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+      </nav>
 
-    const logoSrc = '/images/MollerFC.png';
-
-    return (
-        <header className="fixed inset-x-0 top-0 z-50 bg-linear-to-r from-blue-600 to-indigo-600 shadow">
-            <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-                <NavLink to="/" onClick={closeMenu} className="shrink-0">
-                    <img src={logoSrc} alt="Møller Fanclub Logo" className="h-12 w-auto" />
-                </NavLink>
-                
-                <div className="flex items-center gap-4">
-                    {/* Mobile Menu Button */}
-                    <button
-                        type="button"
-                        className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-md border border-white/40 text-white transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden"
-                        onClick={toggleMenu}
-                        aria-label="Toggle navigation menu"
-                        aria-expanded={isMenuOpen}
-                    >
-                        <span
-                            className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-y-2 rotate-45' : ''}`}
-                        ></span>
-                        <span
-                            className={`block h-0.5 w-6 bg-white transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}
-                        ></span>
-                        <span
-                            className={`block h-0.5 w-6 bg-white transition-transform duration-300 ease-in-out ${isMenuOpen ? '-translate-y-2 -rotate-45' : ''}`}
-                        ></span>
-                    </button>
-                </div>
-                
-                <ul
-                    className={`${isMenuOpen ? 'flex' : 'hidden'
-                        } absolute left-0 right-0 top-full flex-col gap-2 bg-blue-600/95 px-6 py-4 shadow-lg md:static md:flex md:flex-row md:items-center md:gap-8 md:bg-transparent md:px-0 md:py-0 md:shadow-none`}
-                >
-                    {navItems.map((item) => (
-                        <li key={item.path}>
-                            <NavLink
-                                to={item.path}
-                                className={navLinkClasses}
-                                onClick={closeMenu}
-                            >
-                                {item.name}
-                            </NavLink>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </header>
-    );
+      {/* Mobile Navigation Menu */}
+      {isMenuOpen && (
+        <div className={`md:hidden ${menuBgClass} border-t border-white/20 shadow-xl`}>
+          <ul className="flex flex-col px-6 py-4 gap-4">
+            <li>
+              <a 
+                href="/races" 
+                className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Kalender
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/resultater" 
+                className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Resultater
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/kommer-snart" 
+                className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Merch
+              </a>
+            </li>
+          </ul>
+        </div>
+      )}
+    </header>
+  );
 };
 
 export default NavigationBar;

@@ -1,15 +1,13 @@
 import React from 'react';
-import NavigationBar from '../../components/NavigationBar';
+import PageContainer from '../../components/PageContainer';
 
 const ComingSoonPage: React.FC = () => {
     return (
-        <div className="min-h-screen bg-[#FFFAF0]">
-            <NavigationBar />
-            <div className="mx-auto max-w-4xl px-4 py-24">
+        <PageContainer maxWidth="4xl">
                 <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
                     <div className="mb-8">
                         <svg
-                            className="mx-auto h-32 w-32 text-blue-600"
+                            className="mx-auto h-32 w-32 text-yellow-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -23,16 +21,16 @@ const ComingSoonPage: React.FC = () => {
                         </svg>
                     </div>
                     
-                    <h1 className="mb-4 text-5xl font-bold text-gray-800">
+                    <h1 className="mb-4 text-5xl font-bold text-white drop-shadow-lg">
                         Kommer snart
                     </h1>
                     
-                    <p className="mb-8 max-w-2xl text-xl text-gray-600">
+                    <p className="mb-8 max-w-2xl text-xl text-white/90">
                         Vi jobber med noe spennende! Merch-butikken vår vil være tilgjengelig snart.
                     </p>
                     
-                    <div className="rounded-xl bg-white p-8 shadow-lg">
-                        <p className="mb-6 text-lg text-gray-700">
+                    <div className="rounded-xl bg-white/10 backdrop-blur-md border-2 border-white/20 p-8 shadow-xl">
+                        <p className="mb-6 text-lg text-white">
                             Hold deg oppdatert ved å følge oss på Instagram!
                         </p>
                         
@@ -41,7 +39,7 @@ const ComingSoonPage: React.FC = () => {
                                 href="https://www.instagram.com/mollerfan.club"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 px-6 py-3 text-white font-semibold transition-transform hover:scale-105 hover:shadow-lg"
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-linear-to-r from-purple-600 via-pink-600 to-orange-500 px-6 py-3 text-white font-semibold transition-transform hover:scale-105 hover:shadow-lg"
                             >
                                 <svg 
                                     className="h-6 w-6" 
@@ -56,8 +54,7 @@ const ComingSoonPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+        </PageContainer>
     );
 };
 
