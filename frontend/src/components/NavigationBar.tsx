@@ -1,3 +1,4 @@
+import { PublicPaths } from '@/Routes';
 import React, { useState } from 'react';
 
 interface NavigationBarProps {
@@ -22,7 +23,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
         {/* Logo/Brand - Only shown when showBranding is true */}
         {showBranding ? (
-          <a href="/" className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
+          <a href={PublicPaths.base} className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
             Møller Fanclub
           </a>
         ) : (
@@ -31,9 +32,9 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
         
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center gap-8">
-          <li><a href="/races" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</a></li>
-          <li><a href="/resultater" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</a></li>
-          <li><a href="/kommer-snart" className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</a></li>
+          <li><a href={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</a></li>
+          <li><a href={PublicPaths.results} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</a></li>
+          <li><a href={PublicPaths.comingSoon} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</a></li>
         </ul>
 
         {/* Mobile Menu Button */}
@@ -60,7 +61,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
           <ul className="flex flex-col px-6 py-4 gap-4">
             <li>
               <a 
-                href="/races" 
+                href={PublicPaths.calender}
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -69,7 +70,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
             </li>
             <li>
               <a 
-                href="/resultater" 
+                href={PublicPaths.results} 
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -78,7 +79,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
             </li>
             <li>
               <a 
-                href="/kommer-snart" 
+                href={PublicPaths.comingSoon}
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >

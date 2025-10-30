@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useShopConfig } from '../../hooks/useShopConfig';
 import './CheckoutPage.css';
+import { PublicPaths } from '@/Routes';
 
 interface FormData {
   name: string;
@@ -90,7 +91,7 @@ const CheckoutPage: React.FC = () => {
           </svg>
           <h2>Handlekurven er tom</h2>
           <p>Legg til produkter før du går til kassen</p>
-          <a href="/merch" className="checkout-empty-btn">Gå til butikken</a>
+          <a href={PublicPaths.merch} className="checkout-empty-btn">Gå til butikken</a>
         </div>
       </div>
     );
@@ -109,7 +110,7 @@ const CheckoutPage: React.FC = () => {
           <p style={{ marginTop: '12px', fontSize: '16px' }}>
             Neste periode åpner: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
           </p>
-          <a href="/" className="checkout-empty-btn" style={{ marginTop: '24px' }}>Tilbake til forsiden</a>
+          <a href={PublicPaths.base} className="checkout-empty-btn" style={{ marginTop: '24px' }}>Tilbake til forsiden</a>
         </div>
       </div>
     );

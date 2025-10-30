@@ -3,6 +3,7 @@ import "./HomePage.css";
 // import TextBlock from './TextBlock.tsx';
 import {type Race, races} from "../../races.ts";
 import {InstagramEmbed} from "react-social-media-embed";
+import { PublicPaths } from '@/Routes.tsx';
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("60d 0h 0m");
@@ -131,7 +132,7 @@ const HomePage: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
               <a
-                href="/races"
+                href={PublicPaths.calender}
                 className="inline-flex items-center gap-2 rounded-full bg-yellow-400 px-8 py-4 text-lg font-bold text-gray-900 shadow-2xl transition-all duration-300 hover:bg-yellow-300 hover:scale-105 hover:shadow-yellow-400/50"
               >
                 Se Kalender
@@ -140,7 +141,7 @@ const HomePage: React.FC = () => {
                 </svg>
               </a>
               <a
-                href="/kommer-snart"
+                href={PublicPaths.comingSoon}
                 className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-8 py-4 text-lg font-bold text-white border-2 border-white/40 shadow-2xl transition-all duration-300 hover:bg-white/30 hover:scale-105"
               >
                 Kjøp Merch
