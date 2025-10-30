@@ -4,6 +4,7 @@ import Countdown from "../../components/Countdown.tsx";
 import { productService, type Product } from "../../services/productService.ts";
 import { useShopConfig } from "../../hooks/useShopConfig.ts";
 import PageContainer from "../../components/PageContainer.tsx";
+import FadeInnAnimation from "@/components/FadeInnAnimation.tsx";
 
 
 const MerchPage: React.FC = () => {
@@ -164,13 +165,15 @@ const MerchPage: React.FC = () => {
                     {products.map((product) => {
                         if (product.price) {
                             return (
-                                <MerchCard
-                                    key={product.id}
-                                    id={product.id}
-                                    imageUrl={product.imageUrls[0]}
-                                    title={product.title}
-                                    price={product.price}
-                                />
+                                <FadeInnAnimation>
+                                    <MerchCard
+                                        key={product.id}
+                                        id={product.id}
+                                        imageUrl={product.imageUrls[0]}
+                                        title={product.title}
+                                        price={product.price}
+                                    />
+                                </FadeInnAnimation>
                             );
                         }
                         return null;

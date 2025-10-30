@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
-// import TextBlock from './TextBlock.tsx';
 import {type Race, races} from "../../races.ts";
 import {InstagramEmbed} from "react-social-media-embed";
+import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/Routes.tsx';
 
 const HomePage: React.FC = () => {
@@ -176,24 +176,30 @@ const HomePage: React.FC = () => {
         <div className="relative z-10 mx-auto max-w-6xl">
           {/* Title with glass background */}
           <div className="mb-12 text-center">
-              <h2 className="text-4xl font-bold text-white drop-shadow-lg">
-                Følg Møller og Fanclubben på Instagram
-              </h2>
+            <FadeInnAnimation>
+                <h2 className="text-4xl font-bold text-white drop-shadow-lg">
+                  Følg Møller og Fanclubben på Instagram
+                </h2>
+            </FadeInnAnimation>  
           </div>
           
           {/* Instagram embeds with glass containers */}
           <div className="insta-feeds-container">
             <div className="insta-feed">
-                <InstagramEmbed
-                    url="https://www.instagram.com/fredrikmoeller/"
-                    width="100%"
-                />
+                <FadeInnAnimation>
+                  <InstagramEmbed
+                      url="https://www.instagram.com/fredrikmoeller/"
+                      width="100%"
+                  />
+                </FadeInnAnimation>
             </div>
             <div className="insta-feed">
+              <FadeInnAnimation>
                 <InstagramEmbed
                     url="https://www.instagram.com/mollerfan.club/"
                     width="100%"
                 />
+              </FadeInnAnimation>
             </div>
           </div>
         </div>
