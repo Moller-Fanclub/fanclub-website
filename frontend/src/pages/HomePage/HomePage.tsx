@@ -3,7 +3,6 @@ import "./HomePage.css";
 // import TextBlock from './TextBlock.tsx';
 import {type Race, races} from "../../races.ts";
 import {InstagramEmbed} from "react-social-media-embed";
-import NavigationBar from "../../components/NavigationBar";
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("60d 0h 0m");
