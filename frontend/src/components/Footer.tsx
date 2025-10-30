@@ -1,6 +1,6 @@
 import {Link } from 'react-router-dom';
 import FadeInnAnimation from './FadeInnAnimation';
-import { ExternalLinks } from '@/Routes';
+import { ExternalLinks, PublicPaths } from '@/Routes';
 
 const Footer: React.FC = () => {
   
@@ -18,13 +18,13 @@ const Footer: React.FC = () => {
                 {/* Links */}
                 <div className="flex flex-wrap justify-center gap-6">
                   <Link 
-                    to="/kontakt" 
+                    to={PublicPaths.about} 
                     className="text-white/80 text-sm hover:text-white transition-colors"
                   >
                     Om oss
                   </Link>
                   <Link 
-                    to="/salgsvilkar" 
+                    to={PublicPaths.terms}
                     className="text-white/80 text-sm hover:text-white transition-colors"
                   >
                     Salgsvilkår
