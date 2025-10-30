@@ -3,6 +3,7 @@ import { useCart } from '../contexts/CartContext';
 import { useShopConfig } from '../hooks/useShopConfig';
 import './Cart.css';
 import { PublicPaths } from '@/Routes';
+import { Link } from 'react-router-dom';
 
 interface CartProps {
   isOpen: boolean;
@@ -116,9 +117,9 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             </div>
 
             {shopIsOpen ? (
-              <a href={PublicPaths.checkout} className="cart-checkout-btn">
+              <Link to={PublicPaths.checkout} className="cart-checkout-btn">
                 Gå til kassen
-              </a>
+              </Link>
             ) : (
               <div style={{
                 backgroundColor: '#FEE2E2',

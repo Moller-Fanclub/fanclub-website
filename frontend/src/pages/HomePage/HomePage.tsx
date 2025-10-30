@@ -4,6 +4,7 @@ import {type Race, races} from "../../races.ts";
 import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/Routes.tsx';
+import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("60d 0h 0m");
@@ -131,24 +132,24 @@ const HomePage: React.FC = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
-              <a
-                href={PublicPaths.calender}
+              <Link
+                to={PublicPaths.calender}
                 className="inline-flex items-center gap-2 rounded-full bg-yellow-400 px-8 py-4 text-lg font-bold text-gray-900 shadow-2xl transition-all duration-300 hover:bg-yellow-300 hover:scale-105 hover:shadow-yellow-400/50"
               >
                 Se Kalender
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
-              <a
-                href={PublicPaths.comingSoon}
+              </Link>
+              <Link
+                to={PublicPaths.comingSoon}
                 className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-8 py-4 text-lg font-bold text-white border-2 border-white/40 shadow-2xl transition-all duration-300 hover:bg-white/30 hover:scale-105"
               >
                 Kjøp Merch
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

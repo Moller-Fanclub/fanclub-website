@@ -1,5 +1,6 @@
 import { PublicPaths } from '@/Routes';
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface NavigationBarProps {
   showBranding?: boolean;
@@ -23,18 +24,18 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
         {/* Logo/Brand - Only shown when showBranding is true */}
         {showBranding ? (
-          <a href={PublicPaths.base} className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
+          <Link to={PublicPaths.base} className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
             Møller Fanclub
-          </a>
+          </Link>
         ) : (
           <div></div>
         )}
         
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center gap-8">
-          <li><a href={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</a></li>
-          <li><a href={PublicPaths.results} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</a></li>
-          <li><a href={PublicPaths.comingSoon} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</a></li>
+          <li><Link to={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</Link></li>
+          <li><Link to={PublicPaths.results} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</Link></li>
+          <li><Link to={PublicPaths.comingSoon} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</Link></li>
         </ul>
 
         {/* Mobile Menu Button */}
@@ -60,31 +61,31 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
         <div className={`md:hidden ${menuBgClass} border-t border-white/20 shadow-xl`}>
           <ul className="flex flex-col px-6 py-4 gap-4">
             <li>
-              <a 
-                href={PublicPaths.calender}
+              <Link 
+                to={PublicPaths.calender}
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Kalender
-              </a>
+              </Link>
             </li>
             <li>
-              <a 
-                href={PublicPaths.results} 
+              <Link 
+                to={PublicPaths.results} 
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Resultater
-              </a>
+              </Link>
             </li>
             <li>
-              <a 
-                href={PublicPaths.comingSoon}
+              <Link 
+                to={PublicPaths.comingSoon}
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Merch
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
