@@ -1,13 +1,6 @@
 import React from 'react';
 import FadeInnAnimation from './FadeInnAnimation';
-
-interface Race {
-    name: string;
-    imagePath: string;
-    date: Date;
-    discipline: string;
-    resultLink: string;
-}
+import type { Race } from '../races';
 
 interface LocationRaceCardProps {
     location: string;
@@ -69,12 +62,12 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
                         <button
                             key={`${race.discipline}-${index}`}
                             onClick={() => handleRaceClick(race.resultLink)}
-                            className={`flex flex-row sm:flex-col items-center justify-between sm:justify-center rounded-xl border-2 border-gray-200 bg-linear-to-b from-white to-gray-50 p-3 sm:p-4 hover:border-blue-400 hover:shadow-md transition-all duration-200 active:scale-95 sm:hover:scale-105 ${
+                            className={`flex flex-col items-center justify-center rounded-xl border-2 border-gray-200 bg-linear-to-b from-white to-gray-50 p-3 sm:p-4 hover:border-blue-400 hover:shadow-md transition-all duration-200 active:scale-95 sm:hover:scale-105 ${
                                 races.length === 1 ? 'sm:w-48' : 'sm:flex-1 sm:min-w-0'
                             }`}
                         >
                             {/* Discipline Badge */}
-                            <span className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 sm:py-2 text-sm font-bold sm:mb-2 shadow-sm ${
+                            <span className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 sm:py-2 text-sm font-bold mb-2 shadow-sm ${
                                 race.discipline === 'DH' 
                                     ? 'bg-linear-to-br from-red-500 to-red-600 text-white' 
                                     : race.discipline === 'SG'
@@ -85,9 +78,28 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
                             </span>
                             
                             {/* Date */}
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 mb-1">
                                 {formatDate(race.date)}
                             </span>
+
+                            {/* Result Display for Past Races */}
+                            {isPast && race.result && (
+                                <div className="mt-2 pt-2 border-t border-gray-200 w-full text-center">
+                                    {race.result.position.includes('DNF') || 
+                                     race.result.position.includes('DNS') || 
+                                     race.result.position.includes('DNQ') ? (
+                                        <span className="text-xs font-semibold text-red-600">
+                                            {race.result.position}
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <div className="text-lg font-bold text-blue-600">
+                                                #{race.result.position}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </button>
                     ))}
                 </div>
