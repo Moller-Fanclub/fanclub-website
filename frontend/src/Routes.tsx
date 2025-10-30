@@ -5,10 +5,11 @@ import ResultsPage from "./pages/ResultsPage/ResultsPage.tsx";
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
-import ContactPage from "./pages/ContactPage/ContactPage.tsx";
+import ContactPage from "./pages/AboutPage/AboutPage.tsx";
 import TermsPage from "./pages/TermsPage/TermsPage.tsx";
 import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
 import CalenderPage from './pages/CalenderPage/CalenderPage.tsx';
+import AboutPage from './pages/AboutPage/AboutPage.tsx';
 
 export const PublicPaths = {
   base: "/",
@@ -43,7 +44,7 @@ export function AppRoutes() {
         <Route path={PublicPaths.base} element={<HomePage />} />
         <Route path={PublicPaths.calender} element={<CalenderPage />} />
         <Route path={PublicPaths.results} element={<ResultsPage />} />
-        <Route path={PublicPaths.about} element={<HomePage />} />
+        <Route path={PublicPaths.about} element={<AboutPage />} />
         <Route path={PublicPaths.comingSoon} element={<ComingSoonPage />} />
         <Route path={PublicPaths.merch} element={<MerchPage />} />
         <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
