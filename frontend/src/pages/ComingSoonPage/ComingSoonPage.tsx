@@ -1,5 +1,6 @@
 import React from 'react';
 import PageContainer from '../../components/PageContainer';
+import { ExternalLinks } from '@/Routes';
 
 const ComingSoonPage: React.FC = () => {
     return (
@@ -36,7 +37,7 @@ const ComingSoonPage: React.FC = () => {
                         
                         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                             <a
-                                href="https://www.instagram.com/mollerfan.club"
+                                href={ExternalLinks.mollerfanClubInstagram}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-linear-to-r from-purple-600 via-pink-600 to-orange-500 px-6 py-3 text-white font-semibold transition-transform hover:scale-105 hover:shadow-lg"

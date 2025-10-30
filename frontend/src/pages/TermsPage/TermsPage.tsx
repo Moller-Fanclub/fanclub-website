@@ -1,5 +1,6 @@
 import React from 'react';
 import PageContainer from '../../components/PageContainer';
+import { ExternalLinks } from '@/Routes';
 
 const TermsPage: React.FC = () => {
     return (
@@ -18,7 +19,7 @@ const TermsPage: React.FC = () => {
                             </h2>
                             <p className="text-white/90 mb-3">
                                 Dette kjøpet er regulert av de nedenstående standard salgsbetingelser for forbrukerkjøp av varer over Internett. Forbrukerkjøp over internett reguleres hovedsakelig av avtaleloven, forbrukerkjøpsloven, markedsføringsloven, angrerettloven og ehandelsloven, og disse lovene gir forbrukeren ufravikelige rettigheter. Lovene er tilgjengelig på{' '}
-                                <a href="https://www.lovdata.no" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                <a href={ExternalLinks.lovdata} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                     www.lovdata.no
                                 </a>
                                 . Vilkårene i denne avtalen skal ikke forstås som noen begrensning i de lovbestemte rettighetene, men oppstiller partenes viktigste rettigheter og plikter for handelen.
@@ -290,14 +291,14 @@ const TermsPage: React.FC = () => {
                             </h2>
                             <p className="text-white/90 mb-3">
                                 Klager rettes til selger innen rimelig tid, jf. punkt 9 og 10. Partene skal forsøke å løse eventuelle tvister i minnelighet. Dersom dette ikke lykkes, kan kjøperen ta kontakt med Forbrukertilsynet for mekling. Forbrukertilsynet er tilgjengelig på telefon 23 400 600 eller{' '}
-                                <a href="https://www.forbrukertilsynet.no" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                <a href={ExternalLinks.forbrukertilsynet} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                     www.forbrukertilsynet.no
                                 </a>
                                 .
                             </p>
                             <p className="text-white/90">
                                 Europa-Kommisjonens klageportal kan også brukes hvis du ønsker å inngi en klage. Det er særlig relevant, hvis du er forbruker bosatt i et annet EU-land. Klagen inngis her:{' '}
-                                <a href="http://ec.europa.eu/odr" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                <a href={ExternalLinks.europaKommisjonensKlageportal} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                     http://ec.europa.eu/odr
                                 </a>
                                 .
