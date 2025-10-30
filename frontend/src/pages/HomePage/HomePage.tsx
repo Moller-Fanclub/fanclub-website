@@ -5,6 +5,7 @@ import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/Routes.tsx';
 import { Link } from 'react-router-dom';
+import { BlogPostThumbnail } from './BlogPostThumbnail.tsx';
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("60d 0h 0m");
@@ -202,6 +203,17 @@ const HomePage: React.FC = () => {
                 />
               </FadeInnAnimation>
             </div>
+          </div>
+          <div className="mt-20">
+            <FadeInnAnimation>
+              <BlogPostThumbnail
+                title="Sun Valley 2025"
+                date="23. mars 2025"
+                excerpt="Fanclubben samlet seg til vinterens høydepunkt — med nye drakter, merch og mål om å fylle målområdet med rosa vester."
+                image="images/sunvalley_fanclub_img.JPG"
+                to={`${PublicPaths.blog.replace(":id", "kitzbuehel-2026")}`}
+              />
+            </FadeInnAnimation>
           </div>
         </div>
       </section>

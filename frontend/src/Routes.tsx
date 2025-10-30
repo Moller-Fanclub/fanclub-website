@@ -10,6 +10,7 @@ import TermsPage from "./pages/TermsPage/TermsPage.tsx";
 import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
 import CalenderPage from './pages/CalenderPage/CalenderPage.tsx';
 import AboutPage from './pages/AboutPage/AboutPage.tsx';
+import BlogPostPage from './pages/BlogPostPast/BlogPostPage.tsx';
 
 export const PublicPaths = {
   base: "/",
@@ -22,6 +23,7 @@ export const PublicPaths = {
   checkout: "/checkout",
   contact: "/contact",
   terms: "/terms",
+  blog: "/blod/:id",
 };
 
 export const ExternalLinks = {
@@ -51,6 +53,7 @@ export function AppRoutes() {
         <Route path={PublicPaths.checkout} element={<CheckoutPage />} />
         <Route path={PublicPaths.contact} element={<ContactPage />} />
         <Route path={PublicPaths.terms} element={<TermsPage />} />
+        <Route path={PublicPaths.blog} element={<BlogPostPage />} />
         <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
       </Route>
     </Routes>
