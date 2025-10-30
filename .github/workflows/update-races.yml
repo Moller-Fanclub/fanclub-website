@@ -1,0 +1,52 @@
+name: Update Races from FIS Calendar
+
+on:
+  schedule:
+    # Run every day at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-races:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: Update races from calendar
+        run: |
+          cd backend
+          npm run updateRacesFromCalendar
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code frontend/src/races.ts || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push if changed
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/races.ts
+          git commit -m "chore: update races from FIS calendar [automated]"
+          git push
+      
+      - name: No changes
+        if: steps.git-check.outputs.changed != 'true'
+        run: echo "No changes to races.ts detected"

@@ -7,7 +7,13 @@ import {InstagramEmbed} from "react-social-media-embed";
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("");
-  const [nextRace, setNextRace] = useState<Race>({name: "Kitzbühel", imagePath: '/images/austria.png', date: new Date('2026-01-24T00:00:00')});
+  const [nextRace, setNextRace] = useState<Race>({
+    name: "Kitzbühel", 
+    imagePath: '/images/austria.png', 
+    date: new Date('2026-01-24T00:00:00'),
+    discipline: 'DH',
+    resultLink: ''
+  });
 
 
   useEffect(() => {
