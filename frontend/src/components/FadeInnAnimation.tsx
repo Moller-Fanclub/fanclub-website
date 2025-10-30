@@ -14,11 +14,17 @@ const FadeInnAnimation: React.FC<FadeInnAnimationProps> = ({
   renderWhenInView = false,
   className = "",
 }) => {
-  const { ref, isInView, wasInViewOnMount } = useInView();
+  const { ref, isInView, wasInViewOnMount, hasCheckedInitial } = useInView();
 
-  const shouldRender = renderWhenInView ? isInView : true;
+  if (!hasCheckedInitial) {
+    return (
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+    );
+  }
 
-  // 👇 hvis den var synlig fra start: bare render normalt
+  // hvis den var synlig fra start -> ingen animasjon
   if (wasInViewOnMount) {
     return (
       <div ref={ref} className={className}>
@@ -27,7 +33,8 @@ const FadeInnAnimation: React.FC<FadeInnAnimationProps> = ({
     );
   }
 
-  // ellers: kjør fade-animasjon
+  const shouldRender = renderWhenInView ? isInView : true;
+
   return (
     <div
       ref={ref}

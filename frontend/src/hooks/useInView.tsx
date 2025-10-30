@@ -4,26 +4,26 @@ export const useInView = (options?: IntersectionObserverInit) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isInView, setIsInView] = useState(false);
   const [wasInViewOnMount, setWasInViewOnMount] = useState(false);
+  const [hasCheckedInitial, setHasCheckedInitial] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    // sjekk om elementet allerede er synlig ved mount
+    // sjekk om elementet er *delvis* synlig ved mount (litt mer tolerant)
     const rect = el.getBoundingClientRect();
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
     const windowWidth = window.innerWidth || document.documentElement.clientWidth;
 
-    const alreadyVisible =
-      rect.top >= 0 &&
-      rect.left >= 0 &&
-      rect.bottom <= windowHeight &&
-      rect.right <= windowWidth;
+    const intersectsVertically = rect.top < windowHeight && rect.bottom > 0;
+    const intersectsHorizontally = rect.left < windowWidth && rect.right > 0;
+    const alreadyVisible = intersectsVertically && intersectsHorizontally;
 
     if (alreadyVisible) {
       setIsInView(true);
-      setWasInViewOnMount(true); // 👈 viktig
-      return; // ingen observer -> ingen animasjon
+      setWasInViewOnMount(true);
+      setHasCheckedInitial(true);
+      return;
     }
 
     const observer = new IntersectionObserver(
@@ -31,6 +31,7 @@ export const useInView = (options?: IntersectionObserverInit) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsInView(true);
+            setHasCheckedInitial(true);
             observer.unobserve(entry.target);
           }
         });
@@ -43,9 +44,11 @@ export const useInView = (options?: IntersectionObserverInit) => {
     );
 
     observer.observe(el);
+    // viktig: når vi starter observer vet vi også at vi har "sjekket"
+    setHasCheckedInitial(true);
 
     return () => observer.disconnect();
   }, [options]);
 
-  return { ref, isInView, wasInViewOnMount };
+  return { ref, isInView, wasInViewOnMount, hasCheckedInitial };
 };

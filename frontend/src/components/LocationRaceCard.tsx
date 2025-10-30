@@ -1,6 +1,5 @@
 import React from 'react';
-
-
+import FadeInnAnimation from './FadeInnAnimation';
 
 interface Race {
     name: string;
@@ -39,7 +38,7 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
     const daysUntil = Math.round(timeDiff / (1000 * 3600 * 24));
 
     return (
-        <div className="w-full overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <FadeInnAnimation className="w-full overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
             {/* Header with flag and location */}
             <div className="relative flex items-center gap-2 sm:gap-4 bg-linear-to-br from-gray-50 to-gray-100 p-3 sm:p-4 border-b border-gray-200">
                 <div className="relative h-12 w-16 sm:h-16 sm:w-24 shrink-0 overflow-hidden rounded-lg shadow-md border-2 border-white">
@@ -93,7 +92,7 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
                     ))}
                 </div>
             </div>
-        </div>
+        </FadeInnAnimation>
     );
 };
 

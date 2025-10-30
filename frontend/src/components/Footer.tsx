@@ -7,8 +7,7 @@ const Footer: React.FC = () => {
     return (
       <footer className="relative z-30 mt-auto border-t border-white/10 py-8">
           <div className="mx-auto max-w-7xl px-4">
-            <div className="flex flex-col items-center gap-6">
-              <FadeInnAnimation>
+              <FadeInnAnimation className="flex flex-col items-center gap-6">
                 {/* Logo/Branding */}
                 <div className="text-center">
                   <h3 className="text-xl font-bold text-white drop-shadow-md">Møller Fanclub</h3>
@@ -42,7 +41,6 @@ const Footer: React.FC = () => {
                   </a>
                 </div>
               </FadeInnAnimation>
-            </div>
           </div>
         </footer>
     );

@@ -68,7 +68,6 @@ const RacePage: React.FC = () => {
       </h1>
       <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
         {upcomingGrouped.map((group) => (
-          <FadeInnAnimation>
             <LocationRaceCard 
               key={group.location}
               location={group.location}
@@ -76,31 +75,26 @@ const RacePage: React.FC = () => {
               races={group.races}
               isPast={false}
             />
-          </FadeInnAnimation>
         ))}
       </div>
 
       {/* Past Races Section */}
       {pastGrouped.length > 0 && (
         <>
-        <FadeInnAnimation>
-          <h2 className="mt-16 mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
+        <FadeInnAnimation className="mt-16 mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
             Tidligere Renn
-          </h2>
         </FadeInnAnimation>
-          <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
-            {pastGrouped.map((group) => (
-              <FadeInnAnimation>
-                <LocationRaceCard 
-                  key={group.location}
-                  location={group.location}
-                  imagePath={group.imagePath}
-                  races={group.races}
-                  isPast={true}
-                />
-              </FadeInnAnimation>
-            ))}
-          </div>
+        {pastGrouped.map((group) => (
+            <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
+              <LocationRaceCard 
+                key={group.location}
+                location={group.location}
+                imagePath={group.imagePath}
+                races={group.races}
+                isPast={true}
+              />
+            </div>
+          ))}
         </>
       )}
     </PageContainer>
