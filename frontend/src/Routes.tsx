@@ -23,6 +23,17 @@ export const PublicPaths = {
   terms: "/terms",
 };
 
+export const ExternalLinks = {
+  mollerfanClubInstagram: "https://www.instagram.com/mollerfan.club",
+  lovdata: "https://www.lovdata.no",
+  forbrukertilsynet: "https://www.forbrukertilsynet.no",
+  europaKommisjonensKlageportal: "http://ec.europa.eu/odr",
+}
+
+export const Email = {
+  
+}
+
 export function AppRoutes() {
   const location = useLocation();
 
