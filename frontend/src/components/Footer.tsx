@@ -1,5 +1,6 @@
 import {Link } from 'react-router-dom';
 import FadeInnAnimation from './FadeInnAnimation';
+import { ExternalLinks } from '@/Routes';
 
 const Footer: React.FC = () => {
   
@@ -29,7 +30,7 @@ const Footer: React.FC = () => {
                     Salgsvilkår
                   </Link>
                   <a 
-                    href="https://www.instagram.com/mollerfan.club/"
+                    href={ExternalLinks.mollerfanClubInstagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-white/80 text-sm hover:text-white transition-colors flex items-center gap-1"
