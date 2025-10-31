@@ -1,7 +1,13 @@
 export interface RaceResult {
-    position: number;
-    time?: string;
-    behind?: string;
+    position: string;
+    fisPoints?: string;
+    date?: string;
+    place?: string;
+    discipline?: string;
+    country?: string;
+    category?: string;
+    link?: string;
+    season?: string;
 }
 
 export interface Race {
