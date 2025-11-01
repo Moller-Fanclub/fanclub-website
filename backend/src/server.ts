@@ -7,7 +7,7 @@ import { products } from './data/products.js';
 import { shopConfig } from './config/shopConfig.js';
 import { fetchLatestRace } from './services/fisScraper.js';
 // mailService is available for when orders endpoint is re-enabled
-// import { mailService } from './services/mailService.js';
+import { mailService } from './services/mailService.js';
 
 dotenv.config();
 
@@ -161,6 +161,53 @@ app.post('/api/orders', async (_req: Request, res: Response) => {
     */
 });
 
+// Email preview endpoint (development only)
+if (process.env.NODE_ENV !== 'production') {
+    app.get('/api/email/preview', (_req: Request, res: Response) => {
+        // Sample order data for preview
+        const sampleOrderData = {
+            name: 'Ola Nordmann',
+            email: 'test@example.com',
+            orderNumber: 'MF-123456',
+            product: 'Tour Hoodie',
+            size: 'M',
+            color: 'Blue',
+            quantity: 1,
+            price: '599 kr',
+            shippingPrice: '79 kr',
+            totalPrice: '678 kr',
+            estimatedDelivery: '3-5 virkedager',
+            productImage: 'https://mollerfan.club/merch/tour-hoodie-front.png'
+        };
+
+        const html = mailService.generateOrderConfirmationHTML(sampleOrderData);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+    });
+
+    app.post('/api/email/preview', (req: Request, res: Response) => {
+        // Allow custom order data via POST
+        const orderData = {
+            name: req.body.name || 'Ola Nordmann',
+            email: req.body.email || 'test@example.com',
+            orderNumber: req.body.orderNumber || 'MF-123456',
+            product: req.body.product || 'Tour Hoodie',
+            size: req.body.size || 'M',
+            color: req.body.color || 'Blue',
+            quantity: req.body.quantity || 1,
+            price: req.body.price || '599 kr',
+            shippingPrice: req.body.shippingPrice || '79 kr',
+            totalPrice: req.body.totalPrice || '678 kr',
+            estimatedDelivery: req.body.estimatedDelivery || '3-5 virkedager',
+            productImage: req.body.productImage || 'https://mollerfan.club/merch/tour-hoodie-front.png'
+        };
+
+        const html = mailService.generateOrderConfirmationHTML(orderData);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+    });
+}
+
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📦 API endpoints:`);
@@ -172,4 +219,8 @@ app.listen(PORT, () => {
     console.log(`   - GET http://localhost:${PORT}/api/fis/all (from races.json)`);
     console.log(`   - GET http://localhost:${PORT}/api/fis/test`);
     console.log(`   - POST http://localhost:${PORT}/api/orders`);
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`   - GET http://localhost:${PORT}/api/email/preview (dev only)`);
+        console.log(`   - POST http://localhost:${PORT}/api/email/preview (dev only)`);
+    }
 });

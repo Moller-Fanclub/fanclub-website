@@ -39,31 +39,10 @@ export class MailService {
     }
 
     /**
-     * Send order confirmation email
-     * Should only be called internally after order is created and validated
+     * Generate the HTML content for order confirmation email (for preview)
      */
-    async sendOrderConfirmation(orderData: OrderEmailData): Promise<void> {
-        await this.transporter.sendMail({
-            from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
-            to: orderData.email,
-            subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
-            text: `
-Hei ${orderData.name}!
-
-Takk for din bestilling hos Møller Fanclub!
-
-Ordrenummer: ${orderData.orderNumber}
-Produkt: ${orderData.product}
-Størrelse: ${orderData.size}
-Farge: ${orderData.color}
-Pris: ${orderData.totalPrice}
-
-Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
-
-Med vennlig hilsen,
-Møller Fanclub
-            `.trim(),
-            html: `
+    generateOrderConfirmationHTML(orderData: OrderEmailData): string {
+        return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -211,7 +190,7 @@ Møller Fanclub
                         <td style="padding: 32px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
                                 Har du spørsmål om din ordre?<br>
-                                Kontakt oss på <a href="mailto:${process.env.EMAIL_USER}" style="color: #3b82f6; text-decoration: none;">${process.env.EMAIL_USER}</a>
+                                Kontakt oss på <a href="mailto:${process.env.EMAIL_USER || 'shop@mollerfan.club'}" style="color: #3b82f6; text-decoration: none;">${process.env.EMAIL_USER || 'support@mollerfan.club'}</a>
                             </p>
                             <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
                                 © ${new Date().getFullYear()} Møller Fanclub • <a href="https://mollerfan.club" style="color: #3b82f6; text-decoration: none;">mollerfan.club</a>
@@ -225,7 +204,35 @@ Møller Fanclub
     </table>
 </body>
 </html>
-            `,
+        `.trim();
+    }
+
+    /**
+     * Send order confirmation email
+     * Should only be called internally after order is created and validated
+     */
+    async sendOrderConfirmation(orderData: OrderEmailData): Promise<void> {
+        await this.transporter.sendMail({
+            from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
+            to: orderData.email,
+            subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
+            text: `
+Hei ${orderData.name}!
+
+Takk for din bestilling hos Møller Fanclub!
+
+Ordrenummer: ${orderData.orderNumber}
+Produkt: ${orderData.product}
+Størrelse: ${orderData.size}
+Farge: ${orderData.color}
+Pris: ${orderData.totalPrice}
+
+Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
+
+Med vennlig hilsen,
+Møller Fanclub
+            `.trim(),
+            html: this.generateOrderConfirmationHTML(orderData),
             attachments: [{
                 filename: 'tour-hoodie-back.png',
                 path: path.resolve(process.cwd(), '../frontend/public/merch/tour-hoodie-back.png'),
