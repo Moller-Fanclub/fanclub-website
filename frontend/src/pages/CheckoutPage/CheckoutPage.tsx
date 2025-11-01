@@ -45,7 +45,6 @@ const CheckoutPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate order submission (replace with actual API call)
     const orderData = {
       customer: formData,
       items: items,
@@ -54,18 +53,19 @@ const CheckoutPage: React.FC = () => {
     };
 
     try {
-      // Log order data (replace with API call)
-      console.log('Order submitted:', orderData);
-      
-      // You can send this to your backend:
-      // await fetch('/api/orders', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(orderData)
-      // });
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
 
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!response.ok) {
+        throw new Error('Order submission failed');
+      }
+
+      const result = await response.json();
+      console.log('Order created:', result);
 
       setSubmitSuccess(true);
       clearCart();
