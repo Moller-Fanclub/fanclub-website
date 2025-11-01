@@ -6,7 +6,8 @@ import path from 'path';
 import { products } from './data/products.js';
 import { shopConfig } from './config/shopConfig.js';
 import { fetchLatestRace } from './services/fisScraper.js';
-import { mailService } from './services/mailService.js';
+// mailService is available for when orders endpoint is re-enabled
+// import { mailService } from './services/mailService.js';
 
 dotenv.config();
 
@@ -87,8 +88,18 @@ app.get('/api/fis/test', async (_req: Request, res: Response) => {
     }
 });
 
-// Create order endpoint - email is sent internally by the backend
-app.post('/api/orders', async (req: Request, res: Response) => {
+// Create order endpoint - TEMPORARILY DISABLED
+// This endpoint is deactivated until payment processing and database storage are implemented
+app.post('/api/orders', async (_req: Request, res: Response) => {
+    console.log('⚠️ Order endpoint called but is temporarily disabled');
+    
+    return res.status(503).json({
+        error: 'Order processing is temporarily disabled',
+        message: 'This feature is currently under development. Please check back later.'
+    });
+
+    /* 
+    // TODO: Enable when ready for production
     const { customer, items, total } = req.body;
 
     // Validation
@@ -147,6 +158,7 @@ app.post('/api/orders', async (req: Request, res: Response) => {
             details: process.env.NODE_ENV === 'development' ? error : undefined
         });
     }
+    */
 });
 
 app.listen(PORT, () => {
