@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -43,7 +44,7 @@ export class MailService {
      */
     async sendOrderConfirmation(orderData: OrderEmailData): Promise<void> {
         await this.transporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
             to: orderData.email,
             subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
             text: `
@@ -227,7 +228,7 @@ Møller Fanclub
             `,
             attachments: [{
                 filename: 'tour-hoodie-back.png',
-                path: '../../frontend/public/merch/tour-hoodie-back.png',
+                path: path.resolve(process.cwd(), '../frontend/public/merch/tour-hoodie-back.png'),
                 cid: 'hoodie@mollerfan.club'
             }]
         });

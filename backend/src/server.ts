@@ -100,7 +100,7 @@ app.post('/api/orders', async (_req: Request, res: Response) => {
 
     /* 
     // TODO: Enable when ready for production
-    const { customer, items, total } = req.body;
+    const { customer, items, total } = _req.body;
 
     // Validation
     if (!customer || !customer.name || !customer.email || !items || items.length === 0) {
