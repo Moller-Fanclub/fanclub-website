@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://mollerfan.club/</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Races -->
+  <url>
+    <loc>https://mollerfan.club/races</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Results -->
+  <url>
+    <loc>https://mollerfan.club/resultater</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- About -->
+  <url>
+    <loc>https://mollerfan.club/about</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Merch -->
+  <url>
+    <loc>https://mollerfan.club/merch</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Product Pages -->
+  <url>
+    <loc>https://mollerfan.club/merch/1</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://mollerfan.club/merch/2</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://mollerfan.club/merch/3</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://mollerfan.club/merch/4</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://mollerfan.club/merch/5</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Contact -->
+  <url>
+    <loc>https://mollerfan.club/kontakt</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Terms -->
+  <url>
+    <loc>https://mollerfan.club/salgsvilkar</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- Coming Soon -->
+  <url>
+    <loc>https://mollerfan.club/kommer-snart</loc>
+    <lastmod>2025-10-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+</urlset>
+

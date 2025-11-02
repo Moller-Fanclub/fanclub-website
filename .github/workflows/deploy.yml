@@ -45,6 +45,17 @@ jobs:
         cd backend
         npm ci --production
         
+    - name: Create backend .env file
+      run: |
+        cd backend
+        {
+          echo "PORT=${PORT:-3001}"
+          echo "NODE_ENV=${NODE_ENV:-production}"
+          echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
+          echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}"
+          echo "EMAIL_FROM_SHOP=${{ secrets.EMAIL_FROM_SHOP }}"
+        } > .env
+        
     - name: Deploy to server
       uses: easingthemes/ssh-deploy@v5.1.0
       with:
@@ -57,4 +68,8 @@ jobs:
         SCRIPT_AFTER: |
           source ~/.nvm/nvm.sh
           cd ${{ secrets.DEPLOY_PATH }}/backend
+          
+          # Set secure file permissions (read/write for owner only)
+          chmod 600 .env
+
           pm2 restart fanclub-backend || pm2 start dist/server.js --name fanclub-backend

@@ -11,6 +11,7 @@ export interface RaceData {
     fisPoints: string;
     link: string;
     season?: string; // e.g., "2024/2025" or "2025/2026"
+    raceId?: string;
     rawDate?: string; // Internal use for filtering
 }
 
@@ -59,6 +60,11 @@ function parseRaceRow($: cheerio.CheerioAPI, raceElement: any): RaceData | null 
     // FIS Points - looking for the value in the second justify-right div
     const fisPointsElement = $race.find('.g-xs-24.g-sm-8.g-md-8.g-lg-8.justify-right');
     let fisPoints = '';
+
+    //get raceid from href
+    const urlParams = new URLSearchParams(href.split('?')[1]);
+    const raceId = urlParams.get('raceid') || undefined;
+
     
     // There are multiple divs with this class, we want the one that's not empty and doesn't match position
     fisPointsElement.each((_i, elem) => {
@@ -67,6 +73,8 @@ function parseRaceRow($: cheerio.CheerioAPI, raceElement: any): RaceData | null 
             fisPoints = text;
         }
     });
+
+
     
     // Determine the season for this race
     const season = determineSeason(date);
@@ -81,7 +89,8 @@ function parseRaceRow($: cheerio.CheerioAPI, raceElement: any): RaceData | null 
         fisPoints,
         link: href,
         season: season || undefined,
-        rawDate: date
+        rawDate: date,
+        raceId: raceId
     };
 }
 
@@ -235,6 +244,7 @@ export async function fetchAllRaces(): Promise<RaceData[]> {
         return [];
     }
 }
+ 
 
 /**
  * Test function to fetch and log the latest race data

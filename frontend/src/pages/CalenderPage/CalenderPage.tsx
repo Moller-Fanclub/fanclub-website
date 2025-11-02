@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import LocationRaceCard from "../../components/LocationRaceCard.tsx";
-import { races, type Race } from "../../races.ts";
+import { races as staticRaces, type Race } from "../../races.ts";
 import PageContainer from "../../components/PageContainer.tsx";
 import FadeInnAnimation from "@/components/FadeInnAnimation.tsx";
+import { raceService } from "@/services/raceService.ts";
 
 interface LocationGroup {
   location: string;
@@ -10,7 +12,8 @@ interface LocationGroup {
 }
 
 const RacePage: React.FC = () => {
-  
+  const [races, setRaces] = useState<Race[]>(staticRaces);
+
   // Helper function to normalize date to midnight
   const getDateAtMidnight = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -19,6 +22,55 @@ const RacePage: React.FC = () => {
   // Get today's date at midnight for comparison
   const today = new Date();
   const todayMidnight = getDateAtMidnight(today);
+
+  // Fetch results for past races on mount
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const currentDate = new Date();
+        const currentMidnight = getDateAtMidnight(currentDate);
+
+        // Get past races
+        const pastRacesList = staticRaces.filter(
+          (race) => getDateAtMidnight(race.date).getTime() < currentMidnight.getTime()
+        );
+
+        if (pastRacesList.length === 0) {
+          return;
+        }
+
+        // Fetch results for all past races
+        const resultLinks = pastRacesList.map(race => race.resultLink);
+        const results = await raceService.getMultipleRaceResults(resultLinks);
+
+        // Merge results with races
+        const racesWithResults = staticRaces.map(race => {
+          const result = results.get(race.resultLink);
+          if (result) {
+            return {
+              ...race,
+              result: {
+                position: result.position,
+                fisPoints: result.fisPoints,
+                date: result.date,
+                place: result.place,
+                discipline: result.discipline,
+                country: result.country,
+                category: result.category,
+              }
+            };
+          }
+          return race;
+        });
+
+        setRaces(racesWithResults);
+      } catch (error) {
+        console.error('Error fetching race results:', error);
+      }
+    };
+
+    fetchResults();
+  }, []);
 
   // Separate races into past and upcoming
   const pastRaces = races
