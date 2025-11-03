@@ -34,7 +34,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center gap-8">
           <li><Link to={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</Link></li>
-          <li><Link to={PublicPaths.results} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Resultater</Link></li>
           <li><Link to={PublicPaths.comingSoon} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</Link></li>
         </ul>
 
@@ -67,15 +66,6 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
                 onClick={() => setIsMenuOpen(false)}
               >
                 Kalender
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to={PublicPaths.results} 
-                className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Resultater
               </Link>
             </li>
             <li>
