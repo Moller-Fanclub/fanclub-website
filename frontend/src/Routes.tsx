@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import RootLayout from './layout/RootLayout.tsx';
 import HomePage from './pages/HomePage/HomePage';
-import ResultsPage from "./pages/ResultsPage/ResultsPage.tsx";
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
@@ -14,7 +13,6 @@ import AboutPage from './pages/AboutPage/AboutPage.tsx';
 export const PublicPaths = {
   base: "/",
   calender: "/calender",
-  results: "/results",
   about: "/about",
   comingSoon: "/coming-soon",
   merch: "/merch",
@@ -43,7 +41,6 @@ export function AppRoutes() {
       <Route path={PublicPaths.base} element={<RootLayout />}>
         <Route path={PublicPaths.base} element={<HomePage />} />
         <Route path={PublicPaths.calender} element={<CalenderPage />} />
-        <Route path={PublicPaths.results} element={<ResultsPage />} />
         <Route path={PublicPaths.about} element={<AboutPage />} />
         <Route path={PublicPaths.comingSoon} element={<ComingSoonPage />} />
         <Route path={PublicPaths.merch} element={<MerchPage />} />
