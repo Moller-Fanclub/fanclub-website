@@ -71,9 +71,7 @@ const BlogPage: React.FC = () => {
           <h1 className="text-5xl md:text-6xl font-bold drop-shadow-lg mb-4">
             {post.title}
           </h1>
-          <p className="text-white/80">
-            {post.date}
-          </p>
+          <p className="text-white/80">{post.date}</p>
         </div>
       </div>
 
