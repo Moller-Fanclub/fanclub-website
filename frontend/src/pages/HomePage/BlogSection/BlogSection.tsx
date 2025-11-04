@@ -1,12 +1,30 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FadeInnAnimation from "@/components/FadeInnAnimation";
 import { PublicPaths } from "@/Routes";
 import { BlogPostThumbnail } from "./BlogPostThumbnail";
 import ThumnailCarousel from "./ThumnailCarousel";
-import { blogThumbnails } from "@/data/BlogData"; 
+import { blogService, type BlogPostThumbnailData } from "@/services/blogService";
 
 export const BlogSection: React.FC = () => {
-  if (blogThumbnails.length === 0) return null;
+  const [blogThumbnails, setBlogThumbnails] = useState<BlogPostThumbnailData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchThumbnails = async () => {
+      try {
+        const thumbnails = await blogService.getThumbnails();
+        setBlogThumbnails(thumbnails);
+      } catch (error) {
+        console.error("Error fetching blog thumbnails:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchThumbnails();
+  }, []);
+
+  if (isLoading || blogThumbnails.length === 0) return null;
 
   const [featured, ...rest] = blogThumbnails;
 
@@ -25,8 +43,8 @@ export const BlogSection: React.FC = () => {
           title={featured.thumbnailTitle}
           date={featured.date}
           excerpt={featured.excerpt}
-          image={featured.image}
-          to={PublicPaths.blog.useShow(featured.id)}
+          image={featured.imageUrl}
+          to={PublicPaths.blog.useShow(featured.slug)}
         />
       </FadeInnAnimation>
 

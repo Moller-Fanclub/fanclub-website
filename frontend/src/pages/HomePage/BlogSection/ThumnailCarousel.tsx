@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import FadeInnAnimation from "@/components/FadeInnAnimation";
 import { PublicPaths } from "@/Routes";
-import type { BlogPostThumbnailData } from "@/data/BlogData";
+import type { BlogPostThumbnailData } from "@/services/blogService";
 import { BlogPostThumbnail } from "./BlogPostThumbnail";
 
 interface ThumnailCarouselProps {
@@ -133,7 +133,7 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
 
         {posts.map((post) => (
           <div
-            key={post.id}
+            key={post.slug}
             className="
               snap-start shrink-0
               basis-[80%]          /* mobil: 1 og litt neste */
@@ -147,8 +147,8 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
               title={post.thumbnailTitle}
               date={post.date}
               excerpt={post.excerpt}
-              image={post.image}
-              to={PublicPaths.blog.useShow(post.id)}
+              image={post.imageUrl}
+              to={PublicPaths.blog.useShow(post.slug)}
               className="h-full flex flex-col"
             />
           </div>

@@ -22,8 +22,8 @@ export const PublicPaths = {
   contact: "/contact",
   terms: "/terms",
   blog: {
-    show: "/blog/:id",
-    useShow: (blogId: number) => `/blog/${blogId}`
+    show: "/blog/:slug",
+    useShow: (slug: string) => `/blog/${slug}`
     }
 };
 
@@ -34,9 +34,6 @@ export const ExternalLinks = {
   europaKommisjonensKlageportal: "http://ec.europa.eu/odr",
 }
 
-export const Email = {
-  
-}
 
 export function AppRoutes() {
   const location = useLocation();
