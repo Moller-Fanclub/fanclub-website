@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { PublicPaths } from "@/Routes";
 import { blogPosts } from "@/data/BlogData";
 import FadeInnAnimation from "@/components/FadeInnAnimation";
-import GoToTop from "@/components/GoToTop";
 import PageContainer from "@/components/PageContainer";
 
 
@@ -40,18 +39,14 @@ const BlogPage: React.FC = () => {
           <h1 className="text-5xl md:text-6xl font-bold drop-shadow-lg mb-4">
             {post.blogPageTitle}
           </h1>
-          <p className="text-white/80">
-            {post.date}
-          </p>
+          <p className="text-white/80">{post.date}</p>
         </div>
       </div>
 
       {/* Content */}
       <article className="mx-auto max-w-4xl px-6 py-16 text-lg leading-relaxed text-white/90 space-y-6">
         {paragraphs.map((p, i) => (
-          <FadeInnAnimation>
-            {p}
-          </FadeInnAnimation>
+          <FadeInnAnimation key={i}>{p}</FadeInnAnimation>
         ))}
       </article>
 
