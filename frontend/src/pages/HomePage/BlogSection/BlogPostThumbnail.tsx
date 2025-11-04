@@ -7,6 +7,7 @@ type BlogPostThumbnailProps = {
   excerpt?: string;
   image: string;
   to?: string;
+  className?: string
 };
 
 export const BlogPostThumbnail: React.FC<BlogPostThumbnailProps> = ({
@@ -15,9 +16,13 @@ export const BlogPostThumbnail: React.FC<BlogPostThumbnailProps> = ({
   excerpt,
   image,
   to = "#",
+  className
 }) => {
   return (
-    <article className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md shadow-2xl">
+    <article  className={
+        `${className} relative w-full overflow-hidden rounded-2xl border border-white/10 
+        bg-black/40 backdrop-blur-md shadow-2xl`
+      }>
       {/* Background image */}
       <div className="absolute inset-0">
         <img

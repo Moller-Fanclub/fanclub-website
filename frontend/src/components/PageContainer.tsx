@@ -1,4 +1,5 @@
 import React, { type ReactNode } from 'react';
+import GoToTop from './GoToTop';
 
 interface PageContainerProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ const PageContainer: React.FC<PageContainerProps> = ({
       <div className={`pt-24 pb-8 mx-auto ${maxWidthClasses[maxWidth]} px-4 ${className}`}>
         {children}
       </div>
+      <GoToTop />
     </div>
   );
 };
