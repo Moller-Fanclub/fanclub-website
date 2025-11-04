@@ -4,18 +4,25 @@
   "description": "Møller Fanclub - Full Stack Application",
   "private": true,
   "scripts": {
-    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev": "npm run dev:backend & npm run dev:frontend & npm run dev:studio",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
+    "dev:studio": "cd studio-moller-fanclub && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend ",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
+    "build:studio": "cd studio-moller-fanclub && npm run build",
     "start": "npm run start:backend & npm run start:frontend",
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm run preview",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "start:studio": "cd studio-moller-fanclub && npm run start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../studio-moller-fanclub && npm install"
   },
-  "keywords": ["fanclub", "ecommerce", "fullstack"],
+  "keywords": [
+    "fanclub",
+    "ecommerce",
+    "fullstack"
+  ],
   "author": "",
   "license": "ISC"
 }
