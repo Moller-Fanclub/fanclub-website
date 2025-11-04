@@ -5,6 +5,42 @@ import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/Routes.tsx';
 import { Link } from 'react-router-dom';
+import { BlogSection } from './BlogSection/BlogSection.tsx';
+import GoToTop from '@/components/GoToTop.tsx';
+
+export const Typewriter: React.FC<{
+  text: string;
+  delay?: number;      // ⏱ hvor lenge å vente før start (ms)
+  speed?: number;      // ⌨️ ms per tegn
+  className?: string;
+}> = ({ text, delay = 0, speed = 20, className }) => {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    let intervalId: number | undefined;
+    let timeoutId: number | undefined;
+
+    // starter først etter delay
+    timeoutId = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        setDisplayed(text.slice(0, i + 1));
+        i++;
+        if (i >= text.length && intervalId) {
+          clearInterval(intervalId);
+        }
+      }, Math.max(1, speed));
+    }, Math.max(0, delay));
+
+    // opprydding
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [text, speed, delay]);
+
+  return <span className={className}>{displayed}</span>;
+};
 
 const HomePage: React.FC = () => {
   const [countdown, setCountdown] = useState("60d 0h 0m");
@@ -94,7 +130,6 @@ const HomePage: React.FC = () => {
 
   
 
-
   return (
     <div className="relative flex-1 bg-linear-to-br from-gray-900 via-slate-800 to-gray-900">
 
@@ -118,13 +153,14 @@ const HomePage: React.FC = () => {
               Følg Fredrik Møller
             </h1>
             <p className="mb-8 text-white/95 drop-shadow-lg">
-              <span className="text-3xl sm:text-3xl">Ånei!</span>{' '}
+              {/* <span className="text-3xl sm:text-3xl">Ånei!</span>{' '} */}
+               <Typewriter text={"Ånei! "} speed={28} delay={1000} className='text-3xl sm:text-3xl' />
               <span className="text-xl sm:text-2xl font-medium">Neste renn: {nextRace.name}</span>
             </p>
             
             {/* Countdown */}
             <div className="mb-8 inline-block rounded-2xl bg-white/10 backdrop-blur-md px-8 py-4 border border-white/20 shadow-2xl">
-              <div className="text-sm text-white/80 font-semibold uppercase tracking-wider mb-1">Nedtelling</div>
+              <div className="text-sm text-white/80 font-semibold uppercase tracking-wider mb-1">Neste renn</div>
               <div className="text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
                 {countdown}
               </div>
@@ -203,8 +239,10 @@ const HomePage: React.FC = () => {
               </FadeInnAnimation>
             </div>
           </div>
+          <BlogSection />
         </div>
       </section>
+      <GoToTop/>
     </div>
   );
 };

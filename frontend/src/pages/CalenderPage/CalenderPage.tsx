@@ -4,6 +4,7 @@ import { races as staticRaces, type Race } from "../../races.ts";
 import PageContainer from "../../components/PageContainer.tsx";
 import FadeInnAnimation from "@/components/FadeInnAnimation.tsx";
 import { raceService } from "@/services/raceService.ts";
+import GoToTop from "@/components/GoToTop.tsx";
 
 interface LocationGroup {
   location: string;
@@ -149,6 +150,7 @@ const RacePage: React.FC = () => {
           ))}
         </>
       )}
+      <GoToTop />
     </PageContainer>
   );
 };
