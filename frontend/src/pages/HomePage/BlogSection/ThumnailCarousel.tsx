@@ -16,6 +16,7 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isLarge, setIsLarge] = useState(false); // lg breakpoint (~1024px)
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Determine lg breakpoint
   useEffect(() => {
@@ -93,6 +94,39 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
     updateScrollState();
   };
 
+  // Handle touch events to allow vertical scrolling when at horizontal scroll boundaries
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const el = scrollRef.current;
+    if (!el || !touchStartRef.current) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    // Check if we're at scroll boundaries
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const isAtLeft = el.scrollLeft <= 2;
+    const isAtRight = el.scrollLeft >= maxScroll - 2;
+
+    // If vertical scroll is dominant and we're at horizontal boundaries, allow vertical scroll
+    if (Math.abs(deltaY) > Math.abs(deltaX) && (isAtLeft || isAtRight)) {
+      // Don't prevent default to allow vertical scrolling
+      return;
+    }
+
+    // Otherwise, allow horizontal scrolling
+    // The touch-pan-x class will handle this
+  };
+
+  const handleTouchEnd = () => {
+    touchStartRef.current = null;
+  };
+
   // --- Når skal piler vises? ---
   // 1) Aldri ved 0 eller 1 post
   // 2) Skjul når nøyaktig 2 poster og stor skjerm
@@ -111,6 +145,9 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="
           flex gap-4 overflow-x-auto snap-x snap-mandatory
           px-4 pb-6
@@ -118,7 +155,12 @@ const ThumnailCarousel: React.FC<ThumnailCarouselProps> = ({ posts }) => {
           [scrollbar-width:none]
           [&::-webkit-scrollbar]:hidden
         "
-        style={{ scrollBehavior: "smooth", msOverflowStyle: "none" }}
+        style={{ 
+          scrollBehavior: "smooth", 
+          msOverflowStyle: "none",
+          overscrollBehaviorX: "contain",
+          overscrollBehaviorY: "auto"
+        }}
       >
         {/* VENSTRE SPACER – liten på stor skjerm */}
         <div
