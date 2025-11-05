@@ -77,9 +77,14 @@ Sanity Studio er et headless CMS som brukes til å administrere innhold på nett
 npm run build:studio
 ```
 
-**Deploye Sanity Studio:**
+**Starte Sanity Studio i produksjonsmodus:**
 ``` bash
 npm run start:studio
+```
+
+**Deploye Sanity Studio til Sanity's hosting:**
+``` bash
+cd studio-moller-fanclub && npm run deploy
 ```
 
 For mer informasjon om Sanity, se [Sanity dokumentasjonen](https://www.sanity.io/docs).
