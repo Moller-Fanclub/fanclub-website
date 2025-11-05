@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { PublicPaths } from "@/Routes";
+import { PublicPaths } from "@/lib/routes";
 import { blogService, type BlogPostFullData } from "@/services/blogService";
 import FadeInnAnimation from "@/components/FadeInnAnimation";
 import PageContainer from "@/components/PageContainer";

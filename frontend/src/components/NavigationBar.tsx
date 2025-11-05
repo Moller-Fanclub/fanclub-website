@@ -1,4 +1,4 @@
-import { PublicPaths } from '@/Routes';
+import { PublicPaths } from '@/lib/routes';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 

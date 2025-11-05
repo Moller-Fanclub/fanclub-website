@@ -2,7 +2,7 @@ import React from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useShopConfig } from '../hooks/useShopConfig';
 import './Cart.css';
-import { PublicPaths } from '@/Routes';
+import { PublicPaths } from '@/lib/routes';
 import { Link } from 'react-router-dom';
 
 interface CartProps {

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useShopConfig } from '../../hooks/useShopConfig';
 import './CheckoutPage.css';
-import { PublicPaths } from '@/Routes';
+import { PublicPaths } from '@/lib/routes';
 
 interface FormData {
   name: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import PageContainer from '../../components/PageContainer';
-import { ExternalLinks } from '@/Routes';
+import { ExternalLinks } from '@/lib/routes';
 
 const TermsPage: React.FC = () => {
     return (

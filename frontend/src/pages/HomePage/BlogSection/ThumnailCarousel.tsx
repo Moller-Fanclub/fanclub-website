@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import FadeInnAnimation from "@/components/FadeInnAnimation";
-import { PublicPaths } from "@/Routes";
+import { PublicPaths } from "@/lib/routes";
 import type { BlogPostThumbnailData } from "@/services/blogService";
 import { BlogPostThumbnail } from "./BlogPostThumbnail";
 

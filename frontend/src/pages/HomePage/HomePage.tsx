@@ -3,7 +3,7 @@ import "./HomePage.css";
 import {type Race, races} from "../../races.ts";
 import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
-import { PublicPaths } from '@/Routes.tsx';
+import { PublicPaths } from '@/lib/routes';
 import { Link } from 'react-router-dom';
 import { BlogSection } from './BlogSection/BlogSection.tsx';
 import GoToTop from '@/components/GoToTop.tsx';

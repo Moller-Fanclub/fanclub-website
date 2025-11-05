@@ -1,6 +1,6 @@
 import {Link } from 'react-router-dom';
 import FadeInnAnimation from './FadeInnAnimation';
-import { ExternalLinks, PublicPaths } from '@/Routes';
+import { ExternalLinks, PublicPaths } from '@/lib/routes';
 
 const Footer: React.FC = () => {
   
