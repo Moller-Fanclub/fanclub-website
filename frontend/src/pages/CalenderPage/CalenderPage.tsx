@@ -12,8 +12,11 @@ interface LocationGroup {
   races: Race[];
 }
 
+type RaceView = 'upcoming' | 'past';
+
 const RacePage: React.FC = () => {
   const [races, setRaces] = useState<Race[]>(staticRaces);
+  const [selectedView, setSelectedView] = useState<RaceView>('upcoming');
 
   // Helper function to normalize date to midnight
   const getDateAtMidnight = (date: Date) => {
@@ -112,42 +115,106 @@ const RacePage: React.FC = () => {
 
   const upcomingGrouped = groupRacesByLocation(upcomingRaces);
   const pastGrouped = groupRacesByLocation(pastRaces);
+  const hasUpcoming = upcomingGrouped.length > 0;
+  const hasPast = pastGrouped.length > 0;
+
+  useEffect(() => {
+    if (selectedView === 'upcoming' && !hasUpcoming && hasPast) {
+      setSelectedView('past');
+    } else if (selectedView === 'past' && !hasPast && hasUpcoming) {
+      setSelectedView('upcoming');
+    }
+  }, [selectedView, hasUpcoming, hasPast]);
+
+  const toggleButtonBaseClasses =
+    "flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900";
 
   return (
     <PageContainer maxWidth="6xl">
-      {/* Upcoming Races Section */}
-      <h1 className="mt-8 mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
-        Kommende Renn
+      <h1 className="mt-8 text-center text-4xl font-bold text-white drop-shadow-lg">
+        Rennkalender
       </h1>
-      <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
-        {upcomingGrouped.map((group) => (
-            <LocationRaceCard 
-              key={group.location}
-              location={group.location}
-              imagePath={group.imagePath}
-              races={group.races}
-              isPast={false}
-            />
-        ))}
+
+      <div className="mt-8 flex justify-center">
+        <div className="inline-flex w-full max-w-lg gap-1 rounded-full border border-white/10 bg-white/10 p-1 backdrop-blur">
+          <button
+            type="button"
+            onClick={() => hasUpcoming && setSelectedView('upcoming')}
+            disabled={!hasUpcoming}
+            className={
+              `${toggleButtonBaseClasses} ` +
+              (selectedView === 'upcoming'
+                ? 'bg-white text-gray-900 shadow-lg'
+                : 'text-white/70 hover:text-white') +
+              (!hasUpcoming ? ' opacity-40 cursor-not-allowed' : '')
+            }
+          >
+            Kommende renn
+          </button>
+          <button
+            type="button"
+            onClick={() => hasPast && setSelectedView('past')}
+            disabled={!hasPast}
+            className={
+              `${toggleButtonBaseClasses} ` +
+              (selectedView === 'past'
+                ? 'bg-white text-gray-900 shadow-lg'
+                : 'text-white/70 hover:text-white') +
+              (!hasPast ? ' opacity-40 cursor-not-allowed' : '')
+            }
+          >
+            Tidligere renn
+          </button>
+        </div>
       </div>
 
-      {/* Past Races Section */}
-      {pastGrouped.length > 0 && (
+      {selectedView === 'upcoming' && (
         <>
-        <FadeInnAnimation className="mt-16 mb-8 text-center text-4xl font-bold text-white drop-shadow-lg">
-            Tidligere Renn
-        </FadeInnAnimation>
-        {pastGrouped.map((group) => (
-            <div className="grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
-              <LocationRaceCard 
-                key={group.location}
-                location={group.location}
-                imagePath={group.imagePath}
-                races={group.races}
-                isPast={true}
-              />
-            </div>
-          ))}
+          {hasUpcoming ? (
+            <FadeInnAnimation className="mt-12 grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
+              {upcomingGrouped.map((group) => (
+                <LocationRaceCard
+                  key={group.location}
+                  location={group.location}
+                  imagePath={group.imagePath}
+                  races={group.races}
+                  isPast={false}
+                />
+              ))}
+            </FadeInnAnimation>
+          ) : (
+            <p className="mt-12 text-center text-lg font-medium text-white/80">
+              Ingen kommende renn er planlagt ennå.
+            </p>
+          )}
+        </>
+      )}
+
+      {selectedView === 'past' && (
+        <>
+          {hasPast ? (
+            <>
+              {pastGrouped.map((group) => (
+                <div
+                  key={group.location}
+                  className="mt-12 grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  <FadeInnAnimation className="w-full">
+                    <LocationRaceCard
+                      location={group.location}
+                      imagePath={group.imagePath}
+                      races={group.races}
+                      isPast={true}
+                    />
+                  </FadeInnAnimation>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="mt-12 text-center text-lg font-medium text-white/80">
+              Ingen tidligere renn er registrert ennå.
+            </p>
+          )}
         </>
       )}
       <GoToTop />
