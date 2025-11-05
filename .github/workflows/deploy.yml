@@ -72,4 +72,4 @@ jobs:
           # Set secure file permissions (read/write for owner only)
           chmod 600 .env
 
-          pm2 restart fanclub-backend || pm2 start dist/server.js --name fanclub-backend
+          pm2 restart fanclub-backend || pm2 start dist/src/server.js --name fanclub-backend
