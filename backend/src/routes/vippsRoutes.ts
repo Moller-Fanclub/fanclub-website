@@ -18,7 +18,10 @@ const VIPPS_CALLBACK_URL = process.env.VIPPS_CALLBACK_URL || 'http://localhost:3
 const VIPPS_CALLBACK_AUTHORIZATION_TOKEN = process.env.VIPPS_CALLBACK_AUTHORIZATION_TOKEN;
 const VIPPS_MSN = process.env.VIPPS_MSN;
 // Frontend URL - can be set via env or defaults to localhost
-const FRONTEND_URL = process.env.FRONTEND_URL || process.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5173';
+// In production, should be set to https://mollerfan.club
+const FRONTEND_URL = process.env.FRONTEND_URL
+    || (process.env.VITE_API_URL && process.env.VITE_API_URL.startsWith('http') ? process.env.VITE_API_URL.replace('/api', '') : null)
+    || (process.env.NODE_ENV === 'production' ? 'https://mollerfan.club' : 'http://localhost:5173');
 
 // Validate required environment variables on startup
 if (!VIPPS_MSN) {
