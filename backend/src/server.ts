@@ -238,16 +238,20 @@ app.post('/api/orders', async (_req: Request, res: Response) => {
 // Email preview endpoint (development only)
 if (process.env.NODE_ENV !== 'production') {
     app.get('/api/email/preview', (_req: Request, res: Response) => {
-        // Sample order data for preview
+        // Sample order data for preview (using new items array format)
         const sampleOrderData = {
             name: 'Ola Nordmann',
             email: 'test@example.com',
             orderNumber: 'MF-123456',
-            product: 'Tour Hoodie',
-            size: 'M',
-            color: 'Blue',
-            quantity: 1,
-            price: '599 kr',
+            items: [
+                {
+                    name: 'Tour Hoodie',
+                    size: 'M',
+                    quantity: 1,
+                    price: '599 kr',
+                    image: 'https://mollerfan.club/merch/tour-hoodie-front.png'
+                }
+            ],
             shippingPrice: '79 kr',
             totalPrice: '678 kr',
             estimatedDelivery: '3-5 virkedager',
@@ -261,15 +265,27 @@ if (process.env.NODE_ENV !== 'production') {
 
     app.post('/api/email/preview', (req: Request, res: Response) => {
         // Allow custom order data via POST
+        // Support both new items array format and legacy single product format
+        let items;
+        if (req.body.items && Array.isArray(req.body.items)) {
+            // New format: items array
+            items = req.body.items;
+        } else {
+            // Legacy format: convert single product to items array
+            items = [{
+                name: req.body.product || 'Tour Hoodie',
+                size: req.body.size,
+                quantity: req.body.quantity || 1,
+                price: req.body.price || '599 kr',
+                image: req.body.productImage || 'https://mollerfan.club/merch/tour-hoodie-front.png'
+            }];
+        }
+
         const orderData = {
             name: req.body.name || 'Ola Nordmann',
             email: req.body.email || 'test@example.com',
             orderNumber: req.body.orderNumber || 'MF-123456',
-            product: req.body.product || 'Tour Hoodie',
-            size: req.body.size || 'M',
-            color: req.body.color || 'Blue',
-            quantity: req.body.quantity || 1,
-            price: req.body.price || '599 kr',
+            items,
             shippingPrice: req.body.shippingPrice || '79 kr',
             totalPrice: req.body.totalPrice || '678 kr',
             estimatedDelivery: req.body.estimatedDelivery || '3-5 virkedager',
