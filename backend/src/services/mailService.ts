@@ -1,22 +1,25 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
+
+interface OrderItem {
+    name: string;
+    size?: string;
+    quantity: number;
+    price: string;
+    image?: string;
+}
 
 interface OrderEmailData {
     name: string;
     email: string;
     orderNumber: string;
-    product: string;
-    size: string;
-    color: string;
-    quantity: number;
-    price: string;
+    items: OrderItem[]; // Required - modern structure only
     shippingPrice: string;
     totalPrice: string;
     estimatedDelivery: string;
-    productImage: string;
+    productImage?: string;
 }
 
 /**
@@ -27,6 +30,15 @@ export class MailService {
     private transporter;
 
     constructor() {
+        // Validate email configuration
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_FROM_SHOP) {
+            console.error('❌ Email configuration missing!');
+            console.error('   EMAIL_USER:', process.env.EMAIL_USER ? '✓ Set' : '✗ Missing');
+            console.error('   EMAIL_PASS:', process.env.EMAIL_PASS ? '✓ Set' : '✗ Missing');
+            console.error('   EMAIL_FROM_SHOP:', process.env.EMAIL_FROM_SHOP ? '✓ Set' : '✗ Missing');
+            throw new Error('Email configuration is incomplete. Please set EMAIL_USER, EMAIL_PASS, and EMAIL_FROM_SHOP environment variables.');
+        }
+
         this.transporter = nodemailer.createTransport({
             host: 'smtpout.secureserver.net',
             port: 465,
@@ -34,6 +46,13 @@ export class MailService {
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
+            }
+        });
+
+        // Verify transporter configuration (only log errors in production)
+        this.transporter.verify((error) => {
+            if (error) {
+                console.error('❌ Email transporter verification failed:', error);
             }
         });
     }
@@ -101,27 +120,28 @@ export class MailService {
                         <td style="padding: 0 40px 40px 40px;">
                             <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                                 
-                                <!-- Product Image and Info -->
-                                <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="width: 140px; padding: 20px; vertical-align: top;">
-                                            <img src="${orderData.productImage}" alt="${orderData.product}" style="width: 100%; height: auto; border-radius: 6px; display: block;">
-                                        </td>
-                                        <td style="padding: 20px; vertical-align: top;">
-                                            <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 18px; font-weight: 600;">
-                                                ${orderData.product}
-                                            </h3>
-                                            <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.6;">
-                                                <strong>Størrelse:</strong> ${orderData.size}<br>
-                                                <strong>Farge:</strong> ${orderData.color}<br>
-                                                <strong>Antall:</strong> ${orderData.quantity}
-                                            </p>
-                                            <p style="margin: 16px 0 0 0; color: #0f172a; font-size: 20px; font-weight: 700;">
-                                                ${orderData.price}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
+                                ${orderData.items.map((item, index) => `
+                                        <!-- Product Item -->
+                                        <table role="presentation" style="width: 100%; border-collapse: collapse; ${index > 0 ? 'border-top: 1px solid #e2e8f0;' : ''}">
+                                            <tr>
+                                                <td style="width: 140px; padding: 20px; vertical-align: top;">
+                                                    <img src="${item.image || orderData.productImage || 'https://mollerfan.club/merch/tour-hoodie-back.png'}" alt="${item.name}" style="width: 100%; max-width: 140px; height: auto; border-radius: 6px; display: block; border: 1px solid #e2e8f0;">
+                                                </td>
+                                                <td style="padding: 20px; vertical-align: top;">
+                                                    <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 18px; font-weight: 600;">
+                                                        ${item.name}
+                                                    </h3>
+                                                    <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.6;">
+                                                        ${item.size ? `<strong>Størrelse:</strong> ${item.size}<br>` : ''}
+                                                        <strong>Antall:</strong> ${item.quantity}
+                                                    </p>
+                                                    <p style="margin: 16px 0 0 0; color: #0f172a; font-size: 20px; font-weight: 700;">
+                                                        ${item.price}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    `).join('')}
                                 
                                 <!-- Price Breakdown -->
                                 <table role="presentation" style="width: 100%; border-collapse: collapse; border-top: 1px solid #e2e8f0; background-color: #f8fafc;">
@@ -133,7 +153,10 @@ export class MailService {
                                                         Delsum
                                                     </td>
                                                     <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.price}
+                                                        ${orderData.items.reduce((sum, item) => {
+                                                            const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
+                                                            return sum + (price * item.quantity);
+                                                        }, 0).toFixed(0) + ' kr'}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -212,20 +235,28 @@ export class MailService {
      * Should only be called internally after order is created and validated
      */
     async sendOrderConfirmation(orderData: OrderEmailData): Promise<void> {
-        await this.transporter.sendMail({
-            from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
-            to: orderData.email,
-            subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
+        if (!process.env.EMAIL_FROM_SHOP) {
+            throw new Error('EMAIL_FROM_SHOP environment variable is not set');
+        }
+
+        try {
+            await this.transporter.sendMail({
+                from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
+                to: orderData.email,
+                subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
             text: `
 Hei ${orderData.name}!
 
 Takk for din bestilling hos Møller Fanclub!
 
 Ordrenummer: ${orderData.orderNumber}
-Produkt: ${orderData.product}
-Størrelse: ${orderData.size}
-Farge: ${orderData.color}
-Pris: ${orderData.totalPrice}
+
+${orderData.items.map(item =>
+    `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} - ${item.price}`
+).join('\n')}
+
+Frakt: ${orderData.shippingPrice}
+Total: ${orderData.totalPrice}
 
 Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
 
@@ -233,14 +264,21 @@ Med vennlig hilsen,
 Møller Fanclub
             `.trim(),
             html: this.generateOrderConfirmationHTML(orderData),
-            attachments: [{
-                filename: 'tour-hoodie-back.png',
-                path: path.resolve(process.cwd(), '../frontend/public/merch/tour-hoodie-back.png'),
-                cid: 'hoodie@mollerfan.club'
-            }]
-        });
+                // No attachments needed - using external image URLs
+                attachments: []
+            });
 
-        console.log(`✅ Order confirmation sent to ${orderData.name} (${orderData.email})`);
+            // Email sent successfully - log in production
+            if (process.env.NODE_ENV === 'production') {
+                console.log(`✅ Order confirmation email sent to ${orderData.email} for order ${orderData.orderNumber}`);
+            }
+        } catch (error) {
+            console.error(`❌ Failed to send email to ${orderData.email}:`, error);
+            if (error instanceof Error) {
+                console.error('   Error details:', error.message);
+            }
+            throw error; // Re-throw to let caller handle it
+        }
     }
 }
 

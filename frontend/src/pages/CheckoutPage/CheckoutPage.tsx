@@ -1,129 +1,203 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../../contexts/CartContext';
-import { useShopConfig } from '../../hooks/useShopConfig';
-import './CheckoutPage.css';
-import { PublicPaths } from '@/lib/routes';
-
-interface FormData {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  notes: string;
-}
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../../contexts/CartContext";
+import { useShopConfig } from "../../hooks/useShopConfig";
+import { vippsCheckoutService } from "../../services/vippsCheckoutService";
+import type { VippsCheckoutInstance } from "../../services/vippsCheckoutService";
+import "./CheckoutPage.css";
+import { PublicPaths } from "@/lib/routes";
 
 const CheckoutPage: React.FC = () => {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const { config, isOpen: shopIsOpen } = useShopConfig();
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    notes: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const checkoutContainerRef = useRef<HTMLDivElement>(null);
+  const checkoutInstanceRef = useRef<VippsCheckoutInstance | null>(null);
+
   // Compute opening date from config
   const openingDate = config ? new Date(config.openingDate) : null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  // Initialize Vipps Checkout when component mounts or items change
+  useEffect(() => {
+    // Only initialize if we have items and shop is open
+    if (items.length === 0 || !shopIsOpen) {
+      return;
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    const orderData = {
-      customer: formData,
-      items: items,
-      total: totalPrice,
-      orderDate: new Date().toISOString()
+    // Cleanup function to expire session if component unmounts
+    return () => {
+      // Note: We don't have the reference here, so we can't expire
+      // The session will expire automatically after 1 hour
     };
+  }, [items, shopIsOpen]);
+
+  const initializeVippsCheckout = async () => {
+    if (items.length === 0) {
+      setError("Handlekurven er tom");
+      return;
+    }
+
+    if (!shopIsOpen) {
+      setError("Butikken er stengt");
+      return;
+    }
+
+    setIsInitializing(true);
+    setError(null);
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
+      // Create checkout session
+      const session = await vippsCheckoutService.createSession({
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          size: item.size,
+        })),
       });
 
-      if (!response.ok) {
-        throw new Error('Order submission failed');
+      // Validate session response
+      if (!session.checkoutFrontendUrl || !session.token) {
+        console.error("❌ Invalid session response:", session);
+        throw new Error("Manglende data fra Vipps. Vennligst prøv igjen.");
       }
 
-      const result = await response.json();
-      console.log('Order created:', result);
+      // Check if SDK is loaded
+      if (!window.VippsCheckout) {
+        throw new Error(
+          "Vipps Checkout SDK ikke lastet. Vennligst oppdater siden."
+        );
+      }
 
-      setSubmitSuccess(true);
-      clearCart();
+      // Initialize Vipps Checkout
+      const checkoutInstance = vippsCheckoutService.initializeCheckout({
+        checkoutFrontendUrl: session.checkoutFrontendUrl,
+        iFrameContainerId: "vipps-checkout-container",
+        language: "nb",
+        token: session.token,
+        on: (event) => {
+          console.log("Vipps Checkout event:", event);
 
-      // Redirect after success
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-    } catch (error) {
-      console.error('Order submission failed:', error);
-      alert('Noe gikk galt. Vennligst prøv igjen.');
+          if (event.name === "vipps.checkout.session.completed") {
+            // Payment successful
+            clearCart();
+            navigate(
+              `${PublicPaths.checkoutSuccess}?reference=${session.reference}`
+            );
+          } else if (event.name === "vipps.checkout.session.failed") {
+            // Payment failed
+            navigate(
+              `${PublicPaths.checkoutError}?reference=${session.reference}`
+            );
+          } else if (event.name === "vipps.checkout.session.terminated") {
+            // Session terminated
+            navigate(
+              `${PublicPaths.checkoutError}?reference=${session.reference}`
+            );
+          }
+        },
+      });
+
+      checkoutInstanceRef.current = checkoutInstance;
+    } catch (err) {
+      console.error("Error initializing Vipps Checkout:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Kunne ikke initialisere betaling. Vennligst prøv igjen."
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsInitializing(false);
     }
   };
 
-  if (items.length === 0 && !submitSuccess) {
+  // Auto-initialize checkout when component is ready
+  useEffect(() => {
+    if (
+      items.length > 0 &&
+      shopIsOpen &&
+      checkoutContainerRef.current &&
+      !checkoutInstanceRef.current
+    ) {
+      // Small delay to ensure container is rendered
+      const timer = setTimeout(() => {
+        initializeVippsCheckout();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length, shopIsOpen]);
+
+  if (items.length === 0) {
     return (
       <div className="checkout-empty">
         <div className="checkout-empty-content">
-          <svg className="checkout-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          <svg
+            className="checkout-empty-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            />
           </svg>
           <h2>Handlekurven er tom</h2>
           <p>Legg til produkter før du går til kassen</p>
-          <Link to={PublicPaths.merch} className="checkout-empty-btn">Gå til butikken</Link>
+          <Link to={PublicPaths.merch} className="checkout-empty-btn">
+            Gå til butikken
+          </Link>
         </div>
       </div>
     );
   }
 
   // Prevent checkout if shop is closed
-  if (!shopIsOpen && !submitSuccess) {
+  if (!shopIsOpen) {
     return (
       <div className="checkout-empty">
         <div className="checkout-empty-content">
-          <svg className="checkout-empty-icon" style={{ color: '#DC2626' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="checkout-empty-icon"
+            style={{ color: "#DC2626" }}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <h2>Butikken er stengt</h2>
           <p>Forhåndsbestillingsperioden er ikke aktiv akkurat nå.</p>
-          <p style={{ marginTop: '12px', fontSize: '16px' }}>
-            Neste periode åpner: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+          <p style={{ marginTop: "12px", fontSize: "16px" }}>
+            Neste periode åpner:{" "}
+            <strong>
+              {openingDate?.toLocaleDateString("nb-NO", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </strong>
           </p>
-          <Link to={PublicPaths.base} className="checkout-empty-btn" style={{ marginTop: '24px' }}>Tilbake til forsiden</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (submitSuccess) {
-    return (
-      <div className="checkout-success">
-        <div className="checkout-success-content">
-          <div className="success-checkmark">✓</div>
-          <h2>Takk for din bestilling!</h2>
-          <p>Vi har mottatt din bestilling og vil sende deg en bekreftelse på e-post snart.</p>
-          <p className="success-redirect">Sender deg tilbake...</p>
+          <Link
+            to={PublicPaths.base}
+            className="checkout-empty-btn"
+            style={{ marginTop: "24px" }}
+          >
+            Tilbake til forsiden
+          </Link>
         </div>
       </div>
     );
@@ -135,156 +209,195 @@ const CheckoutPage: React.FC = () => {
         <h1 className="checkout-title">Kasse</h1>
 
         {/* Pre-order Information Banner */}
-        <div style={{
-          backgroundColor: '#EFF6FF',
-          border: '2px solid #3B82F6',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '24px',
-          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-            <svg style={{ width: '24px', height: '24px', color: '#2563EB', flexShrink: 0, marginTop: '2px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div
+          style={{
+            backgroundColor: "#EFF6FF",
+            border: "2px solid #3B82F6",
+            borderRadius: "12px",
+            padding: "20px",
+            marginBottom: "24px",
+            boxShadow: "0 2px 8px rgba(59, 130, 246, 0.1)",
+          }}
+        >
+          <div
+            style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}
+          >
+            <svg
+              style={{
+                width: "24px",
+                height: "24px",
+                color: "#2563EB",
+                flexShrink: 0,
+                marginTop: "2px",
+              }}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1E40AF', marginBottom: '8px' }}>
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1E40AF",
+                  marginBottom: "8px",
+                }}
+              >
                 📦 Viktig informasjon om forhåndsbestilling
               </h3>
-              <ul style={{ color: '#1E3A8A', fontSize: '14px', lineHeight: '1.6', marginLeft: '20px', listStyleType: 'disc' }}>
-                <li>Dette er en <strong>forhåndsbestilling</strong> - produktene produseres etter at bestillingsperioden stenger (21. november)</li>
-                <li><strong>Estimert leveringstid:</strong> 2-4 uker etter 21. november</li>
-                <li>Du vil motta e-postoppdateringer om produksjon og utsendelse</li>
-                <li>Alle bestillinger sendes ut samtidig når produktene ankommer oss</li>
+              <ul
+                style={{
+                  color: "#1E3A8A",
+                  fontSize: "14px",
+                  lineHeight: "1.6",
+                  marginLeft: "20px",
+                  listStyleType: "disc",
+                }}
+              >
+                <li>
+                  Dette er en <strong>forhåndsbestilling</strong> - produktene
+                  produseres etter at bestillingsperioden stenger
+                </li>
+                <li>
+                  <strong>Estimert leveringstid:</strong> 2-4 uker etter
+                  bestillingsperioden
+                </li>
+                <li>
+                  Du vil motta e-postoppdateringer om produksjon og utsendelse
+                </li>
+                <li>
+                  Alle bestillinger sendes ut samtidig når produktene ankommer
+                  oss
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
         <div className="checkout-grid">
-          {/* Order Form */}
-          <div className="checkout-form-section">
-            <h2>Leveringsinformasjon</h2>
-            <form onSubmit={handleSubmit} className="checkout-form">
-              <div className="form-group">
-                <label htmlFor="name">Fullt navn *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="form-input"
-                />
-              </div>
+          {/* Vipps Checkout Container */}
+          <div
+            className="checkout-form-section"
+            style={{ gridColumn: "1 / -1" }}
+          >
+            <h2>Betal med Vipps eller kort</h2>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="email">E-post *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="phone">Telefon *</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="address">Adresse *</label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="postalCode">Postnummer *</label>
-                  <input
-                    type="text"
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="city">Poststed *</label>
-                  <input
-                    type="text"
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="notes">Merknader (valgfritt)</label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={4}
-                  className="form-input"
-                  placeholder="Spesielle ønsker eller informasjon"
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="submit-btn"
-                disabled={isSubmitting}
+            {error && (
+              <div
+                style={{
+                  backgroundColor: "#FEF2F2",
+                  border: "2px solid #EF4444",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  marginBottom: "24px",
+                  color: "#991B1B",
+                }}
               >
-                {isSubmitting ? 'Sender bestilling...' : 'Fullfør bestilling'}
-              </button>
-            </form>
+                <p style={{ margin: 0, fontWeight: "600" }}>⚠️ {error}</p>
+                <button
+                  onClick={initializeVippsCheckout}
+                  style={{
+                    marginTop: "12px",
+                    padding: "8px 16px",
+                    backgroundColor: "#3B82F6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Prøv igjen
+                </button>
+              </div>
+            )}
+
+            {isInitializing && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "40px",
+                  color: "#666",
+                }}
+              >
+                <div style={{ marginBottom: "16px" }}>
+                  <svg
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      margin: "0 auto",
+                      color: "#3B82F6",
+                      animation: "spin 1s linear infinite",
+                    }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      style={{ opacity: 0.25 }}
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      style={{ opacity: 0.75 }}
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+                <p>Initialiserer betaling...</p>
+              </div>
+            )}
+
+            {/* Vipps Checkout iframe container */}
+            <div
+              id="vipps-checkout-container"
+              ref={checkoutContainerRef}
+              style={{
+                minHeight: "600px",
+                width: "100%",
+                marginTop: "24px",
+              }}
+            />
           </div>
 
           {/* Order Summary */}
-          <div className="checkout-summary-section">
+          <div
+            className="checkout-summary-section"
+            style={{ marginTop: "24px" }}
+          >
             <h2>Bestillingsoversikt</h2>
             <div className="order-summary">
               <div className="order-items">
                 {items.map((item, index) => (
                   <div key={index} className="order-item">
-                    <img src={item.image} alt={item.name} className="order-item-image" />
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="order-item-image"
+                    />
                     <div className="order-item-details">
                       <h4>{item.name}</h4>
-                      {item.size && <p className="order-item-size">Størrelse: {item.size}</p>}
-                      <p className="order-item-quantity">Antall: {item.quantity}</p>
+                      {item.size && (
+                        <p className="order-item-size">
+                          Størrelse: {item.size}
+                        </p>
+                      )}
+                      <p className="order-item-quantity">
+                        Antall: {item.quantity}
+                      </p>
                     </div>
-                    <p className="order-item-price">{(item.price * item.quantity).toFixed(2)} kr</p>
+                    <p className="order-item-price">
+                      {(item.price * item.quantity).toFixed(2)} kr
+                    </p>
                   </div>
                 ))}
               </div>

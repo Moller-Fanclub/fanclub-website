@@ -6,8 +6,8 @@ import path from 'path';
 import { products } from './data/products.js';
 import { shopConfig } from './config/shopConfig.js';
 import { fetchLatestRace } from './services/fisScraper.js';
-// mailService is available for when orders endpoint is re-enabled
 import { mailService } from './services/mailService.js';
+import vippsRoutes from './routes/vippsRoutes.js';
 
 dotenv.config();
 
@@ -61,6 +61,9 @@ loadRaceResults();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Vipps Checkout API routes
+app.use('/api/vipps', vippsRoutes);
 
 // Routes
 app.get('/api/products', (_req: Request, res: Response) => {
@@ -292,6 +295,16 @@ app.listen(PORT, () => {
     console.log(`   - GET http://localhost:${PORT}/api/fis/all (from races.json)`);
     console.log(`   - GET http://localhost:${PORT}/api/fis/test`);
     console.log(`   - POST http://localhost:${PORT}/api/orders`);
+    console.log(`\n💳 Vipps Checkout API endpoints:`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/checkout/session`);
+    console.log(`   - GET http://localhost:${PORT}/api/vipps/checkout/session/:reference`);
+    console.log(`   - PATCH http://localhost:${PORT}/api/vipps/checkout/session/:reference`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/checkout/session/:reference/expire`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/callback`);
+    console.log(`   - GET http://localhost:${PORT}/api/vipps/payment/:reference`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/capture`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/cancel`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/refund`);
     if (process.env.NODE_ENV !== 'production') {
         console.log(`   - GET http://localhost:${PORT}/api/email/preview (dev only)`);
         console.log(`   - POST http://localhost:${PORT}/api/email/preview (dev only)`);
