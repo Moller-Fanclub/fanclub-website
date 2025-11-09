@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
 import {type Race, races} from "../../races.ts";
-import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/lib/routes';
 import { Link } from 'react-router-dom';
@@ -52,6 +51,20 @@ const HomePage: React.FC = () => {
     discipline: 'DH',
     resultLink: ''
   });
+  const instagramProfiles = [
+    {
+      name: "Fredrik Møller",
+      handle: "@fredrikmoeller",
+      url: "https://www.instagram.com/fredrikmoeller/",
+      description: "Følg hovedpersonen selv for renn-oppdateringer og hverdag fra løypa."
+    },
+    {
+      name: "Møller Fanclub",
+      handle: "@mollerfan.club",
+      url: "https://www.instagram.com/mollerfan.club/",
+      description: "Fanclubben deler stemningsrapporter, reiser og klubbnyheter."
+    }
+  ];
 
 
   useEffect(() => {
@@ -222,22 +235,35 @@ const HomePage: React.FC = () => {
           
           {/* Instagram embeds with glass containers */}
           <div className="insta-feeds-container">
-            <div className="insta-feed">
+            {instagramProfiles.map((profile) => (
+              <div className="insta-feed" key={profile.handle}>
                 <FadeInnAnimation>
-                  <InstagramEmbed
-                      url="https://www.instagram.com/fredrikmoeller/"
-                      width="100%"
-                  />
+                  <a
+                    href={profile.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="block rounded-[24px] border border-white/15 bg-white/5 backdrop-blur-xl p-8 text-white shadow-2xl transition-transform duration-300 hover:scale-105 hover:border-yellow-300/60"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-lg font-bold">
+                        IG
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold">{profile.name}</p>
+                        <p className="text-white/70">{profile.handle}</p>
+                      </div>
+                    </div>
+                    <p className="text-white/80 mb-6">{profile.description}</p>
+                    <span className="inline-flex items-center gap-2 text-yellow-300 font-semibold">
+                      Besøk på Instagram
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </a>
                 </FadeInnAnimation>
-            </div>
-            <div className="insta-feed">
-              <FadeInnAnimation>
-                <InstagramEmbed
-                    url="https://www.instagram.com/mollerfan.club/"
-                    width="100%"
-                />
-              </FadeInnAnimation>
-            </div>
+              </div>
+            ))}
           </div>
           <BlogSection />
         </div>
