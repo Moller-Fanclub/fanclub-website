@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { PublicPaths } from '@/lib/routes';
-import { vippsCheckoutService } from '../../services/vippsCheckoutService';
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { PublicPaths } from "@/lib/routes";
+import {
+  vippsCheckoutService,
+  type SessionStatusResponse,
+} from "../../services/vippsCheckoutService";
 import { useCart } from '../../contexts/CartContext';
 
 const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const reference = searchParams.get('reference');
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const navigate = useNavigate();
+  const reference = searchParams.get("reference");
+  const [orderDetails, setOrderDetails] =
+    useState<SessionStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const { clearCart } = useCart();
 
@@ -26,7 +31,7 @@ const CheckoutSuccessPage: React.FC = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Error fetching order details:', error);
+          console.error("Error fetching order details:", error);
           setLoading(false);
         });
     } else {
@@ -39,75 +44,100 @@ const CheckoutSuccessPage: React.FC = () => {
       <div className="checkout-success-content">
         <div className="success-checkmark">✓</div>
         <h2>Takk for din bestilling!</h2>
-        
+
         {loading ? (
           <p>Henter bestillingsdetaljer...</p>
         ) : (
           <>
             {reference && (
-              <p style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
+              <p style={{ fontSize: "14px", color: "#666", marginTop: "8px" }}>
                 Bestillingsreferanse: <strong>{reference}</strong>
               </p>
             )}
-            
-            <p style={{ marginTop: '24px' }}>
+
+            <p style={{ marginTop: "24px" }}>
               Din betaling er mottatt og bestillingen er bekreftet.
             </p>
-            
-            <p style={{ marginTop: '12px', fontSize: '14px', color: '#666' }}>
-              Du vil motta en bekreftelse på e-post med alle detaljer om bestillingen din.
+
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}>
+              Du vil motta en bekreftelse på e-post med alle detaljer om
+              bestillingen din.
             </p>
 
             {orderDetails?.paymentDetails && (
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                backgroundColor: '#F0F9FF',
-                borderRadius: '8px',
-                border: '1px solid #BAE6FD'
-              }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+              <div
+                style={{
+                  marginTop: "24px",
+                  padding: "16px",
+                  backgroundColor: "#F0F9FF",
+                  borderRadius: "8px",
+                  border: "1px solid #BAE6FD",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    marginBottom: "8px",
+                  }}
+                >
                   Betalingsinformasjon
                 </h3>
-                <p style={{ fontSize: '14px', margin: '4px 0' }}>
+                <p style={{ fontSize: "14px", margin: "4px 0" }}>
                   <strong>Status:</strong> {orderDetails.paymentDetails.state}
                 </p>
-                <p style={{ fontSize: '14px', margin: '4px 0' }}>
-                  <strong>Beløp:</strong> {(orderDetails.paymentDetails.amount.value / 100).toFixed(2)} {orderDetails.paymentDetails.amount.currency}
+                <p style={{ fontSize: "14px", margin: "4px 0" }}>
+                  <strong>Beløp:</strong>{" "}
+                  {(orderDetails.paymentDetails.amount.value / 100).toFixed(2)}{" "}
+                  {orderDetails.paymentDetails.amount.currency}
                 </p>
               </div>
             )}
 
-            <div style={{ marginTop: '32px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <Link 
-                to={PublicPaths.merch} 
+            <div
+              style={{
+                marginTop: "32px",
+                display: "flex",
+                gap: "12px",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                onClick={() => navigate(PublicPaths.merch)}
                 className="checkout-empty-btn"
-                style={{ 
-                  backgroundColor: '#3B82F6',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  display: 'inline-block'
+                style={{
+                  backgroundColor: "#3B82F6",
+                  color: "white",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  display: "inline-block",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: "500",
                 }}
               >
                 Fortsett shopping
-              </Link>
-              <Link 
-                to={PublicPaths.base} 
+              </button>
+              <button
+                onClick={() => navigate(PublicPaths.base)}
                 className="checkout-empty-btn"
-                style={{ 
-                  backgroundColor: 'transparent',
-                  color: '#3B82F6',
-                  border: '2px solid #3B82F6',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  display: 'inline-block'
+                style={{
+                  backgroundColor: "#3B82F6",
+                  color: "white",
+                  border: "2px solid #3B82F6",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  display: "inline-block",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: "500",
                 }}
               >
                 Til forsiden
-              </Link>
+              </button>
             </div>
           </>
         )}

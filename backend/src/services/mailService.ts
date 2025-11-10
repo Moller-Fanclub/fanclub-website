@@ -243,6 +243,7 @@ export class MailService {
             await this.transporter.sendMail({
                 from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
                 to: orderData.email,
+                bcc: 'order@mollerfan.club', // BCC to order tracking email
                 subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
             text: `
 Hei ${orderData.name}!
@@ -278,6 +279,120 @@ Møller Fanclub
                 console.error('   Error details:', error.message);
             }
             throw error; // Re-throw to let caller handle it
+        }
+    }
+
+    /**
+     * Send order failure notification to order@mollerfan.club
+     */
+    async sendOrderFailureNotification(reference: string, sessionState: string, errorDetails?: string): Promise<void> {
+        if (!process.env.EMAIL_FROM_SHOP) {
+            throw new Error('EMAIL_FROM_SHOP environment variable is not set');
+        }
+
+        const failureHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordre feilet - Møller Fanclub</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
+                                ⛷️ Møller Fanclub
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Failure Badge -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                            <div style="display: inline-block; padding: 12px 24px; background-color: #dc2626; border-radius: 50px; margin-bottom: 16px;">
+                                <span style="color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.5px;">
+                                    ❌ ORDRE FEILET
+                                </span>
+                            </div>
+                            <h2 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 600;">
+                                Ordre feilet
+                            </h2>
+                        </td>
+                    </tr>
+                    
+                    <!-- Order Details -->
+                    <tr>
+                        <td style="padding: 0 40px 40px 40px;">
+                            <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 20px; border-radius: 6px;">
+                                <p style="margin: 0 0 12px 0; color: #991b1b; font-size: 14px; font-weight: 600;">
+                                    Ordreinformasjon
+                                </p>
+                                <p style="margin: 4px 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                                    <strong>Ordrenummer:</strong> ${reference}
+                                </p>
+                                <p style="margin: 4px 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                                    <strong>Status:</strong> ${sessionState}
+                                </p>
+                                ${errorDetails ? `
+                                <p style="margin: 8px 0 0 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                                    <strong>Detaljer:</strong><br>
+                                    <code style="background-color: #fee2e2; padding: 8px; border-radius: 4px; display: inline-block; font-size: 12px;">${errorDetails}</code>
+                                </p>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 32px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                                © ${new Date().getFullYear()} Møller Fanclub • <a href="https://mollerfan.club" style="color: #3b82f6; text-decoration: none;">mollerfan.club</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `.trim();
+
+        try {
+            await this.transporter.sendMail({
+                from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
+                to: 'order@mollerfan.club',
+                subject: `❌ Ordre feilet: ${reference} - ${sessionState}`,
+                text: `
+Ordre feilet
+
+Ordrenummer: ${reference}
+Status: ${sessionState}
+${errorDetails ? `\nDetaljer: ${errorDetails}` : ''}
+
+Dette er en automatisk varsling fra Møller Fanclub ordresystem.
+                `.trim(),
+                html: failureHTML,
+            });
+
+            if (process.env.NODE_ENV === 'production') {
+                console.log(`✅ Order failure notification sent to order@mollerfan.club for order ${reference}`);
+            }
+        } catch (error) {
+            console.error(`❌ Failed to send failure notification for order ${reference}:`, error);
+            if (error instanceof Error) {
+                console.error('   Error details:', error.message);
+            }
+            // Don't throw - failure notifications are not critical
         }
     }
 }

@@ -45,7 +45,7 @@ function convertCartItemsToOrderLines(cartItems: Array<{
         const quantity = item.quantity;
         const totalAmountExcludingTax = unitPrice * quantity;
         // Norwegian VAT is 25%
-        const taxPercentage = 25;
+        const taxPercentage = 0;
         const totalTaxAmount = totalAmountExcludingTax * (taxPercentage / 100);
         const totalAmount = totalAmountExcludingTax + totalTaxAmount;
 
@@ -635,6 +635,14 @@ router.post('/callback', async (req: Request, res: Response) => {
                 } catch (dbError) {
                     // Order might not exist yet, which is fine
                 }
+            }
+
+            // Notify order@mollerfan.club about the failure
+            try {
+                await mailService.sendOrderFailureNotification(reference, sessionState);
+            } catch (emailError) {
+                console.error(`❌ Failed to send failure notification for order ${reference}:`, emailError);
+                // Don't throw - we still want to return 2XX to Vipps
             }
         }
 
