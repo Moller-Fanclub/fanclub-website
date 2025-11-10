@@ -209,27 +209,10 @@ const CheckoutPage: React.FC = () => {
         <h1 className="checkout-title">Kasse</h1>
 
         {/* Pre-order Information Banner */}
-        <div
-          style={{
-            backgroundColor: "#EFF6FF",
-            border: "2px solid #3B82F6",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "24px",
-            boxShadow: "0 2px 8px rgba(59, 130, 246, 0.1)",
-          }}
-        >
-          <div
-            style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}
-          >
+        <div className="bg-blue-50 border-2 border-blue-500 rounded-xl p-5 mb-6 shadow-sm">
+          <div className="flex items-start gap-3">
             <svg
-              style={{
-                width: "24px",
-                height: "24px",
-                color: "#2563EB",
-                flexShrink: 0,
-                marginTop: "2px",
-              }}
+              className="w-6 h-6 text-blue-600 shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -242,25 +225,10 @@ const CheckoutPage: React.FC = () => {
               />
             </svg>
             <div>
-              <h3
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "#1E40AF",
-                  marginBottom: "8px",
-                }}
-              >
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">
                 📦 Viktig informasjon om forhåndsbestilling
               </h3>
-              <ul
-                style={{
-                  color: "#1E3A8A",
-                  fontSize: "14px",
-                  lineHeight: "1.6",
-                  marginLeft: "20px",
-                  listStyleType: "disc",
-                }}
-              >
+              <ul className="text-blue-900 text-sm leading-relaxed ml-5 list-disc space-y-1">
                 <li>
                   Dette er en <strong>forhåndsbestilling</strong> - produktene
                   produseres etter at bestillingsperioden stenger
@@ -290,28 +258,11 @@ const CheckoutPage: React.FC = () => {
             <h2>Betal med Vipps eller kort</h2>
 
             {error && (
-              <div
-                style={{
-                  backgroundColor: "#FEF2F2",
-                  border: "2px solid #EF4444",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  marginBottom: "24px",
-                  color: "#991B1B",
-                }}
-              >
-                <p style={{ margin: 0, fontWeight: "600" }}>⚠️ {error}</p>
+              <div className="bg-red-50 border-2 border-red-500 rounded-md p-4 mb-6 text-red-800">
+                <p className="m-0 font-semibold">⚠️ {error}</p>
                 <button
                   onClick={initializeVippsCheckout}
-                  style={{
-                    marginTop: "12px",
-                    padding: "8px 16px",
-                    backgroundColor: "#3B82F6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
+                  className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md border-none cursor-pointer hover:bg-blue-600 transition-colors"
                 >
                   Prøv igjen
                 </button>
@@ -319,27 +270,15 @@ const CheckoutPage: React.FC = () => {
             )}
 
             {isInitializing && (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "40px",
-                  color: "#666",
-                }}
-              >
-                <div style={{ marginBottom: "16px" }}>
+              <div className="text-center p-10 text-gray-600">
+                <div className="mb-4">
                   <svg
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      margin: "0 auto",
-                      color: "#3B82F6",
-                      animation: "spin 1s linear infinite",
-                    }}
+                    className="w-12 h-12 mx-auto text-blue-500 animate-spin"
                     fill="none"
                     viewBox="0 0 24 24"
                   >
                     <circle
-                      style={{ opacity: 0.25 }}
+                      className="opacity-25"
                       cx="12"
                       cy="12"
                       r="10"
@@ -347,7 +286,7 @@ const CheckoutPage: React.FC = () => {
                       strokeWidth="4"
                     ></circle>
                     <path
-                      style={{ opacity: 0.75 }}
+                      className="opacity-75"
                       fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>

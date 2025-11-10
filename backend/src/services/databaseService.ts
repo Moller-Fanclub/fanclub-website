@@ -9,15 +9,15 @@ dotenv.config();
 let PrismaClient: any;
 let OrderStatus: any;
 
-// Try to import Prisma (will fail if not generated yet)
-// Use dynamic import for ES modules compatibility
-(async () => {
+// Initialization promise to prevent race conditions
+const initPrisma = (async () => {
     try {
         // Dynamic import for ES modules (since package.json has "type": "module")
         const prismaModule = await import('@prisma/client');
         if (prismaModule && prismaModule.PrismaClient) {
             PrismaClient = prismaModule.PrismaClient;
             OrderStatus = prismaModule.OrderStatus;
+            return true;
         } else {
             throw new Error('PrismaClient not found in module');
         }
@@ -30,8 +30,17 @@ let OrderStatus: any;
             console.warn('   Error:', e?.message || 'Unknown error');
         }
         // Silently fall back if module not found (Prisma not installed/generated)
+        return false;
     }
 })();
+
+/**
+ * Initialize Prisma client and wait for it to be ready
+ * This should be called at app startup to ensure Prisma is ready
+ */
+export async function init(): Promise<boolean> {
+    return await initPrisma;
+}
 
 // Fallback OrderStatus enum if Prisma is not available
 const OrderStatusEnum = {
@@ -50,7 +59,10 @@ type OrderStatusType = typeof OrderStatusEnum[keyof typeof OrderStatusEnum];
 // This ensures dynamic import completes before creating the client
 let prisma: any = null;
 
-function getPrismaClient() {
+async function getPrismaClient() {
+    // Wait for Prisma initialization to complete
+    await initPrisma;
+
     if (!prisma && PrismaClient) {
         prisma = new PrismaClient({
             log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
@@ -147,7 +159,7 @@ export class DatabaseService {
      * Create a new order
      */
     async createOrder(data: CreateOrderData) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -209,7 +221,7 @@ export class DatabaseService {
      * Get order by reference
      */
     async getOrderByReference(reference: string) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -225,7 +237,7 @@ export class DatabaseService {
      * Update order payment information
      */
     async updateOrderPayment(reference: string, data: UpdateOrderPaymentData) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -250,7 +262,7 @@ export class DatabaseService {
     async updateOrderStatus(reference: string, status: OrderStatusType, additionalData?: {
         shippedAt?: Date;
     }) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -271,7 +283,7 @@ export class DatabaseService {
      * Update order customer information
      */
     async updateOrderCustomer(reference: string, data: UpdateOrderCustomerData) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -305,7 +317,7 @@ export class DatabaseService {
      * Get orders by customer email
      */
     async getOrdersByEmail(email: string, limit: number = 50) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -323,7 +335,7 @@ export class DatabaseService {
      * Get all orders (for admin)
      */
     async getAllOrders(limit: number = 100, offset: number = 0) {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -341,7 +353,7 @@ export class DatabaseService {
      * Check if order exists by reference
      */
     async orderExists(reference: string): Promise<boolean> {
-        const prismaClient = getPrismaClient();
+        const prismaClient = await getPrismaClient();
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
@@ -356,7 +368,7 @@ export const databaseService = new DatabaseService();
 
 // Graceful shutdown
 process.on('beforeExit', async () => {
-    const prismaClient = getPrismaClient();
+    const prismaClient = await getPrismaClient();
     if (prismaClient) {
         await prismaClient.$disconnect();
     }

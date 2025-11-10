@@ -77,26 +77,33 @@ export class VippsEPaymentService {
     }
 
     /**
+     * Get shared request headers for Vipps ePayment API calls
+     */
+    private async getRequestHeaders(): Promise<Record<string, string>> {
+        // Get access token from vippsService
+        const token = await vippsService.getAccessToken();
+
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY!,
+            'Merchant-Serial-Number': VIPPS_MSN!,
+            // System headers (required by Vipps)
+            'Vipps-System-Name': 'Moller Fanclub',
+            'Vipps-System-Version': '1.0.0',
+            'Vipps-System-Plugin-Name': 'custom-integration',
+            'Vipps-System-Plugin-Version': '1.0.0',
+        };
+    }
+
+    /**
      * Get payment details by reference
      */
     async getPaymentDetails(reference: string): Promise<PaymentDetails> {
         try {
-            // Get access token from vippsService
-            const token = await vippsService.getAccessToken();
-
             const response = await this.axiosInstance.get<PaymentDetails>(
                 `/epayment/v1/payments/${reference}`,
                 {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY!,
-                        'Merchant-Serial-Number': VIPPS_MSN!,
-                        // System headers (required by Vipps)
-                        'Vipps-System-Name': 'Moller Fanclub',
-                        'Vipps-System-Version': '1.0.0',
-                        'Vipps-System-Plugin-Name': 'custom-integration',
-                        'Vipps-System-Plugin-Version': '1.0.0',
-                    },
+                    headers: await this.getRequestHeaders(),
                 }
             );
 
@@ -114,23 +121,11 @@ export class VippsEPaymentService {
      */
     async capturePayment(reference: string, captureData: CaptureRequest): Promise<PaymentDetails> {
         try {
-            // Get access token from vippsService
-            const token = await vippsService.getAccessToken();
-
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/capture`,
                 captureData,
                 {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY!,
-                        'Merchant-Serial-Number': VIPPS_MSN!,
-                        // System headers (required by Vipps)
-                        'Vipps-System-Name': 'Moller Fanclub',
-                        'Vipps-System-Version': '1.0.0',
-                        'Vipps-System-Plugin-Name': 'custom-integration',
-                        'Vipps-System-Plugin-Version': '1.0.0',
-                    },
+                    headers: await this.getRequestHeaders(),
                 }
             );
 
@@ -149,9 +144,6 @@ export class VippsEPaymentService {
      */
     async cancelPayment(reference: string, transactionText?: string): Promise<PaymentDetails> {
         try {
-            // Get access token from vippsService
-            const token = await vippsService.getAccessToken();
-
             const cancelData: { transactionText?: string } = {};
             if (transactionText) {
                 cancelData.transactionText = transactionText;
@@ -161,16 +153,7 @@ export class VippsEPaymentService {
                 `/epayment/v1/payments/${reference}/cancel`,
                 cancelData,
                 {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY!,
-                        'Merchant-Serial-Number': VIPPS_MSN!,
-                        // System headers (required by Vipps)
-                        'Vipps-System-Name': 'Moller Fanclub',
-                        'Vipps-System-Version': '1.0.0',
-                        'Vipps-System-Plugin-Name': 'custom-integration',
-                        'Vipps-System-Plugin-Version': '1.0.0',
-                    },
+                    headers: await this.getRequestHeaders(),
                 }
             );
 
@@ -189,23 +172,11 @@ export class VippsEPaymentService {
      */
     async refundPayment(reference: string, refundData: RefundRequest): Promise<PaymentDetails> {
         try {
-            // Get access token from vippsService
-            const token = await vippsService.getAccessToken();
-
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/refund`,
                 refundData,
                 {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY!,
-                        'Merchant-Serial-Number': VIPPS_MSN!,
-                        // System headers (required by Vipps)
-                        'Vipps-System-Name': 'Moller Fanclub',
-                        'Vipps-System-Version': '1.0.0',
-                        'Vipps-System-Plugin-Name': 'custom-integration',
-                        'Vipps-System-Plugin-Version': '1.0.0',
-                    },
+                    headers: await this.getRequestHeaders(),
                 }
             );
 

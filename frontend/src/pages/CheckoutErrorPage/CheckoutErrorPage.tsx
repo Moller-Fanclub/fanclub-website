@@ -31,8 +31,7 @@ const CheckoutErrorPage: React.FC = () => {
     <div className="checkout-empty">
       <div className="checkout-empty-content">
         <svg 
-          className="checkout-empty-icon" 
-          style={{ color: '#DC2626', width: '64px', height: '64px' }} 
+          className="checkout-empty-icon w-16 h-16 text-red-600" 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
@@ -50,62 +49,39 @@ const CheckoutErrorPage: React.FC = () => {
           <p>Henter detaljer...</p>
         ) : (
           <>
-            <p style={{ marginTop: '16px', color: '#666' }}>
+            <p className="mt-4 text-gray-600">
               Det oppstod en feil under betalingsprosessen. Din betaling ble ikke gjennomført.
             </p>
 
             {reference && (
-              <p style={{ fontSize: '14px', color: '#999', marginTop: '12px' }}>
+              <p className="text-sm text-gray-400 mt-3">
                 Referanse: <strong>{reference}</strong>
               </p>
             )}
 
             {errorDetails?.sessionState && (
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                backgroundColor: '#FEF2F2',
-                borderRadius: '8px',
-                border: '1px solid #FECACA'
-              }}>
-                <p style={{ fontSize: '14px', color: '#991B1B' }}>
+              <div className="mt-6 px-4 py-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">
                   <strong>Status:</strong> {errorDetails.sessionState}
                 </p>
               </div>
             )}
 
-            <div style={{ marginTop: '32px' }}>
-              <p style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+            <div className="mt-8">
+              <p className="mb-4 text-sm text-gray-600">
                 Du kan prøve igjen eller kontakte oss hvis problemet vedvarer.
               </p>
               
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="flex gap-3 justify-center flex-wrap">
                 <Link 
                   to={PublicPaths.checkout} 
-                  className="checkout-empty-btn"
-                  style={{ 
-                    backgroundColor: '#3B82F6',
-                    color: 'white',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'inline-block'
-                  }}
+                  className="checkout-empty-btn bg-blue-500 text-white px-4 py-3 rounded-md no-underline inline-block hover:bg-blue-600 transition-colors"
                 >
                   Prøv igjen
                 </Link>
                 <Link 
                   to={PublicPaths.merch} 
-                  className="checkout-empty-btn"
-                  style={{ 
-                    backgroundColor: 'transparent',
-                    color: '#3B82F6',
-                    border: '2px solid #3B82F6',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'inline-block'
-                  }}
+                  className="checkout-empty-btn border-2 border-blue-500 text-blue-500 bg-transparent px-4 py-3 rounded-md no-underline inline-block hover:bg-blue-50 transition-colors"
                 >
                   Tilbake til butikken
                 </Link>

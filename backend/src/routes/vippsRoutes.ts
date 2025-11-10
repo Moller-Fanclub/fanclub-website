@@ -44,7 +44,6 @@ function convertCartItemsToOrderLines(cartItems: Array<{
         const unitPrice = item.price;
         const quantity = item.quantity;
         const totalAmountExcludingTax = unitPrice * quantity;
-        // Norwegian VAT is 25%
         const taxPercentage = 0;
         const totalTaxAmount = totalAmountExcludingTax * (taxPercentage / 100);
         const totalAmount = totalAmountExcludingTax + totalTaxAmount;
@@ -239,7 +238,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                         const unitPrice = Math.round(item.price * 100); // Convert to øre
                         const quantity = item.quantity;
                         const totalPrice = unitPrice * quantity;
-                        const taxAmount = Math.round(totalPrice * 0.25); // 25% VAT
+                        const taxAmount = Math.round(totalPrice * 0);
                         const product = products.find(p => p.id === item.id);
 
                         return {
