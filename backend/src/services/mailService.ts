@@ -1,5 +1,6 @@
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { ConfidentialClientApplication } from '@azure/msal-node';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -27,34 +28,108 @@ interface OrderEmailData {
  * This service should only be called by backend order processing logic
  */
 export class MailService {
-    private transporter;
+    private msalClient: ConfidentialClientApplication | null = null;
+    private cachedAccessToken: string | null = null;
+    private tokenExpiresAt: number = 0;
 
     constructor() {
-        // Validate email configuration
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_FROM_SHOP) {
+        // Validate email configuration for OAuth2
+        const requiredVars = [
+            'EMAIL_USER',
+            'EMAIL_FROM_SHOP',
+            'AZURE_CLIENT_ID',
+            'AZURE_CLIENT_SECRET',
+            'AZURE_TENANT_ID'
+        ];
+
+        const missingVars = requiredVars.filter(varName => !process.env[varName]);
+
+        if (missingVars.length > 0) {
             console.error('❌ Email configuration missing!');
-            console.error('   EMAIL_USER:', process.env.EMAIL_USER ? '✓ Set' : '✗ Missing');
-            console.error('   EMAIL_PASS:', process.env.EMAIL_PASS ? '✓ Set' : '✗ Missing');
-            console.error('   EMAIL_FROM_SHOP:', process.env.EMAIL_FROM_SHOP ? '✓ Set' : '✗ Missing');
-            throw new Error('Email configuration is incomplete. Please set EMAIL_USER, EMAIL_PASS, and EMAIL_FROM_SHOP environment variables.');
+            requiredVars.forEach(varName => {
+                console.error(`   ${varName}:`, process.env[varName] ? '✓ Set' : '✗ Missing');
+            });
+            throw new Error(`Email configuration is incomplete. Please set: ${missingVars.join(', ')}`);
         }
 
-        this.transporter = nodemailer.createTransport({
-            host: 'smtpout.secureserver.net',
-            port: 465,
-            secure: true,
+        // Initialize MSAL client for OAuth2 token acquisition
+        this.msalClient = new ConfidentialClientApplication({
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+                clientId: process.env.AZURE_CLIENT_ID!,
+                authority: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}`,
+                clientSecret: process.env.AZURE_CLIENT_SECRET!
             }
         });
 
-        // Verify transporter configuration (only log errors in production)
-        this.transporter.verify((error) => {
-            if (error) {
-                console.error('❌ Email transporter verification failed:', error);
+        // Using Microsoft Graph API for sending emails (recommended for application-level auth)
+        console.log('📧 Email service configured with Microsoft Graph API');
+        console.log(`   Sender: ${process.env.EMAIL_FROM_SHOP}`);
+    }
+
+    /**
+     * Get OAuth2 access token, using cache if still valid
+     * Uses the Mail.Send permission from Microsoft Graph
+     */
+    private async getAccessToken(): Promise<string> {
+        console.log('🔑 getAccessToken() called');
+
+        // Return cached token if still valid (with 5 minute buffer)
+        const now = Date.now();
+        if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
+            console.log('✅ Using cached OAuth2 token');
+            return this.cachedAccessToken;
+        }
+
+        if (!this.msalClient) {
+            throw new Error('MSAL client not initialized');
+        }
+
+        console.log('🔄 Acquiring new OAuth2 token...');
+        try {
+            // Use Microsoft Graph scope for Mail.Send permission
+            // This is the recommended approach for application-level email sending
+            const tokenRequest = {
+                scopes: ['https://graph.microsoft.com/.default']
+            };
+
+            console.log(`   Client ID: ${process.env.AZURE_CLIENT_ID?.substring(0, 8)}...`);
+            console.log(`   Tenant ID: ${process.env.AZURE_TENANT_ID?.substring(0, 8)}...`);
+            console.log(`   Scope: ${tokenRequest.scopes[0]}`);
+
+            const response = await this.msalClient!.acquireTokenByClientCredential(tokenRequest);
+
+            if (!response || !response.accessToken) {
+                throw new Error('Failed to acquire access token');
             }
-        });
+
+            // Cache the token
+            this.cachedAccessToken = response.accessToken;
+            // Set expiration (tokens typically expire in 1 hour, but we'll use expiresOn if available)
+            if (response.expiresOn) {
+                this.tokenExpiresAt = response.expiresOn.getTime();
+            } else {
+                // Default to 1 hour if expiresOn is not available
+                this.tokenExpiresAt = now + 60 * 60 * 1000;
+            }
+
+            console.log('✅ OAuth2 access token acquired and cached');
+            if (this.cachedAccessToken) {
+                console.log(`   Token length: ${this.cachedAccessToken.length} characters`);
+            }
+            console.log(`   Token expires at: ${new Date(this.tokenExpiresAt).toISOString()}`);
+
+            if (!this.cachedAccessToken) {
+                throw new Error('Failed to cache access token');
+            }
+            return this.cachedAccessToken;
+        } catch (error) {
+            console.error('❌ Failed to acquire OAuth2 access token:', error);
+            if (error instanceof Error) {
+                console.error('   Error message:', error.message);
+                console.error('   Error stack:', error.stack);
+            }
+            throw error;
+        }
     }
 
     /**
@@ -231,6 +306,71 @@ export class MailService {
     }
 
     /**
+     * Send email using Microsoft Graph API
+     * This is the recommended approach for application-level authentication
+     */
+    private async sendEmailViaGraph(
+        to: string | string[],
+        subject: string,
+        _text: string, // Text version (unused but kept for API consistency)
+        html: string,
+        bcc?: string | string[]
+    ): Promise<void> {
+        const token = await this.getAccessToken();
+
+        // Get the sender email
+        const senderEmail = process.env.EMAIL_FROM_SHOP!;
+
+        // Prepare recipients
+        const toAddresses = Array.isArray(to) ? to : [to];
+        const bccAddresses = bcc ? (Array.isArray(bcc) ? bcc : [bcc]) : [];
+
+        // Build the message payload for Microsoft Graph API
+        const message = {
+            message: {
+                subject: subject,
+                body: {
+                    contentType: 'HTML',
+                    content: html
+                },
+                toRecipients: toAddresses.map(email => ({
+                    emailAddress: {
+                        address: email
+                    }
+                })),
+                ...(bccAddresses.length > 0 && {
+                    bccRecipients: bccAddresses.map(email => ({
+                        emailAddress: {
+                            address: email
+                        }
+                    }))
+                })
+            },
+            saveToSentItems: true
+        };
+
+        // Send email via Microsoft Graph API
+        await axios.post(
+            `https://graph.microsoft.com/v1.0/users/${senderEmail}/sendMail`,
+            message,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log('📧 Email sent via Microsoft Graph API');
+            console.log(`   To: ${toAddresses.join(', ')}`);
+            if (bccAddresses.length > 0) {
+                console.log(`   BCC: ${bccAddresses.join(', ')}`);
+            }
+        }
+    }
+
+    /**
      * Send order confirmation email
      * Should only be called internally after order is created and validated
      */
@@ -239,13 +379,10 @@ export class MailService {
             throw new Error('EMAIL_FROM_SHOP environment variable is not set');
         }
 
+        console.log('📧 Preparing to send order confirmation email...');
+
         try {
-            await this.transporter.sendMail({
-                from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
-                to: orderData.email,
-                bcc: 'order@mollerfan.club', // BCC to order tracking email
-                subject: `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
-            text: `
+            const textContent = `
 Hei ${orderData.name}!
 
 Takk for din bestilling hos Møller Fanclub!
@@ -263,11 +400,15 @@ Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
 
 Med vennlig hilsen,
 Møller Fanclub
-            `.trim(),
-            html: this.generateOrderConfirmationHTML(orderData),
-                // No attachments needed - using external image URLs
-                attachments: []
-            });
+            `.trim();
+
+            await this.sendEmailViaGraph(
+                orderData.email,
+                `Ordrebekreftelse #${orderData.orderNumber} - Møller Fanclub`,
+                textContent,
+                this.generateOrderConfirmationHTML(orderData),
+                'order@mollerfan.club'
+            );
 
             // Email sent successfully - log in production
             if (process.env.NODE_ENV === 'production') {
@@ -289,6 +430,16 @@ Møller Fanclub
         if (!process.env.EMAIL_FROM_SHOP) {
             throw new Error('EMAIL_FROM_SHOP environment variable is not set');
         }
+
+        const failureText = `
+Ordre feilet
+
+Ordrenummer: ${reference}
+Status: ${sessionState}
+${errorDetails ? `\nDetaljer: ${errorDetails}` : ''}
+
+Dette er en automatisk varsling fra Møller Fanclub ordresystem.
+        `.trim();
 
         const failureHTML = `
 <!DOCTYPE html>
@@ -368,21 +519,12 @@ Møller Fanclub
         `.trim();
 
         try {
-            await this.transporter.sendMail({
-                from: `"Møller Fanclub Shop" <${process.env.EMAIL_FROM_SHOP}>`,
-                to: 'order@mollerfan.club',
-                subject: `❌ Ordre feilet: ${reference} - ${sessionState}`,
-                text: `
-Ordre feilet
-
-Ordrenummer: ${reference}
-Status: ${sessionState}
-${errorDetails ? `\nDetaljer: ${errorDetails}` : ''}
-
-Dette er en automatisk varsling fra Møller Fanclub ordresystem.
-                `.trim(),
-                html: failureHTML,
-            });
+            await this.sendEmailViaGraph(
+                'order@mollerfan.club',
+                `❌ Ordre feilet: ${reference} - ${sessionState}`,
+                failureText,
+                failureHTML
+            );
 
             if (process.env.NODE_ENV === 'production') {
                 console.log(`✅ Order failure notification sent to order@mollerfan.club for order ${reference}`);
