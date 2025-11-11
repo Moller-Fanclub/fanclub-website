@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { PublicPaths } from "@/lib/routes";
 import {
   vippsCheckoutService,
@@ -9,7 +9,6 @@ import { useCart } from '../../contexts/CartContext';
 
 const CheckoutSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const reference = searchParams.get("reference");
   const [orderDetails, setOrderDetails] =
     useState<SessionStatusResponse | null>(null);
@@ -103,7 +102,9 @@ const CheckoutSuccessPage: React.FC = () => {
               }}
             >
               <button
-                onClick={() => navigate(PublicPaths.merch)}
+                onClick={() => {
+                  window.location.href = PublicPaths.merch;
+                }}
                 className="checkout-empty-btn"
                 style={{
                   backgroundColor: "#3B82F6",
@@ -121,7 +122,9 @@ const CheckoutSuccessPage: React.FC = () => {
                 Fortsett shopping
               </button>
               <button
-                onClick={() => navigate(PublicPaths.base)}
+                onClick={() => {
+                  window.location.href = PublicPaths.base;
+                }}
                 className="checkout-empty-btn"
                 style={{
                   backgroundColor: "#3B82F6",
