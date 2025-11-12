@@ -10,7 +10,7 @@ export interface Product {
 export const products: Product[] = [
     {
         id: '1',
-        imageUrls: ['/merch/basic-tee-front.png', '/merch/basic-tee-left.png'],
+        imageUrls: ['/merch/basic-tee/basic-tee-front.png', '/merch/basic-tee/basic-tee-left.png'],
         title: 'Basic Tee',
         price: '349',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
@@ -18,7 +18,7 @@ export const products: Product[] = [
     },
     {
         id: '2',
-        imageUrls: ['/merch/tour-hoodie-back.png', '/merch/tour-hoodie-front.png', '/merch/tour-hoodie-left.png'],
+        imageUrls: ['/merch/tour-hoodie/tour-hoodie-back.png', '/merch/tour-hoodie/tour-hoodie-front.png', '/merch/tour-hoodie/tour-hoodie-left.png'],
         title: 'Tour Hoodie',
         price: '649',
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -26,7 +26,7 @@ export const products: Product[] = [
     },
     {
         id: '3',
-        imageUrls: ['/merch/tour-basic-tee-back.png', '/merch/tour-basic-tee-front.png', '/merch/tour-basic-tee-left.png'],
+        imageUrls: ['/merch/tour-basic/tour-basic-tee-back.png', '/merch/tour-basic/tour-basic-tee-front.png', '/merch/tour-basic/tour-basic-tee-left.png'],
         title: 'Basic Tour Tee',
         price: '399',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
@@ -34,7 +34,7 @@ export const products: Product[] = [
     },
     {
         id: '4',
-        imageUrls: ['/merch/premium-tee-front.png', '/merch/premium-tee-left.png'],
+        imageUrls: ['/merch/premium-tee/premium-tee-front.png', '/merch/premium-tee/premium-tee-left.png'],
         title: 'Premium Tee',
         price: '449',
         sizes: ['S', 'M', 'L', 'XL'],
@@ -42,7 +42,7 @@ export const products: Product[] = [
     },
     {
         id: '5',
-        imageUrls: ['/merch/bear-front.png', '/merch/bear-back.png'],
+        imageUrls: ['/merch/bear/bear-front.png', '/merch/bear/bear-back.png'],
         title: 'Bamse',
         price: '299',
         sizes: ['One Size'],
