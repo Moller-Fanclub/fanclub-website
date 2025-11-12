@@ -26,10 +26,10 @@ export const products: Product[] = [
     },
     {
         id: '8',
-        imageUrls: ['/merch/moooller/moooller_front.png', '/merch/moooller/moooller_back.png'],
+        imageUrls: ['/merch/moooller/moooller_back.png', '/merch/moooller/moooller_front.png'],
         title: 'Møøller',
         price: '399',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL'],
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull (gråmelert & antrasitt melert: 60% viskose, 40% polyester)',
     },
     {
