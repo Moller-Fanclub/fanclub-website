@@ -67,9 +67,9 @@ export const products: Product[] = [
     {
         id: '69',
         imageUrls: ['/merch/west/west_front.png', '/merch/west/west_back.png'],
-        title: 'Bamse',
+        title: 'Møller Vest',
         price: '449',
-        sizes: ['One Size'],
+        sizes: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: 'The vest is back, bluer then ever.',
     },
 ];
