@@ -48,4 +48,12 @@ export const products: Product[] = [
         sizes: ['One Size'],
         description: 'Adorable teddy bear mascot',
     },
+    {
+        id: '69',
+        imageUrls: ['/merch/west/west_front.png', '/merch/west/west_back.png'],
+        title: 'Bamse',
+        price: '449',
+        sizes: ['One Size'],
+        description: 'The vest is back, bluer then ever.',
+    },
 ];
