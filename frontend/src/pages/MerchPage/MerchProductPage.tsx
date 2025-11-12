@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import './MerchProductPage.css';
-import NavigationBar from "../../components/NavigationBar.tsx";
 import { productService, type Product } from "../../services/productService.ts";
 import { useCart } from '../../contexts/CartContext';
 import { useShopConfig } from '../../hooks/useShopConfig.ts';
@@ -80,7 +79,6 @@ const MerchProductPage: React.FC = () => {
     if (loading) {
         return (
             <div className="merch-product-page">
-                <NavigationBar />
                 <div className="text-center py-12">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
                     <p className="mt-4 text-gray-600">Laster produkt...</p>
@@ -92,7 +90,6 @@ const MerchProductPage: React.FC = () => {
     if (error || !product) {
         return (
             <div className="merch-product-page">
-                <NavigationBar />
                 <div className="text-center py-12">
                     <p className="text-red-600">{error || 'Product not found'}</p>
                     <button 
@@ -108,7 +105,6 @@ const MerchProductPage: React.FC = () => {
 
     return (
         <div className="merch-product-page">
-            <NavigationBar />
             <header className="merch-header">
                 <button className="back-button" onClick={() => navigate('/merch')}>
                     &larr; Back
@@ -192,6 +188,21 @@ const MerchProductPage: React.FC = () => {
                                 Neste periode: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                             </p>
                         </div>
+                    </div>
+                )}
+                
+                {/* Description */}
+                {product.description && (
+                    <div className="product-description" style={{ 
+                        marginTop: '24px',
+                        padding: '16px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '8px',
+                        whiteSpace: 'pre-line',
+                        lineHeight: '1.6',
+                        color: '#fff'
+                    }}>
+                        {product.description}
                     </div>
                 )}
             </div>

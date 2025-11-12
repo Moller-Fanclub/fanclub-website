@@ -1,6 +1,5 @@
 .merch-product-page {
-    min-height: 100vh;
-    background-color: #f8f8f8;
+    flex: 1;
     padding-top: 80px;
     display: flex;
     flex-direction: column;
@@ -39,7 +38,7 @@
     margin: 0;
     font-size: 2.5em;
     font-weight: bold;
-    color: #333;
+    color: #fff;
 }
 
 .carousel-container {
@@ -125,7 +124,7 @@
     margin: 0 0 20px 0;
     font-size: 2em;
     font-weight: bold;
-    color: #333;
+    color: #fff;
 }
 
 .size-selector {
@@ -136,7 +135,7 @@
     display: block;
     font-size: 1.1em;
     font-weight: 600;
-    color: #333;
+    color: #fff;
     margin-bottom: 15px;
 }
 
@@ -151,9 +150,9 @@
     padding: 12px 24px;
     font-size: 1em;
     font-weight: 600;
-    border: 2px solid #ddd;
-    background-color: #fff;
-    color: #333;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
@@ -161,14 +160,14 @@
 }
 
 .size-button:hover {
-    border-color: #3b82f6;
-    background-color: #eff6ff;
+    border-color: rgba(251, 191, 36, 0.5);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .size-button.selected {
-    background-color: #3b82f6;
+    background-color: rgba(251, 191, 36, 0.3);
     color: #fff;
-    border-color: #3b82f6;
+    border-color: rgb(251, 191, 36);
 }
 
 .add-to-cart-button {
@@ -177,19 +176,19 @@
     padding: 16px 32px;
     font-size: 1.2em;
     font-weight: 700;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #fff;
+    background: linear-gradient(135deg, rgb(251, 191, 36) 0%, rgb(245, 158, 11) 100%);
+    color: #000;
     border: none;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s;
     margin-top: 20px;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
 .add-to-cart-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
 }
 
 .add-to-cart-button:disabled {
