@@ -160,9 +160,13 @@ function getCountryImagePath(summary: string): string {
     return '/images/default.png';
 }
 
-function generateRacesTS(races: ParsedRace[]): string {
-    const racesCode = races.map((race) => {
-        const dateStr = race.date.toISOString().split('T')[0] + 'T00:00:00';
+function generateRacesArray(races: ParsedRace[]): string {
+    return races.map((race) => {
+        // Format date in local time to avoid timezone issues
+        const year = race.date.getFullYear();
+        const month = String(race.date.getMonth() + 1).padStart(2, '0');
+        const day = String(race.date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}T00:00:00`;
         const imagePath = getCountryImagePath(race.summary);
         
         return `    {
@@ -173,26 +177,6 @@ function generateRacesTS(races: ParsedRace[]): string {
         resultLink: '${race.resultLink}',
     }`;
     }).join(',\n');
-    
-    return `export interface RaceResult {
-    position: number;
-    time?: string;
-    behind?: string;
-}
-
-export interface Race {
-    name: string;
-    imagePath: string;
-    date: Date;
-    discipline: string;
-    resultLink: string;
-    result?: RaceResult;
-}
-
-export const races: Race[] = [
-${racesCode}
-];
-`;
 }
 
 async function main() {
@@ -229,11 +213,21 @@ async function main() {
         
         console.log(`Found ${uniqueRaces.length} unique races (removed ${allRaces.length - uniqueRaces.length} duplicates)`);
         
-        console.log('Generating races.ts...');
-        const racesTS = generateRacesTS(uniqueRaces);
+        console.log('Updating races.ts...');
+        const racesArrayCode = generateRacesArray(uniqueRaces);
         
         const outputPath = path.join(__dirname, '../../frontend/src/races.ts');
-        fs.writeFileSync(outputPath, racesTS, 'utf-8');
+        
+        // Read existing file
+        const existingContent = fs.readFileSync(outputPath, 'utf-8');
+        
+        // Replace only the races array content
+        const updatedContent = existingContent.replace(
+            /export const races: Race\[\] = \[[^\]]*\];/s,
+            `export const races: Race[] = [\n${racesArrayCode}\n];`
+        );
+        
+        fs.writeFileSync(outputPath, updatedContent, 'utf-8');
         
         console.log(`Successfully updated ${outputPath}`);
         console.log('\nRaces added:');
