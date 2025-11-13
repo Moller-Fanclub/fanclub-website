@@ -33,6 +33,14 @@ export const products: Product[] = [
         description: 'Regular fit\n Myk stoffkvalitet: 153 g/m² (hvitt: 144 g/m²)\n Materiale: 100 % bomull',
     },
     {
+        id: '4',
+        imageUrls: ['/merch/south-tee/south-front.png'],
+        title: 'South Møller Tee',
+        price: '299',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
+    },
+    {
         id: '6',
         imageUrls: ['/merch/boxer/boxer-back.png', '/merch/boxer/boxer-front.png'],
         title: 'Boxer Shorts',
@@ -54,7 +62,7 @@ export const products: Product[] = [
         title: 'Møøller',
         price: '399',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull (gråmelert & antrasitt melert: 60% viskose, 40% polyester)',
+        description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '69',
@@ -62,6 +70,6 @@ export const products: Product[] = [
         title: 'Møller Vest',
         price: '449',
         sizes: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: 'The vest is back, bluer then ever.',
+        description: 'The vest is back, bluer than ever.',
     },
 ];
