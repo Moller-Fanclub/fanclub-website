@@ -31,6 +31,7 @@ export class MailService {
     private msalClient: ConfidentialClientApplication | null = null;
     private cachedAccessToken: string | null = null;
     private tokenExpiresAt: number = 0;
+    private isConfigured: boolean = false;
 
     constructor() {
         // Validate email configuration for OAuth2
@@ -45,25 +46,34 @@ export class MailService {
         const missingVars = requiredVars.filter(varName => !process.env[varName]);
 
         if (missingVars.length > 0) {
-            console.error('❌ Email configuration missing!');
+            console.warn('⚠️  Email configuration missing - email sending will be disabled');
+            console.warn('   This is OK for local development without email setup');
             requiredVars.forEach(varName => {
-                console.error(`   ${varName}:`, process.env[varName] ? '✓ Set' : '✗ Missing');
+                console.warn(`   ${varName}:`, process.env[varName] ? '✓ Set' : '✗ Missing');
             });
-            throw new Error(`Email configuration is incomplete. Please set: ${missingVars.join(', ')}`);
+            console.warn('   Shop functionality will work, but order confirmation emails will be skipped');
+            this.isConfigured = false;
+            return;
         }
 
         // Initialize MSAL client for OAuth2 token acquisition
-        this.msalClient = new ConfidentialClientApplication({
-            auth: {
-                clientId: process.env.AZURE_CLIENT_ID!,
-                authority: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}`,
-                clientSecret: process.env.AZURE_CLIENT_SECRET!
-            }
-        });
+        try {
+            this.msalClient = new ConfidentialClientApplication({
+                auth: {
+                    clientId: process.env.AZURE_CLIENT_ID!,
+                    authority: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}`,
+                    clientSecret: process.env.AZURE_CLIENT_SECRET!
+                }
+            });
 
-        // Using Microsoft Graph API for sending emails (recommended for application-level auth)
-        console.log('📧 Email service configured with Microsoft Graph API');
-        console.log(`   Sender: ${process.env.EMAIL_FROM_SHOP}`);
+            // Using Microsoft Graph API for sending emails (recommended for application-level auth)
+            console.log('📧 Email service configured with Microsoft Graph API');
+            console.log(`   Sender: ${process.env.EMAIL_FROM_SHOP}`);
+            this.isConfigured = true;
+        } catch (error) {
+            console.error('❌ Failed to initialize email service:', error);
+            this.isConfigured = false;
+        }
     }
 
     /**
@@ -71,6 +81,10 @@ export class MailService {
      * Uses the Mail.Send permission from Microsoft Graph
      */
     private async getAccessToken(): Promise<string> {
+        if (!this.isConfigured || !this.msalClient) {
+            throw new Error('Email service is not configured');
+        }
+
         console.log('🔑 getAccessToken() called');
 
         // Return cached token if still valid (with 5 minute buffer)
@@ -78,10 +92,6 @@ export class MailService {
         if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
             console.log('✅ Using cached OAuth2 token');
             return this.cachedAccessToken;
-        }
-
-        if (!this.msalClient) {
-            throw new Error('MSAL client not initialized');
         }
 
         console.log('🔄 Acquiring new OAuth2 token...');
@@ -375,8 +385,15 @@ export class MailService {
      * Should only be called internally after order is created and validated
      */
     async sendOrderConfirmation(orderData: OrderEmailData): Promise<void> {
+        if (!this.isConfigured) {
+            console.warn('⚠️  Email service not configured - skipping order confirmation email');
+            console.warn(`   Order ${orderData.orderNumber} for ${orderData.email} would have been sent`);
+            return;
+        }
+
         if (!process.env.EMAIL_FROM_SHOP) {
-            throw new Error('EMAIL_FROM_SHOP environment variable is not set');
+            console.warn('⚠️  EMAIL_FROM_SHOP not set - skipping order confirmation email');
+            return;
         }
 
         console.log('📧 Preparing to send order confirmation email...');
@@ -427,8 +444,15 @@ Møller Fanclub
      * Send order failure notification to order@mollerfan.club
      */
     async sendOrderFailureNotification(reference: string, sessionState: string, errorDetails?: string): Promise<void> {
+        if (!this.isConfigured) {
+            console.warn('⚠️  Email service not configured - skipping order failure notification');
+            console.warn(`   Order ${reference} failed with state: ${sessionState}`);
+            return;
+        }
+
         if (!process.env.EMAIL_FROM_SHOP) {
-            throw new Error('EMAIL_FROM_SHOP environment variable is not set');
+            console.warn('⚠️  EMAIL_FROM_SHOP not set - skipping order failure notification');
+            return;
         }
 
         const failureText = `
