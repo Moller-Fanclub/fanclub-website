@@ -73,6 +73,14 @@ export const products: Product[] = [
         description: '4 metallmaljer gir god luftsirkulasjon\n Klassiske dekosømmer på bremmen\n Fôret sateng-svettebånd\n Materiale: 100 % bomull\n Håndvask anbefales',
     },
     {
+        id: '10',
+        imageUrls: ['/merch/moller_pin/moller_pin.png'],
+        title: '5x Møller Pin',
+        price: '299',
+        sizes: ['One Size'],
+        description: '5-pakning\n Nål for festing på baksiden\n Diameter: 32 mm\n Materiale: Metall, kunststoff',
+    },
+    {
         id: '69',
         imageUrls: ['/merch/west/west_front.png', '/merch/west/west_back.png'],
         title: 'Møller Vest',
