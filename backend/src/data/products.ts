@@ -9,6 +9,22 @@ export interface Product {
 
 export const products: Product[] = [
     {
+        id: '2',
+        imageUrls: ['/merch/tour-hoodie/tour-hoodie-back.png', '/merch/tour-hoodie/tour-hoodie-front.png', '/merch/tour-hoodie/tour-hoodie-left.png'],
+        title: 'Tour Hoodie',
+        price: '649',
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        description: 'Unisex-snitt: Tettsittende hos menn, videre hos kvinner (bestill et nummer større eller mindre hvis du er i tvil)\n Hette med integrert snor\n Utvendig kengurulomme foran\n Behagelig og glatt stoff (280 g/m²) og myk, børstet innside\n Materiale: 80 % bomull, 20 % polyester (antrasitt: 52 % bomull, 48 % polyester)\n Merke: AWDis',
+    },
+    {
+        id: '3',
+        imageUrls: ['/merch/tour-basic/tour-basic-tee-back.png', '/merch/tour-basic/tour-basic-tee-front.png', '/merch/tour-basic/tour-basic-tee-left.png'],
+        title: 'Basic Tour Tee',
+        price: '449',
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        description: 'Regular fit\n Myk stoffkvalitet: 153 g/m² (hvitt: 144 g/m²)\n Materiale: 100 % bomull',
+    },
+    {
         id: '6',
         imageUrls: ['/merch/boxer/boxer-back.png', '/merch/boxer/boxer-front.png'],
         title: 'Boxer Shorts',
