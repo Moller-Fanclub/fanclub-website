@@ -9,6 +9,14 @@ export interface Product {
 
 export const products: Product[] = [
     {
+        id: '1',
+        imageUrls: ['/merch/bjoller/bjoller.png'],
+        title: 'Møller Bjørn',
+        price: '349',
+        sizes: ['One Size'],
+        description: 'Brun teddybjørn med broderte øyne og nese\n Supermyk plysjpels\n Dybde: 16 cm, bredde: 24 cm, høyde: 20 cm\n Vekt: 106 g\n Materiale bamse: 100 % polyester (resirkulert), materiale T-skjorte: 100 % polyester\n Merke: MiniFeet®',
+    },
+    {
         id: '2',
         imageUrls: ['/merch/tour-hoodie/tour-hoodie-back.png', '/merch/tour-hoodie/tour-hoodie-front.png', '/merch/tour-hoodie/tour-hoodie-left.png'],
         title: 'Tour Hoodie',
