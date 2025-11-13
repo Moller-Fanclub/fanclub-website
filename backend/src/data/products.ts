@@ -65,6 +65,14 @@ export const products: Product[] = [
         description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
+        id: '9',
+        imageUrls: ['/merch/the_botte/the_botte.png'],
+        title: 'The Bøtte',
+        price: '299',
+        sizes: ['S/M', 'L/XL'],
+        description: '4 metallmaljer gir god luftsirkulasjon\n Klassiske dekosømmer på bremmen\n Fôret sateng-svettebånd\n Materiale: 100 % bomull\n Håndvask anbefales',
+    },
+    {
         id: '69',
         imageUrls: ['/merch/west/west_front.png', '/merch/west/west_back.png'],
         title: 'Møller Vest',
