@@ -169,23 +169,34 @@ export interface SessionStatusResponse {
 }
 
 export class VippsService {
-    private axiosInstance: AxiosInstance;
+    private axiosInstance: AxiosInstance | null = null;
     private accessToken: string | null = null;
     private tokenExpiry: number = 0;
+    private isConfigured: boolean = false;
 
     constructor() {
         // Validate required environment variables
-        if (!VIPPS_CLIENT_ID || !VIPPS_CLIENT_SECRET || !VIPPS_SUBSCRIPTION_KEY || !VIPPS_MSN) {
-            throw new Error('Missing required Vipps environment variables. Please check your .env file.');
-        }
+        const missingVars: string[] = [];
+        if (!VIPPS_CLIENT_ID) missingVars.push('VIPPS_CLIENT_ID');
+        if (!VIPPS_CLIENT_SECRET) missingVars.push('VIPPS_CLIENT_SECRET');
+        if (!VIPPS_SUBSCRIPTION_KEY) missingVars.push('VIPPS_SUBSCRIPTION_KEY');
+        if (!VIPPS_MSN) missingVars.push('VIPPS_MSN');
 
-        this.axiosInstance = axios.create({
-            baseURL: VIPPS_API_BASE_URL,
-            timeout: REQUEST_TIMEOUT,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        if (missingVars.length > 0) {
+            console.warn('⚠️  Vipps service not configured. Missing environment variables:');
+            missingVars.forEach(v => console.warn(`   - ${v}`));
+            console.warn('   Vipps payment functionality will not be available.');
+            this.isConfigured = false;
+        } else {
+            this.isConfigured = true;
+            this.axiosInstance = axios.create({
+                baseURL: VIPPS_API_BASE_URL,
+                timeout: REQUEST_TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        }
     }
 
     /**
@@ -193,6 +204,10 @@ export class VippsService {
      * Tokens are cached and reused until expiry
      */
     async getAccessToken(): Promise<string> {
+        if (!this.isConfigured) {
+            throw new Error('Vipps service is not configured. Please set required environment variables.');
+        }
+
         // Return cached token if still valid (with 60 second buffer)
         const now = Date.now();
         if (this.accessToken && this.tokenExpiry > now + 60000) {
@@ -231,6 +246,10 @@ export class VippsService {
      * Create a new Checkout session
      */
     async createCheckoutSession(sessionData: CreateCheckoutSessionRequest): Promise<CreateCheckoutSessionResponse> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps service is not configured. Please set required environment variables.');
+        }
+
         try {
             // Vipps Checkout API v3 requires client_id and client_secret as headers (not OAuth token)
             // Also requires system headers for tracking
@@ -319,6 +338,10 @@ export class VippsService {
      * Get session status by reference
      */
     async getSessionStatus(reference: string): Promise<SessionStatusResponse> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps service is not configured. Please set required environment variables.');
+        }
+
         try {
             // Vipps Checkout API v3 requires client_id and client_secret as headers
             const headers: Record<string, string> = {
@@ -351,6 +374,10 @@ export class VippsService {
      * Update an existing checkout session
      */
     async updateSession(reference: string, updateData: Partial<CreateCheckoutSessionRequest>): Promise<void> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps service is not configured. Please set required environment variables.');
+        }
+
         try {
             // Vipps Checkout API v3 requires client_id and client_secret as headers
             const headers: Record<string, string> = {
@@ -385,6 +412,10 @@ export class VippsService {
      * Expire a checkout session
      */
     async expireSession(reference: string): Promise<void> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps service is not configured. Please set required environment variables.');
+        }
+
         try {
             // Vipps Checkout API v3 requires client_id and client_secret as headers
             const headers: Record<string, string> = {

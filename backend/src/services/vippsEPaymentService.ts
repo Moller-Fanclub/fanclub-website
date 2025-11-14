@@ -59,21 +59,30 @@ export interface RefundRequest {
 }
 
 export class VippsEPaymentService {
-    private axiosInstance: AxiosInstance;
+    private axiosInstance: AxiosInstance | null = null;
+    private isConfigured: boolean = false;
 
     constructor() {
         // Validate required environment variables
-        if (!VIPPS_SUBSCRIPTION_KEY || !VIPPS_MSN) {
-            throw new Error('Missing required Vipps environment variables. Please check your .env file.');
-        }
+        const missingVars: string[] = [];
+        if (!VIPPS_SUBSCRIPTION_KEY) missingVars.push('VIPPS_SUBSCRIPTION_KEY');
+        if (!VIPPS_MSN) missingVars.push('VIPPS_MSN');
 
-        this.axiosInstance = axios.create({
-            baseURL: VIPPS_API_BASE_URL,
-            timeout: REQUEST_TIMEOUT,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        if (missingVars.length > 0) {
+            console.warn('⚠️  Vipps ePayment service not configured. Missing environment variables:');
+            missingVars.forEach(v => console.warn(`   - ${v}`));
+            console.warn('   Vipps ePayment functionality (capture, refund) will not be available.');
+            this.isConfigured = false;
+        } else {
+            this.isConfigured = true;
+            this.axiosInstance = axios.create({
+                baseURL: VIPPS_API_BASE_URL,
+                timeout: REQUEST_TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        }
     }
 
     /**
@@ -99,6 +108,10 @@ export class VippsEPaymentService {
      * Get payment details by reference
      */
     async getPaymentDetails(reference: string): Promise<PaymentDetails> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps ePayment service is not configured. Please set required environment variables.');
+        }
+
         try {
             const response = await this.axiosInstance.get<PaymentDetails>(
                 `/epayment/v1/payments/${reference}`,
@@ -120,6 +133,10 @@ export class VippsEPaymentService {
      * This completes the payment and transfers funds to merchant
      */
     async capturePayment(reference: string, captureData: CaptureRequest): Promise<PaymentDetails> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps ePayment service is not configured. Please set required environment variables.');
+        }
+
         try {
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/capture`,
@@ -143,6 +160,10 @@ export class VippsEPaymentService {
      * This releases the reservation without charging the customer
      */
     async cancelPayment(reference: string, transactionText?: string): Promise<PaymentDetails> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps ePayment service is not configured. Please set required environment variables.');
+        }
+
         try {
             const cancelData: { transactionText?: string } = {};
             if (transactionText) {
@@ -171,6 +192,10 @@ export class VippsEPaymentService {
      * Can be full or partial refund
      */
     async refundPayment(reference: string, refundData: RefundRequest): Promise<PaymentDetails> {
+        if (!this.isConfigured || !this.axiosInstance) {
+            throw new Error('Vipps ePayment service is not configured. Please set required environment variables.');
+        }
+
         try {
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/refund`,
