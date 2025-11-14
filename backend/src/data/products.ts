@@ -81,6 +81,14 @@ export const products: Product[] = [
         description: '5-pakning\n Nål for festing på baksiden\n Diameter: 32 mm\n Materiale: Metall, kunststoff',
     },
     {
+        id: '11',
+        imageUrls: ['/merch/cap/cap.png'],
+        title: 'Møller Cap',
+        price: '299',
+        sizes: ['One Size'],
+        description: 'Rett skjerm og avflatet topp\n Størrelsen kan justeres på baksiden\n Skjermen er grønn på undersiden\n Materiale: 100 % polyester',
+    },
+    {
         id: '69',
         imageUrls: ['/merch/west/west_front.png', '/merch/west/west_back.png'],
         title: 'Møller Vest',
