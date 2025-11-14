@@ -4,6 +4,8 @@ import HomePage from './pages/HomePage/HomePage';
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
+import CheckoutSuccessPage from "./pages/CheckoutSuccessPage/CheckoutSuccessPage.tsx";
+import CheckoutErrorPage from "./pages/CheckoutErrorPage/CheckoutErrorPage.tsx";
 import ContactPage from "./pages/AboutPage/AboutPage.tsx";
 import TermsPage from "./pages/TermsPage/TermsPage.tsx";
 import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
@@ -26,6 +28,8 @@ export function AppRoutes() {
         <Route path={PublicPaths.merch} element={<MerchPage />} />
         <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
         <Route path={PublicPaths.checkout} element={<CheckoutPage />} />
+        <Route path={PublicPaths.checkoutSuccess} element={<CheckoutSuccessPage />} />
+        <Route path={PublicPaths.checkoutError} element={<CheckoutErrorPage />} />
         <Route path={PublicPaths.contact} element={<ContactPage />} />
         <Route path={PublicPaths.terms} element={<TermsPage />} />
         <Route path={PublicPaths.blog.show} element={<BlogPage />} />

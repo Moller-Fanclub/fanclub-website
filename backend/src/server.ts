@@ -6,8 +6,8 @@ import path from 'path';
 import { products } from './data/products.js';
 import { shopConfig } from './config/shopConfig.js';
 import { fetchLatestRace } from './services/fisScraper.js';
-// mailService is available for when orders endpoint is re-enabled
 import { mailService } from './services/mailService.js';
+import vippsRoutes from './routes/vippsRoutes.js';
 
 dotenv.config();
 
@@ -61,6 +61,9 @@ loadRaceResults();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Vipps Checkout API routes
+app.use('/api/vipps', vippsRoutes);
 
 // Routes
 app.get('/api/products', (_req: Request, res: Response) => {
@@ -235,16 +238,20 @@ app.post('/api/orders', async (_req: Request, res: Response) => {
 // Email preview endpoint (development only)
 if (process.env.NODE_ENV !== 'production') {
     app.get('/api/email/preview', (_req: Request, res: Response) => {
-        // Sample order data for preview
+        // Sample order data for preview (using new items array format)
         const sampleOrderData = {
             name: 'Ola Nordmann',
             email: 'test@example.com',
             orderNumber: 'MF-123456',
-            product: 'Tour Hoodie',
-            size: 'M',
-            color: 'Blue',
-            quantity: 1,
-            price: '599 kr',
+            items: [
+                {
+                    name: 'Tour Hoodie',
+                    size: 'M',
+                    quantity: 1,
+                    price: '599 kr',
+                    image: 'https://mollerfan.club/merch/tour-hoodie-front.png'
+                }
+            ],
             shippingPrice: '79 kr',
             totalPrice: '678 kr',
             estimatedDelivery: '3-5 virkedager',
@@ -258,15 +265,27 @@ if (process.env.NODE_ENV !== 'production') {
 
     app.post('/api/email/preview', (req: Request, res: Response) => {
         // Allow custom order data via POST
+        // Support both new items array format and legacy single product format
+        let items;
+        if (req.body.items && Array.isArray(req.body.items)) {
+            // New format: items array
+            items = req.body.items;
+        } else {
+            // Legacy format: convert single product to items array
+            items = [{
+                name: req.body.product || 'Tour Hoodie',
+                size: req.body.size,
+                quantity: req.body.quantity || 1,
+                price: req.body.price || '599 kr',
+                image: req.body.productImage || 'https://mollerfan.club/merch/tour-hoodie-front.png'
+            }];
+        }
+
         const orderData = {
             name: req.body.name || 'Ola Nordmann',
             email: req.body.email || 'test@example.com',
             orderNumber: req.body.orderNumber || 'MF-123456',
-            product: req.body.product || 'Tour Hoodie',
-            size: req.body.size || 'M',
-            color: req.body.color || 'Blue',
-            quantity: req.body.quantity || 1,
-            price: req.body.price || '599 kr',
+            items,
             shippingPrice: req.body.shippingPrice || '79 kr',
             totalPrice: req.body.totalPrice || '678 kr',
             estimatedDelivery: req.body.estimatedDelivery || '3-5 virkedager',
@@ -292,6 +311,16 @@ app.listen(PORT, () => {
     console.log(`   - GET http://localhost:${PORT}/api/fis/all (from races.json)`);
     console.log(`   - GET http://localhost:${PORT}/api/fis/test`);
     console.log(`   - POST http://localhost:${PORT}/api/orders`);
+    console.log(`\n💳 Vipps Checkout API endpoints:`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/checkout/session`);
+    console.log(`   - GET http://localhost:${PORT}/api/vipps/checkout/session/:reference`);
+    console.log(`   - PATCH http://localhost:${PORT}/api/vipps/checkout/session/:reference`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/checkout/session/:reference/expire`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/callback`);
+    console.log(`   - GET http://localhost:${PORT}/api/vipps/payment/:reference`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/capture`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/cancel`);
+    console.log(`   - POST http://localhost:${PORT}/api/vipps/payment/:reference/refund`);
     if (process.env.NODE_ENV !== 'production') {
         console.log(`   - GET http://localhost:${PORT}/api/email/preview (dev only)`);
         console.log(`   - POST http://localhost:${PORT}/api/email/preview (dev only)`);
