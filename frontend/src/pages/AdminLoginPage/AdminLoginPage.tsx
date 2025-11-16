@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signIn, useSession } from '../../lib/auth-client';
 
@@ -11,8 +11,14 @@ export default function AdminLoginPage() {
   const { data: session } = useSession();
 
   // Redirect if already logged in
+  useEffect(() => {
+    if (session) {
+      navigate('/admin');
+    }
+  }, [session, navigate]);
+
+  // Don't render the login form if user is already authenticated
   if (session) {
-    navigate('/admin');
     return null;
   }
 
