@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import "./HomePage.css";
 import {type Race, races} from "../../races.ts";
-import {InstagramEmbed} from "react-social-media-embed";
 import FadeInnAnimation from '../../components/FadeInnAnimation.tsx';
 import { PublicPaths } from '@/lib/routes';
 import { Link } from 'react-router-dom';
 import { BlogSection } from './BlogSection/BlogSection.tsx';
 import GoToTop from '@/components/GoToTop.tsx';
+import { InstagramEmbedWithConsent } from '../../components/InstagramEmbedWithConsent.tsx';
 
 export const Typewriter: React.FC<{
   text: string;
@@ -224,17 +224,17 @@ const HomePage: React.FC = () => {
           <div className="insta-feeds-container">
             <div className="insta-feed">
                 <FadeInnAnimation>
-                  <InstagramEmbed
+                  <InstagramEmbedWithConsent
                       url="https://www.instagram.com/fredrikmoeller/"
-                      width="100%"
+                      username="fredrikmoeller"
                   />
                 </FadeInnAnimation>
             </div>
             <div className="insta-feed">
               <FadeInnAnimation>
-                <InstagramEmbed
+                <InstagramEmbedWithConsent
                     url="https://www.instagram.com/mollerfan.club/"
-                    width="100%"
+                    username="mollerfan.club"
                 />
               </FadeInnAnimation>
             </div>
