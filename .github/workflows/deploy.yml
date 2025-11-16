@@ -67,6 +67,8 @@ jobs:
           echo "VIPPS_CALLBACK_AUTHORIZATION_TOKEN=${{ secrets.VIPPS_CALLBACK_AUTHORIZATION_TOKEN }}"
           echo "VIPPS_API_BASE_URL=${{ secrets.VIPPS_API_BASE_URL }}"
           echo "FRONTEND_URL=${{ secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
+          echo "BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}"
+          echo "BETTER_AUTH_URL=${{ secrets.BETTER_AUTH_URL || secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
         } > .env
         
     - name: Deploy to server

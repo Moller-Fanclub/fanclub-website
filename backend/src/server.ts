@@ -8,6 +8,8 @@ import { shopConfig } from './config/shopConfig.js';
 import { fetchLatestRace } from './services/fisScraper.js';
 import { mailService } from './services/mailService.js';
 import vippsRoutes from './routes/vippsRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -58,9 +60,46 @@ function loadRaceResults() {
 // Load race results on startup
 loadRaceResults();
 
+// CORS configuration - must allow specific origins when using credentials
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://mollerfan.club',
+    FRONTEND_URL,
+].filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
+
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            // In development, be more permissive
+            if (process.env.NODE_ENV === 'development' && origin.startsWith('http://localhost:')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    },
+    credentials: true, // Allow cookies/credentials
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+}));
+
+// Better Auth routes (must be before express.json middleware)
+app.use('/api/auth', authRoutes);
+
+// JSON parsing middleware (after auth routes)
 app.use(express.json());
+
+// Admin routes (protected)
+app.use('/api/admin', adminRoutes);
 
 // Vipps Checkout API routes
 app.use('/api/vipps', vippsRoutes);
