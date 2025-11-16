@@ -3,10 +3,18 @@
  * 
  * Simple configuration for shop opening times.
  * Update these dates to control when the shop is open for orders.
+ * 
+ * TESTING MODE: Shop is currently enabled for testing.
+ * To disable, set openingDate to a future date.
  */
 
 export const shopConfig = {
-  openingDate: '2025-11-15T00:00:00',
-
-  closingDate: '2025-11-21T23:59:59',
+  // Testing: Shop is open (opening date in the past)
+  openingDate: '2025-01-01T00:00:00',
+  // Testing: Shop closes far in the future
+  closingDate: '2026-12-31T23:59:59',
+  
+  // Production dates (commented out for testing):
+  // openingDate: '2025-11-15T00:00:00',
+  // closingDate: '2025-11-21T23:59:59',
 };

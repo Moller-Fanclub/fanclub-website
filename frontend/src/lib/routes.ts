@@ -6,6 +6,8 @@ export const PublicPaths = {
   merch: "/merch",
   merchProduct: "/merch/:id",
   checkout: "/checkout",
+  checkoutSuccess: "/checkout/success",
+  checkoutError: "/checkout/error",
   contact: "/contact",
   terms: "/terms",
   blog: {

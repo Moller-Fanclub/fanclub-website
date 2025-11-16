@@ -117,7 +117,11 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             </div>
 
             {shopIsOpen ? (
-              <Link to={PublicPaths.checkout} className="cart-checkout-btn">
+              <Link 
+                to={PublicPaths.checkout} 
+                className="cart-checkout-btn"
+                onClick={onClose}
+              >
                 Gå til kassen
               </Link>
             ) : (
