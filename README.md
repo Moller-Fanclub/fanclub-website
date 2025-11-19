@@ -5,6 +5,7 @@
 
 -   [Node.js](https://nodejs.org/) (versjon >=20.19.0)
 -   [Sanity](https://www.sanity.io/) - Headless CMS for innholdsadministrasjon
+-   [PostgreSQL](https://www.postgresql.org/) - Database for ordrer og brukerdata
 
 ## Arkitektur
 
@@ -88,4 +89,37 @@ cd studio-moller-fanclub && npm run deploy
 ```
 
 For mer informasjon om Sanity, se [Sanity dokumentasjonen](https://www.sanity.io/docs).
+
+### Prisma (Database)
+
+Prisma brukes til å administrere databasen for ordrer, betalinger og brukerdata. Backend bruker PostgreSQL som database.
+
+**Generer Prisma Client:**
+
+Etter å ha installert avhengigheter, må Prisma Client genereres basert på databaseskjemaet:
+``` bash
+cd backend && npm run db:generate
+```
+
+Dette kommandoen kjører `prisma generate` og genererer TypeScript-typer basert på `prisma/schema.prisma`.
+
+**Kjør database-migrasjoner:**
+
+For å oppdatere databasestrukturen i produksjon:
+``` bash
+cd backend && npm run db:migrate
+```
+
+**Åpne Prisma Studio:**
+
+Prisma Studio er et GUI-verktøy for å se og redigere data i databasen:
+``` bash
+cd backend && npm run db:studio
+```
+
+Dette åpner Prisma Studio på [http://localhost:5555](http://localhost:5555)
+
+**Merk:** Du må ha en `DATABASE_URL` miljøvariabel konfigurert i `.env`-filen i backend-mappen for at Prisma skal fungere.
+
+For mer informasjon om Prisma, se [Prisma dokumentasjonen](https://www.prisma.io/docs).
 
