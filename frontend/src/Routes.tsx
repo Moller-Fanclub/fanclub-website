@@ -12,7 +12,10 @@ import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
 import CalenderPage from './pages/CalenderPage/CalenderPage.tsx';
 import AboutPage from './pages/AboutPage/AboutPage.tsx';
 import BlogPage from './pages/BlogPage/BlogPage.tsx';
-import { PublicPaths } from './lib/routes';
+import AdminLoginPage from './pages/AdminLoginPage/AdminLoginPage.tsx';
+import AdminDashboardPage from './pages/AdminDashboardPage/AdminDashboardPage.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
+import { PublicPaths, AdminPaths } from './lib/routes';
 
 
 export function AppRoutes() {
@@ -35,6 +38,17 @@ export function AppRoutes() {
         <Route path={PublicPaths.blog.show} element={<BlogPage />} />
         <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
       </Route>
+      
+      {/* Admin routes (outside RootLayout) */}
+      <Route path={AdminPaths.login} element={<AdminLoginPage />} />
+      <Route
+        path={AdminPaths.dashboard}
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

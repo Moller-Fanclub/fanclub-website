@@ -16,6 +16,11 @@ export const PublicPaths = {
     }
 };
 
+export const AdminPaths = {
+  login: "/admin/login",
+  dashboard: "/admin",
+};
+
 export const ExternalLinks = {
   mollerfanClubInstagram: "https://www.instagram.com/mollerfan.club",
   lovdata: "https://www.lovdata.no",
