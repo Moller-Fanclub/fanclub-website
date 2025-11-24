@@ -298,80 +298,32 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
         const paymentDescription = generatePaymentDescription(validatedItems);
 
         // Determine initial amount and logistics configuration
-        // Initial amount should only include products - shipping will be added when address is entered
-        // Vipps will call the shipping-options callback and update the amount dynamically
-        let initialAmount = totalAmount; // Start with just product total
-        let logisticsConfig: any = null;
+        // Use single fixed shipping option since all orders are sent out at the same time
+        // Shipping cost is included in initial amount
+        let initialAmount = totalAmount;
+        const shippingCost = 7900; // 79 kr in øre
+        initialAmount = totalAmount + shippingCost;
 
-        // Add logistics configuration only if shipping service is configured and callback URL is valid
-        // Vipps validates the callback URL during session creation, so we need to ensure it's accessible
-        if (shippingService.isConfigured() && VIPPS_CALLBACK_URL) {
-            try {
-                // Build dynamic shipping options callback URL
-                // Remove '/callback' from the end of VIPPS_CALLBACK_URL and add '/checkout/shipping-options'
-                const baseUrl = VIPPS_CALLBACK_URL.replace('/callback', '').replace(/\/$/, ''); // Remove trailing slash too
-                const shippingOptionsCallbackUrl = `${baseUrl}/checkout/shipping-options`;
-
-                // Only add logistics if callback URL is HTTPS (required by Vipps in production)
-                // For localhost, we still allow it for development
-                if (shippingOptionsCallbackUrl.startsWith('https://') || shippingOptionsCallbackUrl.includes('localhost')) {
-                    // Vipps requires fixedOptions as fallback when using dynamicOptionsCallback
-                    // If callback fails or times out (>8s), Vipps will use fixedOptions
-                    const defaultOptions = shippingService.getDefaultShippingOptions();
-
-                    logisticsConfig = {
-                        dynamicOptionsCallback: shippingOptionsCallbackUrl,
-                        fixedOptions: defaultOptions.map((option, index) => ({
-                            id: `shipping-option-${index + 1}`,
-                            priority: option.priority,
-                            amount: {
-                                value: option.amount,
-                                currency: 'NOK',
-                            },
-                            description: option.description,
-                            brand: 'POSTEN',
-                            isDefault: index === 0, // First option is default
-                            vippsLogistics: option.vippsLogistics,
-                        })),
-                    };
-                } else {
-                    console.warn('⚠️  Shipping options callback URL must be HTTPS. Using fixed shipping options instead.');
-                    console.warn('   URL was:', shippingOptionsCallbackUrl);
-                }
-            } catch (error) {
-                console.warn('⚠️  Failed to configure dynamic shipping options. Using fixed shipping options instead:', error);
-            }
-        }
-
-        // If no dynamic shipping, use fixed options
-        if (!logisticsConfig) {
-            logisticsConfig = {
-                fixedOptions: [
-                    {
-                        id: 'servicepakke-standard',
-                        priority: 1,
-                        amount: {
-                            value: 7900, // 79 kr in øre
-                            currency: 'NOK',
-                        },
-                        description: 'Posten Servicepakke (3-5 virkedager)',
-                        brand: 'POSTEN',
-                        isDefault: true,
+        // Single fixed shipping option - no choice needed since all orders ship together
+        const logisticsConfig: CreateCheckoutSessionRequest['logistics'] = {
+            fixedOptions: [
+                {
+                    id: 'servicepakke-standard',
+                    priority: 1,
+                    amount: {
+                        value: shippingCost,
+                        currency: 'NOK',
                     },
-                    {
-                        id: 'pa-doren-express',
-                        priority: 2,
-                        amount: {
-                            value: 14900, // 149 kr in øre
-                            currency: 'NOK',
-                        },
-                        description: 'Posten på døren (1-2 virkedager)',
-                        brand: 'POSTEN',
-                        isDefault: false,
+                    description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
+                    brand: 'POSTEN' as const,
+                    isDefault: true,
+                    vippsLogistics: {
+                        product: 'SERVICEPAKKE',
+                        service: 'STANDARD',
                     },
-                ],
-            };
-        }
+                },
+            ],
+        };
 
         // Calculate bottom line (total amount - shipping will be added by Vipps when address is entered)
         // Note: Vipps API expects 'orderBottomLine' (camelCase), not 'bottomLine'
@@ -518,94 +470,21 @@ router.options('/checkout/shipping-options', (_req: Request, res: Response) => {
     res.sendStatus(200);
 });
 
-router.post('/checkout/shipping-options', async (req: Request, res: Response) => {
+router.post('/checkout/shipping-options', async (_req: Request, res: Response) => {
     try {
-        const { postalCode, country, weight, volume, address } = req.body;
-
-        // Extract postal code from address object if not directly provided
-        let actualPostalCode = postalCode;
-        if (!actualPostalCode && address) {
-            actualPostalCode = address.postalCode || address.postcode || address.zipCode;
-        }
-
-        // If no postal code provided (e.g., during Vipps validation), return default options
-        // Vipps may call this during session validation before address is entered
-        if (!actualPostalCode) {
-            const defaultOptions = shippingService.getDefaultShippingOptions();
-            const responseOptions = defaultOptions.map((option, index) => ({
-                id: `shipping-option-${index + 1}`,
-                priority: option.priority,
-                amount: {
-                    value: option.amount,
-                    currency: 'NOK',
-                },
-                description: option.description,
-                brand: 'POSTEN',
-                isDefault: index === 0,
-                vippsLogistics: option.vippsLogistics,
-            }));
-            return res.json({
-                fixedOptions: responseOptions,
-            });
-        }
-
-        // Get shipping options from Posten/Bring
-        const actualCountry = country || (address?.country || 'NO');
-
-        let shippingOptions: import('../services/shippingService').ShippingOption[];
-        try {
-            shippingOptions = await shippingService.getShippingOptions({
-                postalCode: actualPostalCode,
-                country: actualCountry,
-                weight: weight || 2000, // Default 2kg
-                volume: volume || 5, // Default 5L
-            });
-        } catch (error: any) {
-            console.error('❌ Error fetching shipping options from Posten/Bring:', error.message);
-            console.warn('   Falling back to default options.');
-            shippingOptions = [];
-        }
-
-        // Ensure we always return at least one option
-        // This is critical - Vipps requires valid options even during validation calls
-        if (!shippingOptions || shippingOptions.length === 0) {
-            console.warn('⚠️  No shipping options found. Returning default options.');
-            const defaultOptions = shippingService.getDefaultShippingOptions();
-            return res.json({
-                fixedOptions: defaultOptions.map((option, index) => ({
-                    id: `shipping-option-${index + 1}`,
-                    priority: option.priority,
-                    amount: {
-                        value: option.amount,
-                        currency: 'NOK',
-                    },
-                    description: option.description,
-                    brand: 'POSTEN',
-                    isDefault: index === 0,
-                    vippsLogistics: option.vippsLogistics,
-                })),
-            });
-        }
-
-        // Return in Vipps format
-        // Map Posten/Bring products to Vipps brands
-        const getBrandFromProduct = (product?: string): string => {
-            if (!product) return 'POSTEN';
-            if (product.includes('SERVICEPAKKE') || product.includes('PA_DOREN')) return 'POSTEN';
-            if (product.includes('BPAKKE') || product.includes('EKSPRESS')) return 'BRING';
-            return 'POSTEN'; // Default to POSTEN
-        };
-
-        const responseOptions = shippingOptions.map((option, index) => ({
-            id: `shipping-option-${index + 1}-${option.vippsLogistics?.product || 'default'}`,
+        // Always return single fixed shipping option
+        // All orders are sent out at the same time, so no choice is needed
+        const defaultOptions = shippingService.getDefaultShippingOptions();
+        const responseOptions = defaultOptions.map((option) => ({
+            id: `shipping-option-${option.priority}`,
             priority: option.priority,
             amount: {
                 value: option.amount,
                 currency: 'NOK',
             },
             description: option.description,
-            brand: getBrandFromProduct(option.vippsLogistics?.product),
-            isDefault: index === 0,
+            brand: 'POSTEN' as const,
+            isDefault: true,
             vippsLogistics: option.vippsLogistics,
         }));
 
@@ -618,16 +497,16 @@ router.post('/checkout/shipping-options', async (req: Request, res: Response) =>
         // This ensures Vipps doesn't reject the checkout session
         const defaultOptions = shippingService.getDefaultShippingOptions();
         return res.json({
-            fixedOptions: defaultOptions.map((option, index) => ({
-                id: `shipping-option-${index + 1}`,
+            fixedOptions: defaultOptions.map((option) => ({
+                id: `shipping-option-${option.priority}`,
                 priority: option.priority,
                 amount: {
                     value: option.amount,
                     currency: 'NOK',
                 },
                 description: option.description,
-                brand: 'POSTEN',
-                isDefault: index === 0,
+                brand: 'POSTEN' as const,
+                isDefault: true,
                 vippsLogistics: option.vippsLogistics,
             })),
         });

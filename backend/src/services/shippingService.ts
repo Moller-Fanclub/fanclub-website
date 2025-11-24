@@ -151,25 +151,17 @@ export class ShippingService {
 
     /**
      * Get default shipping options (fallback when API is not available)
+     * Single fixed option since all orders are sent out at the same time
      */
     getDefaultShippingOptions(): ShippingOption[] {
         return [
             {
                 priority: 1,
-                amount: 7900, // 79 kr in øre
-                description: 'Posten Servicepakke (3-5 virkedager)',
+                amount: 9900, // 99 kr in øre
+                description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
                 vippsLogistics: {
                     product: 'SERVICEPAKKE',
                     service: 'STANDARD',
-                },
-            },
-            {
-                priority: 2,
-                amount: 14900, // 149 kr in øre
-                description: 'Posten på døren (1-2 virkedager)',
-                vippsLogistics: {
-                    product: 'PA_DOREN',
-                    service: 'EXPRESS',
                 },
             },
         ];
