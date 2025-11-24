@@ -88,15 +88,6 @@ function calculateTotalAmount(orderLines: OrderLine[]): number {
     return orderLines.reduce((sum, line) => sum + line.totalAmount, 0);
 }
 
-// Helper: Calculate total weight from cart items (in grams)
-function calculateTotalWeight(items: Array<{ id: string; quantity: number }>): number {
-    return items.reduce((total, item) => {
-        const product = products.find(p => p.id === item.id);
-        const itemWeight = product?.weight || 200; // Default 200g per item if weight not specified
-        return total + (itemWeight * item.quantity);
-    }, 0);
-}
-
 // Helper: Generate unique reference ID
 function generateReference(): string {
     const timestamp = Date.now();
