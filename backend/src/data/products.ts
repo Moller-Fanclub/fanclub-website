@@ -9,6 +9,14 @@ export interface Product {
 
 export const products: Product[] = [
     {
+        id: '69',
+        imageUrls: ['/merch/west/front-vest.png', '/merch/west/back-vest.png'],
+        title: 'Møller Vest',
+        price: '449',
+        sizes: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        description: 'The vest is back!!!\n\n CE_merket – EN 1150:1999\n Tekstil: 100% polyester \nPassform: Unisex\n Vekt: 130 g/m2\n Størrelser barn: XXS – 4/8 år, XS – 8-12 år, S 12-14 år',
+    },
+    {
         id: '1',
         imageUrls: ['/merch/bjoller/bjoller.png'],
         title: 'Møller Bjørn',
@@ -39,22 +47,6 @@ export const products: Product[] = [
         price: '299',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
-    },
-    {
-        id: '6',
-        imageUrls: ['/merch/boxer/boxer-back.png', '/merch/boxer/boxer-front.png'],
-        title: 'Boxer Shorts',
-        price: '299',
-        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-        description: '- Med omsluttende, fremhevet gummibånd\n - Elastisk jersey, behagelig tøybar og myk å ta på\n - Myk stoffkvalitet: 160 g/m²\n - Materiale: 95 % bomull, 5 % elastan\n - Sertifikater: Global Recycled Standard, GOTS, OEKO-TEX® STANDARD 100\n - Lettstelt: 30 °C vaskbar, kan strykes',
-    },
-    {
-        id: '7',
-        imageUrls: ['/merch/tank-top/tank-front.png', '/merch/tank-top/tank-back.png'],
-        title: 'Tank Top',
-        price: '299',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: '- Normalt snitt for optimal passform\n - 1x1 ribbestrikk i halsutsnitt og ermehull\n - Dobbelt søm i livet og på ermene\n - Fargetilpasset jersey-nakkebånd\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '8',
@@ -97,11 +89,19 @@ export const products: Product[] = [
         description: 'Brodert logo\n Rett skjerm og avflatet topp\n Størrelsen kan justeres på baksiden\n Skjermen er grønn på undersiden\n Materiale: 100 % polyester',
     },
     {
-        id: '69',
-        imageUrls: ['/merch/west/front-vest.png', '/merch/west/back-vest.png'],
-        title: 'Møller Vest',
-        price: '449',
-        sizes: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: 'The vest is back!!!\n\n CE_merket – EN 1150:1999\n Tekstil: 100% polyester \nPassform: Unisex\n Vekt: 130 g/m2\n Størrelser barn: XXS – 4/8 år, XS – 8-12 år, S 12-14 år',
+        id: '6',
+        imageUrls: ['/merch/boxer/boxer-back.png', '/merch/boxer/boxer-front.png'],
+        title: 'Boxer Shorts',
+        price: '299',
+        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        description: '- Med omsluttende, fremhevet gummibånd\n - Elastisk jersey, behagelig tøybar og myk å ta på\n - Myk stoffkvalitet: 160 g/m²\n - Materiale: 95 % bomull, 5 % elastan\n - Sertifikater: Global Recycled Standard, GOTS, OEKO-TEX® STANDARD 100\n - Lettstelt: 30 °C vaskbar, kan strykes',
+    },
+    {
+        id: '7',
+        imageUrls: ['/merch/tank-top/tank-front.png', '/merch/tank-top/tank-back.png'],
+        title: 'Tank Top',
+        price: '299',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        description: '- Normalt snitt for optimal passform\n - 1x1 ribbestrikk i halsutsnitt og ermehull\n - Dobbelt søm i livet og på ermene\n - Fargetilpasset jersey-nakkebånd\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
 ];
