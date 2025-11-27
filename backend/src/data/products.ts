@@ -90,7 +90,7 @@ export const products: Product[] = [
     },
     {
         id: '12',
-        imageUrls: ['/merch/cap/cap.png', '/merch/cap_left.png', '/merch/cap_right.png', '/merch/cap_in.png'],
+        imageUrls: ['/merch/cap/cap.png', '/merch/cap/cap_left.png', '/merch/cap/cap_right.png', '/merch/cap/cap_in.png'],
         title: 'Møller Cap',
         price: '349',
         sizes: ['One Size'],
