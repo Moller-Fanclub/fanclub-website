@@ -90,11 +90,11 @@ export const products: Product[] = [
     },
     {
         id: '12',
-        imageUrls: ['/merch/cap/cap.png'],
+        imageUrls: ['/merch/cap/cap.png', '/merch/cap_left.png', '/merch/cap_right.png', '/merch/cap_in.png'],
         title: 'Møller Cap',
-        price: '299',
+        price: '349',
         sizes: ['One Size'],
-        description: 'Rett skjerm og avflatet topp\n Størrelsen kan justeres på baksiden\n Skjermen er grønn på undersiden\n Materiale: 100 % polyester',
+        description: 'Brodert logo\n Rett skjerm og avflatet topp\n Størrelsen kan justeres på baksiden\n Skjermen er grønn på undersiden\n Materiale: 100 % polyester',
     },
     {
         id: '69',
