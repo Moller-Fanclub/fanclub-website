@@ -22,6 +22,8 @@ jobs:
       run: |
         cd backend
         npm ci
+        # Generate Prisma Client (needed for build)
+        npx prisma generate || echo "⚠️ Prisma not configured yet - database will be disabled"
         
     - name: Install frontend dependencies
       run: |
@@ -52,8 +54,21 @@ jobs:
           echo "PORT=${PORT:-3001}"
           echo "NODE_ENV=${NODE_ENV:-production}"
           echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
-          echo "EMAIL_PASS=${{ secrets.EMAIL_PASS }}"
           echo "EMAIL_FROM_SHOP=${{ secrets.EMAIL_FROM_SHOP }}"
+          echo "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"
+          echo "AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}"
+          echo "AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}"
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          echo "VIPPS_CLIENT_ID=${{ secrets.VIPPS_CLIENT_ID }}"
+          echo "VIPPS_CLIENT_SECRET=${{ secrets.VIPPS_CLIENT_SECRET }}"
+          echo "VIPPS_SUBSCRIPTION_KEY=${{ secrets.VIPPS_SUBSCRIPTION_KEY }}"
+          echo "VIPPS_MSN=${{ secrets.VIPPS_MSN }}"
+          echo "VIPPS_CALLBACK_URL=${{ secrets.VIPPS_CALLBACK_URL }}"
+          echo "VIPPS_CALLBACK_AUTHORIZATION_TOKEN=${{ secrets.VIPPS_CALLBACK_AUTHORIZATION_TOKEN }}"
+          echo "VIPPS_API_BASE_URL=${{ secrets.VIPPS_API_BASE_URL }}"
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
+          echo "BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}"
+          echo "BETTER_AUTH_URL=${{ secrets.BETTER_AUTH_URL || secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
         } > .env
         
     - name: Deploy to server
@@ -71,5 +86,20 @@ jobs:
           
           # Set secure file permissions (read/write for owner only)
           chmod 600 .env
+          
+          # Install Prisma CLI if DATABASE_URL is set (needed for migrations)
+          if grep -q "DATABASE_URL=" .env; then
+            echo "📦 Installing Prisma CLI..."
+            npm install prisma --save-dev --no-save || echo "⚠️ Prisma install failed"
+            
+            echo "📦 Generating Prisma Client..."
+            npx prisma generate || echo "⚠️ Prisma generation failed - check DATABASE_URL"
+            
+            echo "🔄 Running database migrations..."
+            npx prisma migrate deploy || echo "⚠️ Migration failed - database may need manual setup"
+          else
+            echo "ℹ️ DATABASE_URL not set - skipping database setup"
+          fi
 
+          # Restart application
           pm2 restart fanclub-backend || pm2 start dist/src/server.js --name fanclub-backend

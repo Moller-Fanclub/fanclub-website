@@ -4,13 +4,18 @@ import HomePage from './pages/HomePage/HomePage';
 import MerchPage from "./pages/MerchPage/MerchPage.tsx";
 import MerchProductPage from "./pages/MerchPage/MerchProductPage.tsx";
 import CheckoutPage from "./pages/CheckoutPage/CheckoutPage.tsx";
+import CheckoutSuccessPage from "./pages/CheckoutSuccessPage/CheckoutSuccessPage.tsx";
+import CheckoutErrorPage from "./pages/CheckoutErrorPage/CheckoutErrorPage.tsx";
 import ContactPage from "./pages/AboutPage/AboutPage.tsx";
 import TermsPage from "./pages/TermsPage/TermsPage.tsx";
 import ComingSoonPage from "./pages/ComingSoonPage/ComingSoonPage.tsx";
 import CalenderPage from './pages/CalenderPage/CalenderPage.tsx';
 import AboutPage from './pages/AboutPage/AboutPage.tsx';
 import BlogPage from './pages/BlogPage/BlogPage.tsx';
-import { PublicPaths } from './lib/routes';
+import AdminLoginPage from './pages/AdminLoginPage/AdminLoginPage.tsx';
+import AdminDashboardPage from './pages/AdminDashboardPage/AdminDashboardPage.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
+import { PublicPaths, AdminPaths } from './lib/routes';
 
 
 export function AppRoutes() {
@@ -26,11 +31,24 @@ export function AppRoutes() {
         <Route path={PublicPaths.merch} element={<MerchPage />} />
         <Route path={PublicPaths.merchProduct} element={<MerchProductPage />} />
         <Route path={PublicPaths.checkout} element={<CheckoutPage />} />
+        <Route path={PublicPaths.checkoutSuccess} element={<CheckoutSuccessPage />} />
+        <Route path={PublicPaths.checkoutError} element={<CheckoutErrorPage />} />
         <Route path={PublicPaths.contact} element={<ContactPage />} />
         <Route path={PublicPaths.terms} element={<TermsPage />} />
         <Route path={PublicPaths.blog.show} element={<BlogPage />} />
         <Route path="*" element={<Navigate to={PublicPaths.base} replace />} />
       </Route>
+      
+      {/* Admin routes (outside RootLayout) */}
+      <Route path={AdminPaths.login} element={<AdminLoginPage />} />
+      <Route
+        path={AdminPaths.dashboard}
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

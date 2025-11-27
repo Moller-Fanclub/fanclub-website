@@ -1,0 +1,147 @@
+// Prisma schema for Møller Fanclub orders and payments
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id                 String      @id @default(cuid())
+  reference          String      @unique // Vipps reference ID (e.g., "MF-1762622010451-A7L7MI")
+  vippsSessionId     String? // Vipps session ID
+  status             OrderStatus @default(PENDING)
+  // Customer information
+  customerEmail      String
+  customerName       String
+  customerPhone      String?
+  // Shipping address
+  shippingFirstName  String?
+  shippingLastName   String?
+  shippingStreet     String?
+  shippingPostalCode String?
+  shippingCity       String?
+  shippingCountry    String?
+  // Billing address
+  billingFirstName   String?
+  billingLastName    String?
+  billingStreet      String?
+  billingPostalCode  String?
+  billingCity        String?
+  billingCountry     String?
+  // Payment information
+  paymentMethod      String? // "Wallet", "Card", etc.
+  paymentState       String? // "AUTHORIZED", "CAPTURED", etc.
+  amount             Int // Amount in øre (cents)
+  currency           String      @default("NOK")
+  // Order totals
+  itemsTotal         Int // Items total in øre
+  shippingPrice      Int         @default(7900) // Shipping in øre (79 kr = 7900 øre)
+  totalAmount        Int // Total in øre
+  // Timestamps
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  paidAt             DateTime?
+  shippedAt          DateTime?
+  // Relations
+  items              OrderItem[]
+
+  @@index([reference])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Product information
+  productId     String
+  productName   String
+  productImage  String?
+  size          String?
+  // Pricing
+  unitPrice     Int // Price per unit in øre
+  quantity      Int
+  totalPrice    Int // Total for this item in øre
+  taxAmount     Int // Tax amount in øre
+  taxPercentage Int      @default(25) // Norwegian VAT
+  createdAt     DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING // Order created, payment not yet completed
+  PAYMENT_PENDING // Payment initiated but not confirmed
+  PAID // Payment successful, order confirmed
+  SHIPPED // Order has been shipped
+  DELIVERED // Order has been delivered
+  CANCELLED // Order cancelled
+  REFUNDED // Order refunded
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}

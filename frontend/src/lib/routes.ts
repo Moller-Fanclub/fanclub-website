@@ -6,12 +6,19 @@ export const PublicPaths = {
   merch: "/merch",
   merchProduct: "/merch/:id",
   checkout: "/checkout",
+  checkoutSuccess: "/checkout/success",
+  checkoutError: "/checkout/error",
   contact: "/contact",
   terms: "/terms",
   blog: {
     show: "/blog/:slug",
     useShow: (slug: string) => `/blog/${slug}`
     }
+};
+
+export const AdminPaths = {
+  login: "/admin/login",
+  dashboard: "/admin",
 };
 
 export const ExternalLinks = {
