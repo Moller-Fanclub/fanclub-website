@@ -1,5 +1,29 @@
 [
   {
+    "date": "02-12-2025",
+    "place": "Beaver Creek",
+    "discipline": "Downhill",
+    "country": "USA",
+    "category": "Training",
+    "position": "38",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127337",
+    "season": "2025/2026",
+    "raceId": "127337"
+  },
+  {
+    "date": "27-11-2025",
+    "place": "Copper Mountain, CO",
+    "discipline": "Super G",
+    "country": "USA",
+    "category": "World Cup",
+    "position": "5",
+    "fisPoints": "45",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127440",
+    "season": "2025/2026",
+    "raceId": "127440"
+  },
+  {
     "date": "26-10-2025",
     "place": "Soelden",
     "discipline": "Giant Slalom",
