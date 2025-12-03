@@ -146,7 +146,6 @@ export class VippsEPaymentService {
                 }
             );
 
-            console.log(`✅ Captured payment: ${reference}`);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;
@@ -178,7 +177,6 @@ export class VippsEPaymentService {
                 }
             );
 
-            console.log(`✅ Cancelled payment: ${reference}`);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;
@@ -205,7 +203,6 @@ export class VippsEPaymentService {
                 }
             );
 
-            console.log(`✅ Refunded payment: ${reference}`);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;

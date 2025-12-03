@@ -1,6 +1,7 @@
 .checkout-page {
   flex: 1;
   padding: 6rem 1rem 2rem;
+  background: transparent;
 }
 
 .checkout-container {
@@ -10,10 +11,12 @@
 
 .checkout-title {
   font-size: 2.5rem;
-  font-weight: 800;
+  font-weight: 900;
   text-align: center;
-  color: #111827;
+  color: #ffffff;
   margin-bottom: 2rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
 }
 
 .checkout-grid {

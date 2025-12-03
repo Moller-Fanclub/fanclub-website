@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { vippsService, OrderLine, CreateCheckoutSessionRequest } from '../services/vippsService.js';
 import { vippsEPaymentService, CaptureRequest, RefundRequest } from '../services/vippsEPaymentService.js';
+import { shippingService } from '../services/shippingService.js';
 import { products } from '../data/products.js';
 import { mailService } from '../services/mailService.js';
 import { databaseService } from '../services/databaseService.js';
@@ -225,9 +226,11 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
         if (USE_DATABASE) {
             try {
                 // Calculate totals
+                // Note: Shipping price will be added dynamically when customer selects shipping option
+                // We use a default shipping price for initial order creation, which will be updated in callback
                 const itemsTotal = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity * 100), 0); // Convert to øre
-                const shippingPrice = 7900; // 79 kr in øre
-                const totalAmount = itemsTotal + shippingPrice;
+                const shippingPrice = 7900; // Default 79 kr in øre (will be updated when shipping is selected)
+                const totalAmount = itemsTotal + shippingPrice; // Initial total, will be updated when shipping is selected
 
                 await databaseService.createOrder({
                     reference,
@@ -264,9 +267,9 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             }
         }
 
-        // Validate required environment variables
+        // Validate required environment variables (warn but don't throw)
         if (!VIPPS_MSN) {
-            throw new Error('VIPPS_MSN environment variable is not set');
+            console.warn('⚠️  VIPPS_MSN environment variable is not set - checkout session creation will fail if Vipps service is not configured');
         }
 
         // Build callback URL (full URL, not prefix)
@@ -291,15 +294,43 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             console.warn('⚠️  VIPPS_CALLBACK_AUTHORIZATION_TOKEN not set - callbacks will not be secured');
         }
 
-        // Calculate bottom line (total amount)
+        // Generate descriptive payment description
+        const paymentDescription = generatePaymentDescription(validatedItems);
+
+        // Determine initial amount and logistics configuration
+        // Use single fixed shipping option since all orders are sent out at the same time
+        // Shipping cost is included in initial amount
+        let initialAmount = totalAmount;
+        const shippingCost = 7900; // 79 kr in øre
+        initialAmount = totalAmount + shippingCost;
+
+        // Single fixed shipping option - no choice needed since all orders ship together
+        const logisticsConfig: CreateCheckoutSessionRequest['logistics'] = {
+            fixedOptions: [
+                {
+                    id: 'servicepakke-standard',
+                    priority: 1,
+                    amount: {
+                        value: shippingCost,
+                        currency: 'NOK',
+                    },
+                    description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
+                    brand: 'POSTEN' as const,
+                    isDefault: true,
+                    vippsLogistics: {
+                        product: 'SERVICEPAKKE',
+                        service: 'STANDARD',
+                    },
+                },
+            ],
+        };
+
+        // Calculate bottom line (total amount - shipping will be added by Vipps when address is entered)
         // Note: Vipps API expects 'orderBottomLine' (camelCase), not 'bottomLine'
         const orderBottomLine = {
             currency: 'NOK',
-            amount: totalAmount,
+            amount: initialAmount, // Just product total - Vipps will update this when shipping is selected
         };
-
-        // Generate descriptive payment description
-        const paymentDescription = generatePaymentDescription(validatedItems);
 
         const sessionRequest: CreateCheckoutSessionRequest = {
             type: 'PAYMENT',
@@ -307,7 +338,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             transaction: {
                 amount: {
                     currency: 'NOK',
-                    value: totalAmount, // Amount in øre
+                    value: initialAmount, // Amount in øre (products only - shipping will be added when address is entered)
                 },
                 reference,
                 paymentDescription,
@@ -319,7 +350,11 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             merchantInfo,
             configuration: {
                 elements: 'PaymentAndContactInfo', // We need address for shipping
+                shippingDetails: {
+                    isShipping: true, // Explicitly request shipping address collection
+                },
             },
+            logistics: logisticsConfig,
         };
 
         // Add customer info if provided (for prefill)
@@ -422,6 +457,63 @@ router.post('/checkout/session/:reference/expire', async (req: Request, res: Res
 });
 
 /**
+ * POST /api/vipps/checkout/shipping-options
+ * Dynamic shipping options callback for Vipps Checkout
+ * This endpoint is called by Vipps when the customer enters their shipping address
+ * Vipps may also call this during session validation, so we need to handle empty requests
+ */
+// Handle OPTIONS preflight requests for CORS (Vipps may send these)
+router.options('/checkout/shipping-options', (_req: Request, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+});
+
+router.post('/checkout/shipping-options', async (_req: Request, res: Response) => {
+    try {
+        // Always return single fixed shipping option
+        // All orders are sent out at the same time, so no choice is needed
+        const defaultOptions = shippingService.getDefaultShippingOptions();
+        const responseOptions = defaultOptions.map((option) => ({
+            id: `shipping-option-${option.priority}`,
+            priority: option.priority,
+            amount: {
+                value: option.amount,
+                currency: 'NOK',
+            },
+            description: option.description,
+            brand: 'POSTEN' as const,
+            isDefault: true,
+            vippsLogistics: option.vippsLogistics,
+        }));
+
+        return res.json({
+            fixedOptions: responseOptions,
+        });
+    } catch (error) {
+        console.error('❌ Error getting shipping options:', error);
+        // Always return valid options, even on error
+        // This ensures Vipps doesn't reject the checkout session
+        const defaultOptions = shippingService.getDefaultShippingOptions();
+        return res.json({
+            fixedOptions: defaultOptions.map((option) => ({
+                id: `shipping-option-${option.priority}`,
+                priority: option.priority,
+                amount: {
+                    value: option.amount,
+                    currency: 'NOK',
+                },
+                description: option.description,
+                brand: 'POSTEN' as const,
+                isDefault: true,
+                vippsLogistics: option.vippsLogistics,
+            })),
+        });
+    }
+});
+
+/**
  * POST /api/vipps/callback
  * Handle Vipps callbacks
  * This endpoint receives callbacks from Vipps when payment state changes
@@ -442,6 +534,8 @@ router.post('/callback', async (req: Request, res: Response) => {
         if (sessionState === 'PaymentSuccessful') {
             // Get full session details
             const sessionStatus = await vippsService.getSessionStatus(reference);
+
+            // Log shipping and billing details for debugging
 
             // Extract email from shippingDetails, billingDetails, or userDetails
             // Vipps Checkout API v3 returns email in shippingDetails/billingDetails, not userDetails
@@ -473,8 +567,18 @@ router.post('/callback', async (req: Request, res: Response) => {
                     }> = [];
 
                     let itemsTotal = 0;
-                    const shippingPrice = 7900; // 79 kr in øre
+                    let shippingPrice = 7900; // Default 79 kr in øre, will be extracted from session
                     let totalAmount = 0;
+
+                    // Extract shipping price from session order summary if available
+                    // Vipps includes shipping as a line item in the order summary
+                    if ((sessionStatus as any).orderSummary?.orderLines) {
+                        const orderLines = (sessionStatus as any).orderSummary.orderLines;
+                        const shippingLine = orderLines.find((line: any) => line.isShipping === true);
+                        if (shippingLine) {
+                            shippingPrice = shippingLine.totalAmount || shippingPrice;
+                        }
+                    }
 
                     // Try to get order from database first
                     let order = null;
@@ -482,7 +586,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                         try {
                             order = await databaseService.getOrderByReference(reference);
                             if (order) {
-                                // Order exists, use it
+                                // Order exists, use it but update shipping price if available from session
                                 orderItems = order.items.map((item: any) => ({
                                     productId: item.productId,
                                     productName: item.productName,
@@ -494,6 +598,12 @@ router.post('/callback', async (req: Request, res: Response) => {
                                     taxAmount: item.taxAmount,
                                 }));
                                 itemsTotal = order.itemsTotal;
+                                // Update shipping price from session if available
+                                if (shippingPrice !== 7900) {
+                                    shippingPrice = shippingPrice; // Use extracted shipping price
+                                } else {
+                                    shippingPrice = order.shippingPrice;
+                                }
                                 totalAmount = order.totalAmount;
                             }
                         } catch (dbError) {
@@ -506,7 +616,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                         // Extract order items from session (if available in orderSummary)
                         // Note: Vipps session status might not include order lines, so we'll create a basic order
                         const paymentAmount = sessionStatus.paymentDetails.amount.value;
-                        itemsTotal = paymentAmount - shippingPrice; // Approximate
+                        itemsTotal = paymentAmount - shippingPrice; // Calculate items total
                         totalAmount = paymentAmount;
 
                         // Create order in database

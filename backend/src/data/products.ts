@@ -5,6 +5,7 @@ export interface Product {
     price: string;
     sizes: string[];
     description?: string;
+    weight?: number; // Weight in grams (for shipping calculations)
 }
 
 export const products: Product[] = [
@@ -15,6 +16,7 @@ export const products: Product[] = [
         price: '349',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: 'Classic basic tee in premium cotton',
+        weight: 200, // grams
     },
     {
         id: '2',
@@ -23,6 +25,7 @@ export const products: Product[] = [
         price: '649',
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
         description: 'Comfortable hoodie perfect for cold race days',
+        weight: 600, // grams
     },
     {
         id: '3',
@@ -31,6 +34,7 @@ export const products: Product[] = [
         price: '399',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: 'Tour edition basic tee with special design',
+        weight: 200, // grams
     },
     {
         id: '4',
@@ -39,6 +43,7 @@ export const products: Product[] = [
         price: '449',
         sizes: ['S', 'M', 'L', 'XL'],
         description: 'Premium quality t-shirt for true fans',
+        weight: 250, // grams
     },
     {
         id: '5',
@@ -47,5 +52,6 @@ export const products: Product[] = [
         price: '299',
         sizes: ['One Size'],
         description: 'Adorable teddy bear mascot',
+        weight: 300, // grams
     },
 ];

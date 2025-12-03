@@ -347,8 +347,8 @@ const CheckoutPage: React.FC = () => {
                   <span>{totalPrice.toFixed(2)} kr</span>
                 </div>
                 <div className="total-row">
-                  <span>Frakt:</span>
-                  <span>Gratis</span>
+                  <span>Estimert frakt:</span>
+                  <span>79 kr</span>
                 </div>
                 <div className="total-row total-final">
                   <span>Totalt:</span>

@@ -85,26 +85,18 @@ export class MailService {
             throw new Error('Email service is not configured');
         }
 
-        console.log('🔑 getAccessToken() called');
-
         // Return cached token if still valid (with 5 minute buffer)
         const now = Date.now();
         if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
-            console.log('✅ Using cached OAuth2 token');
             return this.cachedAccessToken;
         }
 
-        console.log('🔄 Acquiring new OAuth2 token...');
         try {
             // Use Microsoft Graph scope for Mail.Send permission
             // This is the recommended approach for application-level email sending
             const tokenRequest = {
                 scopes: ['https://graph.microsoft.com/.default']
             };
-
-            console.log(`   Client ID: ${process.env.AZURE_CLIENT_ID?.substring(0, 8)}...`);
-            console.log(`   Tenant ID: ${process.env.AZURE_TENANT_ID?.substring(0, 8)}...`);
-            console.log(`   Scope: ${tokenRequest.scopes[0]}`);
 
             const response = await this.msalClient!.acquireTokenByClientCredential(tokenRequest);
 
@@ -121,12 +113,6 @@ export class MailService {
                 // Default to 1 hour if expiresOn is not available
                 this.tokenExpiresAt = now + 60 * 60 * 1000;
             }
-
-            console.log('✅ OAuth2 access token acquired and cached');
-            if (this.cachedAccessToken) {
-                console.log(`   Token length: ${this.cachedAccessToken.length} characters`);
-            }
-            console.log(`   Token expires at: ${new Date(this.tokenExpiresAt).toISOString()}`);
 
             if (!this.cachedAccessToken) {
                 throw new Error('Failed to cache access token');
@@ -372,11 +358,6 @@ export class MailService {
         );
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('📧 Email sent via Microsoft Graph API');
-            console.log(`   To: ${toAddresses.join(', ')}`);
-            if (bccAddresses.length > 0) {
-                console.log(`   BCC: ${bccAddresses.join(', ')}`);
-            }
         }
     }
 
@@ -396,7 +377,6 @@ export class MailService {
             return;
         }
 
-        console.log('📧 Preparing to send order confirmation email...');
 
         try {
             const textContent = `
@@ -429,7 +409,6 @@ Møller Fanclub
 
             // Email sent successfully - log in production
             if (process.env.NODE_ENV === 'production') {
-                console.log(`✅ Order confirmation email sent to ${orderData.email} for order ${orderData.orderNumber}`);
             }
         } catch (error) {
             console.error(`❌ Failed to send email to ${orderData.email}:`, error);
@@ -551,7 +530,6 @@ Dette er en automatisk varsling fra Møller Fanclub ordresystem.
             );
 
             if (process.env.NODE_ENV === 'production') {
-                console.log(`✅ Order failure notification sent to order@mollerfan.club for order ${reference}`);
             }
         } catch (error) {
             console.error(`❌ Failed to send failure notification for order ${reference}:`, error);
