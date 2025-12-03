@@ -4,7 +4,7 @@
   "description": "Møller Fanclub - Full Stack Application",
   "private": true,
   "scripts": {
-    "dev": "npm run dev:backend & npm run dev:frontend & npm run dev:studio",
+    "dev": "concurrently -k -n backend,frontend,studio -c green,cyan,magenta \"cd backend && npm run dev\" \"cd frontend && npm run dev\" \"cd studio-moller-fanclub && npm run dev\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:studio": "cd studio-moller-fanclub && npm run dev",
@@ -12,7 +12,7 @@
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
     "build:studio": "cd studio-moller-fanclub && npm run build",
-    "start": "npm run start:backend & npm run start:frontend",
+    "start": "concurrently -k -n backend,frontend -c green,cyan \"cd backend && npm start\" \"cd frontend && npm run preview\"",
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm run preview",
     "start:studio": "cd studio-moller-fanclub && npm run start",
@@ -24,5 +24,8 @@
     "fullstack"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

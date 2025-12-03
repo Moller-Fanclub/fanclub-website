@@ -193,23 +193,18 @@ const RacePage: React.FC = () => {
       {selectedView === 'past' && (
         <>
           {hasPast ? (
-            <>
-              {pastGrouped.map((group) => (
-                <div
-                  key={group.location}
-                  className="mt-12 grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3"
-                >
-                  <FadeInnAnimation className="w-full">
-                    <LocationRaceCard
-                      location={group.location}
-                      imagePath={group.imagePath}
-                      races={group.races}
-                      isPast={true}
-                    />
-                  </FadeInnAnimation>
-                </div>
+            <div className="mt-12 grid grid-cols-1 gap-6 justify-items-center sm:grid-cols-2 lg:grid-cols-3">
+              {pastGrouped.map((group, index) => (
+                <FadeInnAnimation key={group.location} className="w-full" delay={index * 100}>
+                  <LocationRaceCard
+                    location={group.location}
+                    imagePath={group.imagePath}
+                    races={group.races}
+                    isPast={true}
+                  />
+                </FadeInnAnimation>
               ))}
-            </>
+            </div>
           ) : (
             <p className="mt-12 text-center text-lg font-medium text-white/80">
               Ingen tidligere renn er registrert ennå.

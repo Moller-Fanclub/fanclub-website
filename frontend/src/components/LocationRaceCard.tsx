@@ -23,12 +23,17 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
         return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     };
 
+    const now = new Date();
     const today = new Date();
     const todayMidnight = getDateAtMidnight(today);
     const firstRaceDate = races.length > 0 ? races[0].date : today;
     const raceMidnight = getDateAtMidnight(firstRaceDate);
     const timeDiff = raceMidnight.getTime() - todayMidnight.getTime();
     const daysUntil = Math.round(timeDiff / (1000 * 3600 * 24));
+    
+    // Check if it's race day and the time has passed
+    const isRaceDay = daysUntil === 0;
+    const hasRaceStarted = isRaceDay && now.getTime() >= firstRaceDate.getTime();
 
     return (
         <FadeInnAnimation className="w-full overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
@@ -45,7 +50,9 @@ const LocationRaceCard: React.FC<LocationRaceCardProps> = ({ location, imagePath
                     <h3 className="font-bold text-gray-800 text-lg sm:text-xl truncate">{location}</h3>
                     {!isPast && daysUntil >= 0 && (
                         <p className="text-xs sm:text-sm text-blue-600 font-medium mt-1">
-                            {daysUntil === 0 ? '🏁 I dag!' : `⏱️ Om ${daysUntil} dag${daysUntil !== 1 ? 'er' : ''}`}
+                            {hasRaceStarted ? '🏁 Race day!' : 
+                             daysUntil === 0 ? '🏁 I dag!' : 
+                             `⏱️ Om ${daysUntil} dag${daysUntil !== 1 ? 'er' : ''}`}
                         </p>
                     )}
                 </div>
