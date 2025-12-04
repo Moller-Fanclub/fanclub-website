@@ -1,5 +1,17 @@
 [
   {
+    "date": "03-12-2025",
+    "place": "Beaver Creek",
+    "discipline": "Downhill",
+    "country": "USA",
+    "category": "Training",
+    "position": "24",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127338",
+    "season": "2025/2026",
+    "raceId": "127338"
+  },
+  {
     "date": "02-12-2025",
     "place": "Beaver Creek",
     "discipline": "Downhill",
