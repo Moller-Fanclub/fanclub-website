@@ -44,7 +44,7 @@ export const races: Race[] = [
     {
         name: 'Beaver Creek',
         imagePath: '/images/usa.png',
-        date: new Date('2025-12-06T17:30:00.000Z'), // America/Denver local time
+        date: new Date('2025-12-05T18:15:00.000Z'), // America/Denver local time
         discipline: 'SG',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127341',
     },
