@@ -44,7 +44,7 @@ jobs:
           echo "changed=true" >> $GITHUB_OUTPUT
         else
           echo "changed=false" >> $GITHUB_OUTPUT
-          echo "No changes detected in backend/races.json. Exiting early."
+          echo "No changes detected in backend/races.json. Skipping PR creation."
         fi
         
     - name: Create Pull Request
