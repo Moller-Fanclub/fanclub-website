@@ -22,11 +22,11 @@ const MerchPage: React.FC = () => {
     
     // Format date range
     const dateRange = openingDate && closingDate 
-        ? `${openingDate.getDate()}. november - ${closingDate.getDate()}. november`
+        ? `${openingDate.getDate()}. ${openingDate.toLocaleDateString('nb-NO', { month: 'long' })} - ${closingDate.getDate()}. ${closingDate.toLocaleDateString('nb-NO', { month: 'long' })}`
         : '';
     
     // Estimated delivery
-    const estimatedDeliveryWeeks = '3-4 uker';
+    const estimatedDeliveryWeeks = '2-4 uker';
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -131,7 +131,7 @@ const MerchPage: React.FC = () => {
                                 <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Estimert leveringstid: <strong>{estimatedDeliveryWeeks}</strong> etter {closingDate?.getDate()}. november</span>
+                                <span>Estimert leveringstid: <strong>{estimatedDeliveryWeeks}</strong> etter {closingDate?.getDate()}. {closingDate?.toLocaleDateString('nb-NO', { month: 'long' })}</span>
                             </p>
                             <p className="flex items-start">
                                 <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

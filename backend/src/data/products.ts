@@ -33,12 +33,12 @@ export const products: Product[] = [
         description: 'Unisex-snitt: Tettsittende hos menn, videre hos kvinner (bestill et nummer større eller mindre hvis du er i tvil)\n Hette med integrert snor\n Utvendig kengurulomme foran\n Behagelig og glatt stoff (280 g/m²) og myk, børstet innside\n Materiale: 80 % bomull, 20 % polyester (antrasitt: 52 % bomull, 48 % polyester)\n Merke: AWDis',
     },
     {
-        id: '3',
-        imageUrls: ['/merch/tour-basic/tour-basic-tee-back.png', '/merch/tour-basic/tour-basic-tee-front.png', '/merch/tour-basic/tour-basic-tee-left.png'],
-        title: 'Basic Tour Tee',
-        price: '499',
-        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-        description: 'Regular fit\n Myk stoffkvalitet: 153 g/m²\n Materiale: 100 % bomull',
+        id: '13',
+        imageUrls: ['/merch/art/art-front.png', '/merch/art/art-back.png'],
+        title: 'Art Print',
+        price: '399',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '4',
@@ -103,5 +103,6 @@ export const products: Product[] = [
         price: '299',
         sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: '- Normalt snitt for optimal passform\n - 1x1 ribbestrikk i halsutsnitt og ermehull\n - Dobbelt søm i livet og på ermene\n - Fargetilpasset jersey-nakkebånd\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
-    },
+    }
+
 ];
