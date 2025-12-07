@@ -39,7 +39,7 @@ export const races: Race[] = [
         imagePath: '/images/usa.png',
         date: new Date('2025-12-04T18:00:00.000Z'), // America/Denver local time
         discipline: 'DH',
-        resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127339',
+        resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127340',
     },
     {
         name: 'Beaver Creek',
@@ -47,6 +47,13 @@ export const races: Race[] = [
         date: new Date('2025-12-05T18:45:00.000Z'), // America/Denver local time
         discipline: 'SG',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127341',
+    },
+    {
+        name: 'Val Gardena Südtirol',
+        imagePath: '/images/italy.png',
+        date: new Date('2025-12-18T10:45:00.000Z'), // Europe/Rome local time
+        discipline: 'DH',
+        resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127339',
     },
     {
         name: 'Val Gardena Südtirol',
