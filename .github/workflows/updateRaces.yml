@@ -6,6 +6,10 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch: # Allow manual triggering
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-races:
     runs-on: ubuntu-latest
@@ -14,7 +18,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
         
     - name: Setup Node.js
@@ -40,13 +44,14 @@ jobs:
           echo "changed=true" >> $GITHUB_OUTPUT
         else
           echo "changed=false" >> $GITHUB_OUTPUT
+          echo "No changes detected in backend/races.json. Skipping PR creation."
         fi
         
     - name: Create Pull Request
       if: steps.verify-changed-files.outputs.changed == 'true'
       uses: peter-evans/create-pull-request@v6
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}
         commit-message: "🤖 Auto-update: Races data updated"
         title: "🤖 Auto-update: Races data updated"
         body: |
@@ -59,7 +64,6 @@ jobs:
           - Branch: ${{ github.ref }}
           
           Please review the changes and merge when ready.
-        branch: update/races-auto-${{ github.run_number }}
+        branch: update/races-auto
         delete-branch: true
         labels: automated,races-update
-
