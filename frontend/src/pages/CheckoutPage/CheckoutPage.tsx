@@ -182,14 +182,7 @@ const CheckoutPage: React.FC = () => {
           <h2>Butikken er stengt</h2>
           <p>Forhåndsbestillingsperioden er ikke aktiv akkurat nå.</p>
           <p style={{ marginTop: "12px", fontSize: "16px" }}>
-            Neste periode åpner:{" "}
-            <strong>
-              {openingDate?.toLocaleDateString("nb-NO", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </strong>
+            Følg med på Instagram for å få beskjed når neste periode åpner!
           </p>
           <Link
             to={PublicPaths.base}
@@ -234,8 +227,12 @@ const CheckoutPage: React.FC = () => {
                   produseres etter at bestillingsperioden stenger
                 </li>
                 <li>
-                  <strong>Estimert leveringstid:</strong> 2-4 uker etter
-                  bestillingsperioden
+                  <strong>Estimert leveringstid:</strong> 3-4 uker etter {" "}
+                    {openingDate?.toLocaleDateString("nb-NO", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                 </li>
                 <li>
                   Du vil motta e-postoppdateringer om produksjon og utsendelse
