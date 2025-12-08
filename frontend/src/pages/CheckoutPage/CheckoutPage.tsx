@@ -17,7 +17,7 @@ const CheckoutPage: React.FC = () => {
   const checkoutInstanceRef = useRef<VippsCheckoutInstance | null>(null);
 
   // Compute opening date from config
-  const openingDate = config ? new Date(config.openingDate) : null;
+  const closingDate = config ? new Date(config.closingDate) : null;
 
   // Initialize Vipps Checkout when component mounts or items change
   useEffect(() => {
@@ -228,7 +228,7 @@ const CheckoutPage: React.FC = () => {
                 </li>
                 <li>
                   <strong>Estimert leveringstid:</strong> 3-4 uker etter {" "}
-                    {openingDate?.toLocaleDateString("nb-NO", {
+                    {closingDate?.toLocaleDateString("nb-NO", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
