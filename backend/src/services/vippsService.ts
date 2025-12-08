@@ -55,6 +55,7 @@ export interface CheckoutSessionConfig {
     elements?: ElementsMode;
     shippingDetails?: ShippingDetails;
     prefillCustomer?: PrefillCustomer;
+    showOrderSummary?: boolean; // Display order summary in checkout window
     customConsent?: {
         required: boolean;
         text: string;
@@ -106,9 +107,20 @@ export interface CreateCheckoutSessionRequest {
     logistics?: {
         dynamicOptionsCallback?: string;
         fixedOptions?: Array<{
+            id: string;
             priority: number;
-            amount: number;
+            amount: {
+                value: number;
+                currency: string;
+            };
+            title: string; // Required by Vipps API
             description: string;
+            brand?: 'POSTEN' | 'BRING' | 'OTHER';
+            isDefault?: boolean;
+            vippsLogistics?: {
+                product: string;
+                service: string;
+            };
         }>;
         integrations?: Record<string, any>;
     };
@@ -266,22 +278,6 @@ export class VippsService {
                 'Vipps-System-Plugin-Version': '1.0.0',
             };
 
-            // Log request details for debugging
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('📤 Creating Vipps checkout session:');
-                console.log('  URL:', `${VIPPS_API_BASE_URL}/checkout/v3/session`);
-                console.log('  Headers:', {
-                    'client_id': VIPPS_CLIENT_ID ? '✓ Set' : '✗ Missing',
-                    'client_secret': VIPPS_CLIENT_SECRET ? '✓ Set' : '✗ Missing',
-                    'Ocp-Apim-Subscription-Key': VIPPS_SUBSCRIPTION_KEY ? '✓ Set' : '✗ Missing',
-                    'Merchant-Serial-Number': VIPPS_MSN || '✗ Missing',
-                });
-            }
-
-            // Log the exact request body being sent
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('📦 Request Body:', JSON.stringify(sessionData, null, 2));
-            }
 
             const response = await this.axiosInstance.post<CreateCheckoutSessionResponse>(
                 '/checkout/v3/session',
@@ -304,12 +300,8 @@ export class VippsService {
                 throw new Error('Invalid response from Vipps: missing required fields (token or checkoutFrontendUrl)');
             }
 
-            console.log(`✅ Created Vipps checkout session: ${sessionData.transaction.reference}`);
-            console.log('📋 Session response:', {
-                token: response.data.token ? '✓' : '✗',
-                checkoutFrontendUrl: response.data.checkoutFrontendUrl ? '✓' : '✗',
-                pollingUrl: response.data.pollingUrl ? '✓' : '✗',
-            });
+            console.log(`✅ Vipps checkout session created: ${sessionData.transaction.reference}`);
+
 
             return response.data;
         } catch (error) {
@@ -400,7 +392,6 @@ export class VippsService {
                 }
             );
 
-            console.log(`✅ Updated Vipps checkout session: ${reference}`);
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;
             console.error(`❌ Failed to update session ${reference}:`, axiosError.response?.data || axiosError.message);
@@ -438,7 +429,7 @@ export class VippsService {
                 }
             );
 
-            console.log(`✅ Expired Vipps checkout session: ${reference}`);
+            console.log(`✅ Vipps checkout session expired: ${reference}`);
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;
             console.error(`❌ Failed to expire session ${reference}:`, axiosError.response?.data || axiosError.message);

@@ -17,8 +17,10 @@ const CheckoutSuccessPage: React.FC = () => {
 
   useEffect(() => {
     // Clear cart when arriving at success page (backup in case it wasn't cleared earlier)
+    // Only clear once when component mounts
     clearCart();
-  }, [clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   useEffect(() => {
     if (reference) {
@@ -38,15 +40,86 @@ const CheckoutSuccessPage: React.FC = () => {
     }
   }, [reference]);
 
+  // Determine if payment was successful - only after we have data from Vipps
+  // Payment is successful if:
+  // 1. sessionState is "PaymentSuccessful", OR
+  // 2. paymentDetails.state is a successful state (AUTHORIZED, CAPTURED, RESERVED)
+  const paymentState =
+    orderDetails?.paymentDetails?.state || orderDetails?.sessionState;
+  const isPaymentSuccessful =
+    !loading &&
+    orderDetails !== null &&
+    (orderDetails.sessionState === "PaymentSuccessful" ||
+      paymentState === "AUTHORIZED" ||
+      paymentState === "CAPTURED" ||
+      paymentState === "RESERVED");
+  const isPaymentTerminated =
+    !loading &&
+    orderDetails !== null &&
+    (orderDetails.sessionState === "PaymentTerminated" ||
+      orderDetails.sessionState === "PaymentInitiationFailed" ||
+      orderDetails.sessionState === "SessionExpired" ||
+      paymentState === "CANCELLED" ||
+      paymentState === "REFUNDED");
+
   return (
     <div className="checkout-success">
       <div className="checkout-success-content">
-        <div className="success-checkmark">✓</div>
-        <h2>Takk for din bestilling!</h2>
-
         {loading ? (
-          <p>Henter bestillingsdetaljer...</p>
+          <>
+            {/* Loader while fetching payment status from Vipps */}
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                margin: "0 auto 24px",
+                border: "4px solid #E5E7EB",
+                borderTop: "4px solid #3B82F6",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+            <h2 style={{ textAlign: "center", marginBottom: "16px" }}>
+              Henter betalingsstatus...
+            </h2>
+            <p style={{ textAlign: "center", color: "#666" }}>
+              Vennligst vent mens vi henter informasjon fra Vipps
+            </p>
+          </>
+        ) : orderDetails === null ? (
+          <>
+            {/* Error state if we couldn't fetch order details */}
+            <div className="success-checkmark error-state">✗</div>
+            <h2 style={{ color: "#DC2626" }}>
+              Kunne ikke hente bestillingsdetaljer
+            </h2>
+            <p style={{ marginTop: "24px", color: "#DC2626" }}>
+              Vi kunne ikke hente informasjon om bestillingen din.
+            </p>
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}>
+              Hvis du mener dette er en feil, vennligst kontakt oss på{" "}
+              <a
+                href="mailto:order@mollerfan.club"
+                style={{ color: "#3B82F6" }}
+              >
+                order@mollerfan.club
+              </a>
+              .
+            </p>
+          </>
+        ) : isPaymentSuccessful ? (
+          <>
+            <div className="success-checkmark">✓</div>
+            <h2>Takk for din bestilling!</h2>
+          </>
         ) : (
+          <>
+            <div className="success-checkmark error-state">✗</div>
+            <h2 style={{ color: "#DC2626" }}>Betaling ikke gjennomført</h2>
+          </>
+        )}
+
+        {!loading && orderDetails !== null && (
           <>
             {reference && (
               <p style={{ fontSize: "14px", color: "#666", marginTop: "8px" }}>
@@ -54,23 +127,110 @@ const CheckoutSuccessPage: React.FC = () => {
               </p>
             )}
 
-            <p style={{ marginTop: "24px" }}>
-              Din betaling er mottatt og bestillingen er bekreftet.
-            </p>
+            {isPaymentSuccessful ? (
+              <>
+                <p style={{ marginTop: "24px" }}>
+                  Din betaling er mottatt og bestillingen er bekreftet.
+                </p>
 
-            <p style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}>
-              Du vil motta en bekreftelse på e-post med alle detaljer om
-              bestillingen din.
-            </p>
+                <p
+                  style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}
+                >
+                  Du vil motta en bekreftelse på e-post med alle detaljer om
+                  bestillingen din.
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ marginTop: "24px", color: "#DC2626" }}>
+                  Din betaling ble ikke gjennomført. Bestillingen er ikke
+                  bekreftet.
+                </p>
+
+                <p
+                  style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}
+                >
+                  Hvis du mener dette er en feil, vennligst kontakt oss på{" "}
+                  <a
+                    href="mailto:order@mollerfan.club"
+                    style={{ color: "#3B82F6" }}
+                  >
+                    order@mollerfan.club
+                  </a>
+                  .
+                </p>
+              </>
+            )}
+
+            {/* Shipping Address */}
+            {isPaymentSuccessful && orderDetails?.shippingDetails && (
+              <div
+                style={{
+                  marginTop: "24px",
+                  padding: "16px",
+                  backgroundColor: "#F9FAFB",
+                  borderRadius: "8px",
+                  border: "1px solid #E5E7EB",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    marginBottom: "12px",
+                    color: "#111827",
+                  }}
+                >
+                  Leveringsadresse
+                </h3>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "#374151",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {orderDetails.shippingDetails.firstName &&
+                    orderDetails.shippingDetails.lastName && (
+                      <p style={{ margin: "4px 0", fontWeight: "500" }}>
+                        {orderDetails.shippingDetails.firstName}{" "}
+                        {orderDetails.shippingDetails.lastName}
+                      </p>
+                    )}
+                  {orderDetails.shippingDetails.streetAddress && (
+                    <p style={{ margin: "4px 0" }}>
+                      {orderDetails.shippingDetails.streetAddress}
+                    </p>
+                  )}
+                  {(orderDetails.shippingDetails.postalCode ||
+                    orderDetails.shippingDetails.city) && (
+                    <p style={{ margin: "4px 0" }}>
+                      {orderDetails.shippingDetails.postalCode}{" "}
+                      {orderDetails.shippingDetails.city}
+                    </p>
+                  )}
+                  {orderDetails.shippingDetails.country && (
+                    <p style={{ margin: "4px 0" }}>
+                      {orderDetails.shippingDetails.country === "NO" ||
+                      orderDetails.shippingDetails.country === "NOR"
+                        ? "Norge"
+                        : orderDetails.shippingDetails.country}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {orderDetails?.paymentDetails && (
               <div
                 style={{
                   marginTop: "24px",
                   padding: "16px",
-                  backgroundColor: "#F0F9FF",
+                  backgroundColor: isPaymentSuccessful ? "#F0F9FF" : "#FEE2E2",
                   borderRadius: "8px",
-                  border: "1px solid #BAE6FD",
+                  border: `1px solid ${
+                    isPaymentSuccessful ? "#BAE6FD" : "#FCA5A5"
+                  }`,
                 }}
               >
                 <h3
@@ -78,12 +238,21 @@ const CheckoutSuccessPage: React.FC = () => {
                     fontSize: "16px",
                     fontWeight: "600",
                     marginBottom: "8px",
+                    color: isPaymentSuccessful ? "#1E40AF" : "#991B1B",
                   }}
                 >
                   Betalingsinformasjon
                 </h3>
                 <p style={{ fontSize: "14px", margin: "4px 0" }}>
-                  <strong>Status:</strong> {orderDetails.paymentDetails.state}
+                  <strong>Status:</strong>{" "}
+                  <span
+                    style={{
+                      color: isPaymentSuccessful ? "#059669" : "#DC2626",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {paymentState}
+                  </span>
                 </p>
                 <p style={{ fontSize: "14px", margin: "4px 0" }}>
                   <strong>Beløp:</strong>{" "}
@@ -99,15 +268,38 @@ const CheckoutSuccessPage: React.FC = () => {
                 display: "flex",
                 gap: "12px",
                 justifyContent: "center",
+                flexWrap: "wrap",
               }}
             >
+              {isPaymentTerminated && (
+                <button
+                  onClick={() => {
+                    window.location.href = PublicPaths.checkout;
+                  }}
+                  className="checkout-empty-btn"
+                  style={{
+                    backgroundColor: "#DC2626",
+                    color: "white",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    display: "inline-block",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Prøv igjen
+                </button>
+              )}
               <button
                 onClick={() => {
                   window.location.href = PublicPaths.merch;
                 }}
                 className="checkout-empty-btn"
                 style={{
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: isPaymentSuccessful ? "#3B82F6" : "#6B7280",
                   color: "white",
                   padding: "12px 24px",
                   borderRadius: "8px",
@@ -119,7 +311,9 @@ const CheckoutSuccessPage: React.FC = () => {
                   fontWeight: "500",
                 }}
               >
-                Fortsett shopping
+                {isPaymentSuccessful
+                  ? "Fortsett shopping"
+                  : "Tilbake til butikken"}
               </button>
               <button
                 onClick={() => {
@@ -127,16 +321,18 @@ const CheckoutSuccessPage: React.FC = () => {
                 }}
                 className="checkout-empty-btn"
                 style={{
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: isPaymentSuccessful ? "#3B82F6" : "#6B7280",
                   color: "white",
-                  border: "2px solid #3B82F6",
+                  border: `2px solid ${
+                    isPaymentSuccessful ? "#3B82F6" : "#9CA3AF"
+                  }`,
                   padding: "12px 24px",
                   borderRadius: "8px",
                   textDecoration: "none",
                   display: "inline-block",
                   cursor: "pointer",
                   fontSize: "16px",
-                  fontWeight: "500",
+                  fontWeight: "600",
                 }}
               >
                 Til forsiden
@@ -145,6 +341,12 @@ const CheckoutSuccessPage: React.FC = () => {
           </>
         )}
       </div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

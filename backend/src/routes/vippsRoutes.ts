@@ -4,6 +4,7 @@ import { vippsEPaymentService, CaptureRequest, RefundRequest } from '../services
 import { products } from '../data/products.js';
 import { mailService } from '../services/mailService.js';
 import { databaseService } from '../services/databaseService.js';
+import { shippingService } from '../services/shippingService.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -23,6 +24,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL
     || (process.env.VITE_API_URL && process.env.VITE_API_URL.startsWith('http') ? process.env.VITE_API_URL.replace('/api', '') : null)
     || (process.env.NODE_ENV === 'production' ? 'https://mollerfan.club' : 'http://localhost:5173');
 
+// Helper: Get image base URL - use production URLs for localhost since same products exist in prod
+function getImageBaseUrl(): string {
+    // For localhost development, use production URL since same products exist there
+    if (FRONTEND_URL.includes('localhost')) {
+        return 'https://mollerfan.club';
+    }
+    return FRONTEND_URL;
+}
+
 // Validate required environment variables on startup
 if (!VIPPS_MSN) {
     console.error('❌ VIPPS_MSN environment variable is required');
@@ -39,7 +49,7 @@ function convertCartItemsToOrderLines(cartItems: Array<{
     quantity: number;
     image?: string;
     size?: string;
-}>, baseUrl: string = ''): OrderLine[] {
+}>): OrderLine[] {
     return cartItems.map(item => {
         const unitPrice = item.price;
         const quantity = item.quantity;
@@ -69,13 +79,37 @@ function convertCartItemsToOrderLines(cartItems: Array<{
 
         // Add optional fields only if they exist
         // Note: ProductUrl must be a valid HTTPS URL (Vipps doesn't accept localhost HTTP URLs)
-        // Only include productUrl if it's HTTPS
-        if (baseUrl && baseUrl.startsWith('https://')) {
-            orderLine.productUrl = `${baseUrl}/merch/${item.id}`;
+        // For localhost development, use production URL since same products exist there
+        const productBaseUrl = getImageBaseUrl(); // Use same logic as images
+        if (productBaseUrl && productBaseUrl.startsWith('https://')) {
+            orderLine.productUrl = `${productBaseUrl}/merch/${item.id}`;
         }
-        // For localhost/development, skip productUrl to avoid validation errors
+
+        // Handle image URL - Vipps requires absolute HTTPS URLs for images
+        // For localhost development, use production URLs since same products exist there
         if (item.image) {
-            orderLine.imageUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
+            const imageBaseUrl = getImageBaseUrl();
+
+            if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
+                // Already absolute URL
+                // Convert HTTP to HTTPS (Vipps requires HTTPS)
+                if (item.image.startsWith('http://')) {
+                    // Replace localhost HTTP with production HTTPS
+                    if (item.image.includes('localhost')) {
+                        // Extract image path and use production URL
+                        const imagePath = item.image.replace(/^https?:\/\/[^/]+/, '');
+                        orderLine.imageUrl = `${imageBaseUrl}${imagePath}`;
+                    } else {
+                        orderLine.imageUrl = item.image.replace('http://', 'https://');
+                    }
+                } else {
+                    orderLine.imageUrl = item.image;
+                }
+            } else {
+                // Relative URL - make it absolute using production URL for localhost, or baseUrl for production
+                const imagePath = item.image.startsWith('/') ? item.image : '/' + item.image;
+                orderLine.imageUrl = `${imageBaseUrl}${imagePath}`;
+            }
         }
 
         return orderLine;
@@ -208,11 +242,17 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                     message: `Price mismatch for product ${item.id}`,
                 });
             }
-            validatedItems.push(item);
+            // Ensure image is set from product data if not provided in cart item
+            const validatedItem = {
+                ...item,
+                image: item.image || (product.imageUrls && product.imageUrls[0]) || undefined,
+            };
+            validatedItems.push(validatedItem);
         }
 
         // Convert cart items to Vipps order lines
-        const orderLines = convertCartItemsToOrderLines(validatedItems, FRONTEND_URL);
+        const orderLines = convertCartItemsToOrderLines(validatedItems);
+
 
         // Calculate total amount
         const totalAmount = calculateTotalAmount(orderLines);
@@ -226,7 +266,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             try {
                 // Calculate totals
                 const itemsTotal = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity * 100), 0); // Convert to øre
-                const shippingPrice = 7900; // 79 kr in øre
+                const shippingPrice = 9900; // 99 kr in øre
                 const totalAmount = itemsTotal + shippingPrice;
 
                 await databaseService.createOrder({
@@ -291,15 +331,56 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             console.warn('⚠️  VIPPS_CALLBACK_AUTHORIZATION_TOKEN not set - callbacks will not be secured');
         }
 
-        // Calculate bottom line (total amount)
-        // Note: Vipps API expects 'orderBottomLine' (camelCase), not 'bottomLine'
-        const orderBottomLine = {
-            currency: 'NOK',
-            amount: totalAmount,
-        };
-
         // Generate descriptive payment description
         const paymentDescription = generatePaymentDescription(validatedItems);
+
+        // Calculate shipping cost (fixed price)
+        const shippingCost = 9900; // 99 kr in øre
+
+        // Configure logistics with fixed shipping options
+        // No address validation - users can enter any address
+        const logisticsConfig: CreateCheckoutSessionRequest['logistics'] = {
+            fixedOptions: [
+                {
+                    id: 'pickup-haldens-gate',
+                    priority: 0, // Higher priority (lower number) - appears first
+                    amount: {
+                        value: 0, // 0 kr - free pickup
+                        currency: 'NOK',
+                    },
+                    title: 'Hent hos Rory',
+                    description: 'Hent på Haldens Gate 15, 7014 Trondheim',
+                    brand: 'OTHER' as const, // Use "OTHER" for in-store pickup (not a Posten service)
+                    isDefault: false, // No default - user must select
+                },
+                {
+                    id: 'servicepakke-standard',
+                    priority: 1,
+                    amount: {
+                        value: shippingCost,
+                        currency: 'NOK',
+                    },
+                    title: 'Posten Servicepakke',
+                    description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
+                    brand: 'POSTEN' as const,
+                    isDefault: false, // No default - shipping added only when selected
+                    vippsLogistics: {
+                        product: 'SERVICEPAKKE',
+                        service: 'STANDARD',
+                    },
+                },
+            ],
+        };
+
+        // Start with products only - shipping will be added by Vipps when:
+        // 1. User selects a shipping option, OR
+        // 2. Dynamic callback returns shipping options
+        // This ensures shipping is NOT in the initial view
+        const initialAmount = totalAmount; // Products only - no shipping included
+        const orderBottomLine = {
+            currency: 'NOK',
+            amount: initialAmount, // Products only - shipping added dynamically
+        };
 
         const sessionRequest: CreateCheckoutSessionRequest = {
             type: 'PAYMENT',
@@ -307,7 +388,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             transaction: {
                 amount: {
                     currency: 'NOK',
-                    value: totalAmount, // Amount in øre
+                    value: initialAmount, // Products only if dynamic callback, products + shipping if fixed only
                 },
                 reference,
                 paymentDescription,
@@ -318,8 +399,13 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             },
             merchantInfo,
             configuration: {
-                elements: 'PaymentAndContactInfo', // We need address for shipping
+                elements: 'Full', // Use 'Full' to ensure address section is visible and editable
+                shippingDetails: {
+                    isShipping: true, // Explicitly request shipping address collection and make it editable
+                },
+                showOrderSummary: true, // Display order summary with products in the checkout window
             },
+            logistics: logisticsConfig,
         };
 
         // Add customer info if provided (for prefill)
@@ -354,6 +440,43 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
 });
 
 /**
+ * OPTIONS /api/vipps/checkout/shipping-options
+ * Handle CORS preflight for shipping options callback
+ */
+router.options('/checkout/shipping-options', (_req: Request, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+});
+
+/**
+ * POST /api/vipps/checkout/shipping-options
+ * Dynamic shipping options callback from Vipps (optional - not currently used)
+ * Returns fixed shipping options without validation
+ * 
+ * Note: This endpoint is kept for potential future use but is not currently
+ * configured in the session creation. All shipping options are provided as
+ * fixedOptions in the session.
+ */
+router.post('/checkout/shipping-options', async (_req: Request, res: Response) => {
+    try {
+        // Handle CORS
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        // Return fixed shipping options (no validation)
+        const fixedOptions = shippingService.getDefaultShippingOptions();
+        return res.json({ fixedOptions });
+    } catch (error) {
+        console.error('❌ Error in shipping options callback:', error);
+        // Return empty options on error
+        return res.json({ fixedOptions: [] });
+    }
+});
+
+/**
  * GET /api/vipps/checkout/session/:reference
  * Get session status
  */
@@ -382,7 +505,7 @@ router.patch('/checkout/session/:reference', async (req: Request, res: Response)
 
         // Convert items if provided
         if (updateData.items) {
-            updateData.orderLines = convertCartItemsToOrderLines(updateData.items, FRONTEND_URL);
+            updateData.orderLines = convertCartItemsToOrderLines(updateData.items);
             updateData.transaction = {
                 amount: {
                     currency: 'NOK',
@@ -473,7 +596,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                     }> = [];
 
                     let itemsTotal = 0;
-                    const shippingPrice = 7900; // 79 kr in øre
+                    const shippingPrice = 9900; // 99 kr in øre
                     let totalAmount = 0;
 
                     // Try to get order from database first
@@ -616,6 +739,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                             estimatedDelivery: '3-5 virkedager',
                         });
                     }
+                    console.log(`✅ Order processed successfully: ${reference} - Payment: ${sessionStatus.paymentDetails?.state || 'N/A'}`);
                 } catch (emailError) {
                     console.error(`❌ Failed to process order ${reference}:`, emailError);
                     // Don't throw - we still want to return 2XX to Vipps

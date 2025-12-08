@@ -263,6 +263,14 @@ textarea.form-input {
   animation: scaleIn 0.5s ease-out;
 }
 
+/* Error state override */
+.success-checkmark.error-state {
+  background: #FEE2E2 !important;
+  background-image: none !important;
+  color: #DC2626;
+  border: 2px solid #DC2626;
+}
+
 @keyframes scaleIn {
   from {
     transform: scale(0);

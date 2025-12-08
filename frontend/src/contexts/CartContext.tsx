@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 
 export interface CartItem {
@@ -70,7 +70,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => {
+    setItems([]);
+  }, []);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
