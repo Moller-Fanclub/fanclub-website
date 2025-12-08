@@ -83,10 +83,10 @@ export const products: Product[] = [
     {
         id: '11',
         imageUrls: ['/merch/moller_pin/moller_pin.png'],
-        title: '5x Møller Pin',
-        price: '299',
+        title: 'Møller Pin',
+        price: '39',
         sizes: ['One Size'],
-        description: '5-pakning\n Nål for festing på baksiden\n Diameter: 32 mm\n Materiale: Metall, kunststoff',
+        description: 'Nål for festing på baksiden\n Diameter: 32 mm\n Materiale: Metall, kunststoff',
     },
     {
         id: '12',
