@@ -123,9 +123,12 @@ function calculateTotalAmount(orderLines: OrderLine[]): number {
 
 // Helper: Generate unique reference ID
 function generateReference(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `MF-${timestamp}-${random}`;
+    // Short, human-friendly unique id:
+    // - timestamp in base36 for compactness
+    // - 3 char random base36 suffix
+    const ts = Date.now().toString(36).toUpperCase();
+    const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `MF-${ts}-${rand}`;
 }
 
 // Helper: Generate payment description from cart items
