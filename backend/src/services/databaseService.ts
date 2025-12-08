@@ -126,6 +126,8 @@ export interface UpdateOrderPaymentData {
     paymentState?: string;
     status?: OrderStatusType;
     paidAt?: Date;
+    shippingPrice?: number; // in øre
+    totalAmount?: number; // in øre
 }
 
 export interface UpdateOrderCustomerData {
@@ -241,19 +243,30 @@ export class DatabaseService {
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
-        return await prismaClient.order.update({
+
+        const updateData: any = {
+            paymentMethod: data.paymentMethod,
+            paymentState: data.paymentState,
+            status: data.status,
+            paidAt: data.paidAt,
+            updatedAt: new Date(),
+        };
+
+        if (data.shippingPrice !== undefined) {
+            updateData.shippingPrice = data.shippingPrice;
+        }
+        if (data.totalAmount !== undefined) {
+            updateData.totalAmount = data.totalAmount;
+        }
+
+        const updatedOrder = await prismaClient.order.update({
             where: { reference },
-            data: {
-                paymentMethod: data.paymentMethod,
-                paymentState: data.paymentState,
-                status: data.status,
-                paidAt: data.paidAt,
-                updatedAt: new Date(),
-            },
+            data: updateData,
             include: {
                 items: true,
             },
         });
+        return updatedOrder;
     }
 
     /**

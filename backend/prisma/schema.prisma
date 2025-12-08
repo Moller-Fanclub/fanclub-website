@@ -39,7 +39,7 @@ model Order {
   currency           String      @default("NOK")
   // Order totals
   itemsTotal         Int // Items total in øre
-  shippingPrice      Int         @default(7900) // Shipping in øre (79 kr = 7900 øre)
+  shippingPrice      Int         @default(9900) // Shipping in øre (99 kr = 9900 øre)
   totalAmount        Int // Total in øre
   // Timestamps
   createdAt          DateTime    @default(now())
@@ -69,7 +69,7 @@ model OrderItem {
   quantity      Int
   totalPrice    Int // Total for this item in øre
   taxAmount     Int // Tax amount in øre
-  taxPercentage Int      @default(25) // Norwegian VAT
+  taxPercentage Int      @default(0) // Norwegian VAT
   createdAt     DateTime @default(now())
 
   @@index([orderId])

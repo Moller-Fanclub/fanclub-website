@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import axios from 'axios';
+import { shopConfig } from '../config/shopConfig.js';
 
 dotenv.config();
 
@@ -17,9 +18,9 @@ interface OrderEmailData {
     email: string;
     orderNumber: string;
     items: OrderItem[]; // Required - modern structure only
-    shippingPrice: string;
+    shippingPrice: string; // Kept for backwards compatibility but not displayed (included in total)
     totalPrice: string;
-    estimatedDelivery: string;
+    estimatedDelivery?: string; // Optional - no longer displayed
     productImage?: string;
 }
 
@@ -225,17 +226,9 @@ export class MailService {
                                                     </td>
                                                     <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
                                                         ${orderData.items.reduce((sum, item) => {
-                                                            const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
-                                                            return sum + (price * item.quantity);
-                                                        }, 0).toFixed(0) + ' kr'}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 4px 0; color: #64748b; font-size: 14px;">
-                                                        Frakt
-                                                    </td>
-                                                    <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.shippingPrice}
+            const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
+            return sum + (price * item.quantity);
+        }, 0).toFixed(0) + ' kr'}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -263,7 +256,22 @@ export class MailService {
                                     📦 Leveringsinformasjon
                                 </p>
                                 <p style="margin: 8px 0 0 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
-                                    Forventet levering: <strong>${orderData.estimatedDelivery}</strong><br>
+                                    Forventet levering: <strong>${(() => {
+                                        const closingDate = new Date(shopConfig.closingDate);
+                                        const deliveryDateStart = new Date(closingDate);
+                                        deliveryDateStart.setDate(deliveryDateStart.getDate() + 21); // 3 weeks
+                                        const deliveryDateEnd = new Date(closingDate);
+                                        deliveryDateEnd.setDate(deliveryDateEnd.getDate() + 28); // 4 weeks
+                                        
+                                        const formatDate = (date: Date): string => {
+                                            const day = date.getDate();
+                                            const month = date.toLocaleDateString('nb-NO', { month: 'long' });
+                                            const year = date.getFullYear();
+                                            return `${day}. ${month} ${year}`;
+                                        };
+                                        
+                                        return `3-4 uker fra butikkens stenging (${formatDate(deliveryDateStart)} - ${formatDate(deliveryDateEnd)})`;
+                                    })()}</strong><br>
                                     Du vil motta sporingsinformasjon på e-post når pakken er sendt.
                                 </p>
                             </div>
@@ -284,7 +292,7 @@ export class MailService {
                         <td style="padding: 32px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
                                 Har du spørsmål om din ordre?<br>
-                                Kontakt oss på <a href="mailto:${process.env.EMAIL_USER || 'shop@mollerfan.club'}" style="color: #3b82f6; text-decoration: none;">${process.env.EMAIL_USER || 'support@mollerfan.club'}</a>
+                                Kontakt oss på <a href="mailto:order@mollerfan.club" style="color: #3b82f6; text-decoration: none;">order@mollerfan.club</a>
                             </p>
                             <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
                                 © ${new Date().getFullYear()} Møller Fanclub • <a href="https://mollerfan.club" style="color: #3b82f6; text-decoration: none;">mollerfan.club</a>
@@ -314,8 +322,8 @@ export class MailService {
     ): Promise<void> {
         const token = await this.getAccessToken();
 
-        // Get the sender email
-        const senderEmail = process.env.EMAIL_FROM_SHOP!;
+        // Get the sender email - use order@mollerfan.club
+        const senderEmail = 'order@mollerfan.club';
 
         // Prepare recipients
         const toAddresses = Array.isArray(to) ? to : [to];
@@ -372,6 +380,8 @@ export class MailService {
             return;
         }
 
+        // Use order@mollerfan.club as sender (must be configured in Azure AD)
+        // EMAIL_FROM_SHOP should be set to order@mollerfan.club
         if (!process.env.EMAIL_FROM_SHOP) {
             console.warn('⚠️  EMAIL_FROM_SHOP not set - skipping order confirmation email');
             return;
@@ -379,6 +389,23 @@ export class MailService {
 
 
         try {
+            // Calculate delivery date: 3-4 weeks from closing date
+            const closingDate = new Date(shopConfig.closingDate);
+            const deliveryDateStart = new Date(closingDate);
+            deliveryDateStart.setDate(deliveryDateStart.getDate() + 21); // 3 weeks
+            const deliveryDateEnd = new Date(closingDate);
+            deliveryDateEnd.setDate(deliveryDateEnd.getDate() + 28); // 4 weeks
+
+            // Format dates in Norwegian format
+            const formatDate = (date: Date): string => {
+                const day = date.getDate();
+                const month = date.toLocaleDateString('nb-NO', { month: 'long' });
+                const year = date.getFullYear();
+                return `${day}. ${month} ${year}`;
+            };
+
+            const deliveryText = `3-4 uker fra butikkens stenging (${formatDate(deliveryDateStart)} - ${formatDate(deliveryDateEnd)})`;
+
             const textContent = `
 Hei ${orderData.name}!
 
@@ -387,13 +414,12 @@ Takk for din bestilling hos Møller Fanclub!
 Ordrenummer: ${orderData.orderNumber}
 
 ${orderData.items.map(item =>
-    `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} - ${item.price}`
-).join('\n')}
+                `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} - ${item.price}`
+            ).join('\n')}
 
-Frakt: ${orderData.shippingPrice}
 Total: ${orderData.totalPrice}
 
-Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
+Forventet levering: ${deliveryText}
 
 Med vennlig hilsen,
 Møller Fanclub
@@ -407,7 +433,7 @@ Møller Fanclub
                 'order@mollerfan.club'
             );
 
-            console.log(`✅ Order confirmation email sent: Order #${orderData.orderNumber} to ${orderData.email}`);
+            console.log(`✅ Order confirmation email sent: Order #${orderData.orderNumber}`);
         } catch (error) {
             console.error(`❌ Failed to send email to ${orderData.email}:`, error);
             if (error instanceof Error) {

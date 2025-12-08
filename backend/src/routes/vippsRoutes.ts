@@ -264,10 +264,10 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
         // This ensures we have the order items even if the callback fails
         if (USE_DATABASE) {
             try {
-                // Calculate totals
+                // Calculate totals (products only - shipping will be added by Vipps based on user selection)
                 const itemsTotal = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity * 100), 0); // Convert to øre
-                const shippingPrice = 9900; // 99 kr in øre
-                const totalAmount = itemsTotal + shippingPrice;
+                const shippingPrice = 0; // Will be updated in callback based on actual Vipps selection (0 for pickup, 9900 for shipping)
+                const totalAmount = itemsTotal; // Products only - shipping added by Vipps
 
                 await databaseService.createOrder({
                     reference,
@@ -596,7 +596,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                     }> = [];
 
                     let itemsTotal = 0;
-                    const shippingPrice = 9900; // 99 kr in øre
+                    let shippingPrice = 0; // Will be calculated from actual payment amount
                     let totalAmount = 0;
 
                     // Try to get order from database first
@@ -616,21 +616,40 @@ router.post('/callback', async (req: Request, res: Response) => {
                                     totalPrice: item.totalPrice,
                                     taxAmount: item.taxAmount,
                                 }));
-                                itemsTotal = order.itemsTotal;
-                                totalAmount = order.totalAmount;
+
+                                // Use order's itemsTotal, but verify it matches sum of items
+                                const calculatedItemsTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                                itemsTotal = order.itemsTotal; // Products only (from initial order creation)
+
+                                // If itemsTotal doesn't match, use calculated value
+                                if (order.itemsTotal !== calculatedItemsTotal && calculatedItemsTotal > 0) {
+                                    itemsTotal = calculatedItemsTotal;
+                                }
                             }
                         } catch (dbError) {
                             console.error(`⚠️ Database error when retrieving order ${reference}:`, dbError);
                         }
                     }
 
+                    // Calculate actual shipping price from Vipps payment amount
+                    // Payment amount = products + shipping (selected by user: 0 kr for pickup or 99 kr for shipping)
+                    let paymentAmount = 0;
+                    if (sessionStatus.paymentDetails) {
+                        paymentAmount = sessionStatus.paymentDetails.amount.value;
+
+                        // Ensure itemsTotal is valid - recalculate from order items if needed
+                        if (itemsTotal <= 0 && orderItems.length > 0) {
+                            itemsTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                        }
+
+                        // Calculate shipping price: payment amount minus products total
+                        // This will be 0 kr for pickup or 9900 kr (99 kr) for shipping
+                        shippingPrice = paymentAmount - itemsTotal;
+                        totalAmount = paymentAmount;
+                    }
+
                     // If order doesn't exist in database, create it from session data
                     if (!order && sessionStatus.paymentDetails && USE_DATABASE) {
-                        // Extract order items from session (if available in orderSummary)
-                        // Note: Vipps session status might not include order lines, so we'll create a basic order
-                        const paymentAmount = sessionStatus.paymentDetails.amount.value;
-                        itemsTotal = paymentAmount - shippingPrice; // Approximate
-                        totalAmount = paymentAmount;
 
                         // Create order in database
                         try {
@@ -734,9 +753,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                             email: customerEmail,
                             orderNumber: reference,
                             items: emailItems,
-                            shippingPrice: `${(shippingPrice / 100).toFixed(0)} kr`,
+                            shippingPrice: `${(shippingPrice / 100).toFixed(0)} kr`, // Not displayed, kept for compatibility
                             totalPrice: `${(totalAmount / 100).toFixed(0)} kr`,
-                            estimatedDelivery: '3-5 virkedager',
                         });
                     }
                     console.log(`✅ Order processed successfully: ${reference} - Payment: ${sessionStatus.paymentDetails?.state || 'N/A'}`);
