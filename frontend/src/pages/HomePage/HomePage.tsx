@@ -78,6 +78,11 @@ const HomePage: React.FC = () => {
       const startTime = Date.now();
       const duration = 2000; // 2 seconds
       const startDays = 60;
+      if (distance < 0) {
+        setCountdown("Race Day 🏔️🔥");
+        setIsAnimating(false);
+        return;
+      }
       
       const animate = () => {
         const elapsed = Date.now() - startTime;

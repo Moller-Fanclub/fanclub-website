@@ -44,6 +44,7 @@ jobs:
           echo "changed=true" >> $GITHUB_OUTPUT
         else
           echo "changed=false" >> $GITHUB_OUTPUT
+          echo "No changes detected in backend/races.json. Skipping PR creation."
         fi
         
     - name: Create Pull Request
@@ -63,6 +64,6 @@ jobs:
           - Branch: ${{ github.ref }}
           
           Please review the changes and merge when ready.
-        branch: update/races-auto-${{ github.run_number }}
+        branch: update/races-auto
         delete-branch: true
         labels: automated,races-update
