@@ -89,6 +89,7 @@ export interface SessionStatusResponse {
     mobileNumber?: string;
     address?: any;
   };
+  shippingPrice?: number; // Shipping price in øre (0 for pickup, 9900 for delivery)
 }
 
 export const vippsCheckoutService = {

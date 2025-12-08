@@ -484,6 +484,21 @@ router.get('/checkout/session/:reference', async (req: Request, res: Response) =
     try {
         const { reference } = req.params;
         const sessionStatus = await vippsService.getSessionStatus(reference);
+        
+        // Add shipping price from database if order exists
+        if (USE_DATABASE) {
+            try {
+                const order = await databaseService.getOrderByReference(reference);
+                if (order) {
+                    // Add shipping price to response
+                    (sessionStatus as any).shippingPrice = order.shippingPrice;
+                }
+            } catch (dbError) {
+                // If database lookup fails, continue without shipping price
+                console.error(`⚠️ Could not fetch order for shipping price:`, dbError);
+            }
+        }
+        
         res.json(sessionStatus);
     } catch (error) {
         console.error(`❌ Error getting session status for ${req.params.reference}:`, error);

@@ -137,7 +137,7 @@ const CheckoutSuccessPage: React.FC = () => {
                   style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}
                 >
                   Du vil motta en bekreftelse på e-post med alle detaljer om
-                  bestillingen din.
+                  bestillingen din. Sjekk også søppelpost, da e-posten kan ha havnet der.
                 </p>
               </>
             ) : (
@@ -162,8 +162,8 @@ const CheckoutSuccessPage: React.FC = () => {
               </>
             )}
 
-            {/* Shipping Address */}
-            {isPaymentSuccessful && orderDetails?.shippingDetails && (
+            {/* Shipping Address or Pickup Instructions */}
+            {isPaymentSuccessful && (
               <div
                 style={{
                   marginTop: "24px",
@@ -173,51 +173,89 @@ const CheckoutSuccessPage: React.FC = () => {
                   border: "1px solid #E5E7EB",
                 }}
               >
-                <h3
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    marginBottom: "12px",
-                    color: "#111827",
-                  }}
-                >
-                  Leveringsadresse
-                </h3>
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#374151",
-                    lineHeight: "1.6",
-                  }}
-                >
-                  {orderDetails.shippingDetails.firstName &&
-                    orderDetails.shippingDetails.lastName && (
+                {/* Check if pickup was selected (shippingPrice === 0) */}
+                {orderDetails?.shippingPrice === 0 ? (
+                  <>
+                    <h3
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        marginBottom: "12px",
+                        color: "#111827",
+                      }}
+                    >
+                      Henting
+                    </h3>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#374151",
+                        lineHeight: "1.6",
+                      }}
+                    >
                       <p style={{ margin: "4px 0", fontWeight: "500" }}>
-                        {orderDetails.shippingDetails.firstName}{" "}
-                        {orderDetails.shippingDetails.lastName}
+                        Hent hos Rory
                       </p>
-                    )}
-                  {orderDetails.shippingDetails.streetAddress && (
-                    <p style={{ margin: "4px 0" }}>
-                      {orderDetails.shippingDetails.streetAddress}
-                    </p>
-                  )}
-                  {(orderDetails.shippingDetails.postalCode ||
-                    orderDetails.shippingDetails.city) && (
-                    <p style={{ margin: "4px 0" }}>
-                      {orderDetails.shippingDetails.postalCode}{" "}
-                      {orderDetails.shippingDetails.city}
-                    </p>
-                  )}
-                  {orderDetails.shippingDetails.country && (
-                    <p style={{ margin: "4px 0" }}>
-                      {orderDetails.shippingDetails.country === "NO" ||
-                      orderDetails.shippingDetails.country === "NOR"
-                        ? "Norge"
-                        : orderDetails.shippingDetails.country}
-                    </p>
-                  )}
-                </div>
+                      <p style={{ margin: "4px 0" }}>
+                        Haldens Gate 15
+                      </p>
+                      <p style={{ margin: "4px 0" }}>
+                        7014 Trondheim
+                      </p>
+                      <p style={{ margin: "12px 0 4px 0", fontSize: "13px", color: "#6B7280" }}>
+                        Du vil motta en e-post når bestillingen er klar til henting. Sjekk også søppelpost, da e-posten kan ha havnet der.
+                      </p>
+                    </div>
+                  </>
+                ) : orderDetails?.shippingDetails ? (
+                  <>
+                    <h3
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        marginBottom: "12px",
+                        color: "#111827",
+                      }}
+                    >
+                      Leveringsadresse
+                    </h3>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#374151",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      {orderDetails.shippingDetails.firstName &&
+                        orderDetails.shippingDetails.lastName && (
+                          <p style={{ margin: "4px 0", fontWeight: "500" }}>
+                            {orderDetails.shippingDetails.firstName}{" "}
+                            {orderDetails.shippingDetails.lastName}
+                          </p>
+                        )}
+                      {orderDetails.shippingDetails.streetAddress && (
+                        <p style={{ margin: "4px 0" }}>
+                          {orderDetails.shippingDetails.streetAddress}
+                        </p>
+                      )}
+                      {(orderDetails.shippingDetails.postalCode ||
+                        orderDetails.shippingDetails.city) && (
+                        <p style={{ margin: "4px 0" }}>
+                          {orderDetails.shippingDetails.postalCode}{" "}
+                          {orderDetails.shippingDetails.city}
+                        </p>
+                      )}
+                      {orderDetails.shippingDetails.country && (
+                        <p style={{ margin: "4px 0" }}>
+                          {orderDetails.shippingDetails.country === "NO" ||
+                          orderDetails.shippingDetails.country === "NOR"
+                            ? "Norge"
+                            : orderDetails.shippingDetails.country}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                ) : null}
               </div>
             )}
 
