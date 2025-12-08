@@ -25,16 +25,44 @@ const CheckoutSuccessPage: React.FC = () => {
   useEffect(() => {
     if (reference) {
       // Fetch order details if reference is provided
-      vippsCheckoutService
-        .getSessionStatus(reference)
-        .then((status) => {
-          setOrderDetails(status);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching order details:", error);
-          setLoading(false);
-        });
+      // Poll a few times in case callback hasn't finished updating the order yet
+      let attempts = 0;
+      const maxAttempts = 5;
+      const pollInterval = 1000; // 1 second
+
+      const fetchOrderDetails = () => {
+        vippsCheckoutService
+          .getSessionStatus(reference)
+          .then((status) => {
+            // If shippingPrice is undefined and we haven't reached max attempts, poll again
+            // This handles the case where callback hasn't finished updating the order yet
+            // Only poll if payment was successful (callback should have run)
+            const isPaymentSuccessful =
+              status.sessionState === "PaymentSuccessful" ||
+              status.paymentDetails?.state === "AUTHORIZED" ||
+              status.paymentDetails?.state === "CAPTURED" ||
+              status.paymentDetails?.state === "RESERVED";
+
+            if (
+              status.shippingPrice === undefined &&
+              isPaymentSuccessful &&
+              attempts < maxAttempts - 1
+            ) {
+              attempts++;
+              setTimeout(fetchOrderDetails, pollInterval);
+              return;
+            }
+
+            setOrderDetails(status);
+            setLoading(false);
+          })
+          .catch((error) => {
+            console.error("Error fetching order details:", error);
+            setLoading(false);
+          });
+      };
+
+      fetchOrderDetails();
     } else {
       setLoading(false);
     }
@@ -133,12 +161,6 @@ const CheckoutSuccessPage: React.FC = () => {
                   Din betaling er mottatt og bestillingen er bekreftet.
                 </p>
 
-                <p
-                  style={{ marginTop: "12px", fontSize: "14px", color: "#666" }}
-                >
-                  Du vil motta en bekreftelse på e-post med alle detaljer om
-                  bestillingen din. Sjekk også søppelpost, da e-posten kan ha havnet der.
-                </p>
               </>
             ) : (
               <>
@@ -174,7 +196,11 @@ const CheckoutSuccessPage: React.FC = () => {
                 }}
               >
                 {/* Check if pickup was selected (shippingPrice === 0) */}
-                {orderDetails?.shippingPrice === 0 ? (
+                {/* Only show pickup if shippingPrice is explicitly 0 (in øre) AND payment details exist (callback has run) */}
+                {/* shippingPrice: 0 = pickup, 9900 = delivery (99 kr) */}
+                {/* If shippingPrice is undefined, default to showing delivery address */}
+                {orderDetails?.shippingPrice === 0 &&
+                orderDetails?.paymentDetails ? (
                   <>
                     <h3
                       style={{
@@ -196,14 +222,18 @@ const CheckoutSuccessPage: React.FC = () => {
                       <p style={{ margin: "4px 0", fontWeight: "500" }}>
                         Hent hos Rory
                       </p>
-                      <p style={{ margin: "4px 0" }}>
-                        Haldens Gate 15
-                      </p>
-                      <p style={{ margin: "4px 0" }}>
-                        7014 Trondheim
-                      </p>
-                      <p style={{ margin: "12px 0 4px 0", fontSize: "13px", color: "#6B7280" }}>
-                        Du vil motta en e-post når bestillingen er klar til henting. Sjekk også søppelpost, da e-posten kan ha havnet der.
+                      <p style={{ margin: "4px 0" }}>Haldens Gate 15</p>
+                      <p style={{ margin: "4px 0" }}>7014 Trondheim</p>
+                      <p
+                        style={{
+                          margin: "12px 0 4px 0",
+                          fontSize: "13px",
+                          color: "#6B7280",
+                        }}
+                      >
+                        Du vil motta en e-post når bestillingen er klar til
+                        henting. Sjekk også søppelpost, da e-posten kan ha
+                        havnet der.
                       </p>
                     </div>
                   </>

@@ -704,13 +704,18 @@ router.post('/callback', async (req: Request, res: Response) => {
                     } else if (order && USE_DATABASE) {
                         // Update existing order with payment information and customer details
                         try {
-                            // Update payment information
+
+                            // Update payment information, shipping price, and total amount
+                            // Shipping price is calculated from actual Vipps payment (0 for pickup, 9900 for shipping)
                             await databaseService.updateOrderPayment(reference, {
                                 paymentMethod: sessionStatus.paymentMethod,
                                 paymentState: sessionStatus.paymentDetails?.state,
                                 status: 'PAID' as any,
                                 paidAt: new Date(),
+                                shippingPrice, // Actual shipping selected by user (0 or 9900)
+                                totalAmount, // Products + actual shipping
                             });
+
                             
                             // Update customer information if it was pending or missing
                             // Always update if email is pending, name is pending, or address fields are null
