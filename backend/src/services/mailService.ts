@@ -167,9 +167,6 @@ export class MailService {
                             <h2 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 600;">
                                 Takk for din bestilling, ${orderData.name}!
                             </h2>
-                            <p style="margin: 12px 0 0 0; color: #64748b; font-size: 15px; line-height: 1.6;">
-                                Din ordre er nå på vei. Du vil motta en ny e-post med sporingsinformasjon når pakken er sendt.
-                            </p>
                         </td>
                     </tr>
                     
@@ -222,13 +219,10 @@ export class MailService {
                                             <table role="presentation" style="width: 100%; border-collapse: collapse;">
                                                 <tr>
                                                     <td style="padding: 4px 0; color: #64748b; font-size: 14px;">
-                                                        Delsum
+                                                        Frakt
                                                     </td>
                                                     <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.items.reduce((sum, item) => {
-            const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
-            return sum + (price * item.quantity);
-        }, 0).toFixed(0) + ' kr'}
+                                                        ${orderData.shippingPrice && orderData.shippingPrice !== '0' ? orderData.shippingPrice : 'Hentes'}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -249,6 +243,7 @@ export class MailService {
                     </tr>
                     
                     <!-- Shipping Info -->
+                    ${orderData.shippingPrice && orderData.shippingPrice !== '0' ? `
                     <tr>
                         <td style="padding: 0 40px 40px 40px;">
                             <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 6px;">
@@ -258,34 +253,31 @@ export class MailService {
                                 <p style="margin: 8px 0 0 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
                                     Forventet levering: <strong>${(() => {
                                         const closingDate = new Date(shopConfig.closingDate);
-                                        const deliveryDateStart = new Date(closingDate);
-                                        deliveryDateStart.setDate(deliveryDateStart.getDate() + 21); // 3 weeks
-                                        const deliveryDateEnd = new Date(closingDate);
-                                        deliveryDateEnd.setDate(deliveryDateEnd.getDate() + 28); // 4 weeks
-                                        
-                                        const formatDate = (date: Date): string => {
-                                            const day = date.getDate();
-                                            const month = date.toLocaleDateString('nb-NO', { month: 'long' });
-                                            const year = date.getFullYear();
-                                            return `${day}. ${month} ${year}`;
-                                        };
-                                        
-                                        return `3-4 uker fra butikkens stenging (${formatDate(deliveryDateStart)} - ${formatDate(deliveryDateEnd)})`;
+                                        return `3-4 uker etter bestillingsperioden stenger ${closingDate.toLocaleDateString("nb-NO", {
+                                            day: "numeric",
+                                            month: "long",
+                                            year: "numeric",
+                                        })}`;
                                     })()}</strong><br>
                                     Du vil motta sporingsinformasjon på e-post når pakken er sendt.
                                 </p>
                             </div>
                         </td>
                     </tr>
-                    
-                    <!-- CTA Button -->
+                    ` : `
                     <tr>
-                        <td style="padding: 0 40px 40px 40px; text-align: center;">
-                            <a href="https://mollerfan.club/orders/${orderData.orderNumber}" style="display: inline-block; padding: 14px 36px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px;">
-                                Spor din ordre
-                            </a>
+                        <td style="padding: 0 40px 40px 40px;">
+                            <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 6px;">
+                                <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">
+                                    📦 Henteinfo
+                                </p>
+                                <p style="margin: 8px 0 0 0; color: #064e3b; font-size: 14px; line-height: 1.6;">
+                                    Du har valgt å hente varene i Trondheim. Du vil motta en e-post når varene er klare for henting.
+                                </p>
+                            </div>
                         </td>
                     </tr>
+                    `}
                     
                     <!-- Footer -->
                     <tr>
