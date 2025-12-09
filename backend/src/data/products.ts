@@ -58,7 +58,7 @@ export const products: Product[] = [
     },
     {
         id: '9',
-        imageUrls: ['/merch/the_botte/the_botte_marine.png', '/merch/the_botte/the_botte_back_marine.png'],
+        imageUrls: ['/merch/the_botte/the_botte_marine.png', '/merch/the_botte/the_botte_marine_back.png'],
         title: 'The Bøtte',
         price: '349',
         sizes: ['S/M', 'L/XL'],
