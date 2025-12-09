@@ -208,8 +208,8 @@ export class DatabaseService {
                         unitPrice: item.unitPrice,
                         quantity: item.quantity,
                         totalPrice: item.totalPrice,
-                        taxAmount: item.taxAmount,
-                        taxPercentage: 25, // Norwegian VAT
+                        taxAmount: 0,
+                        taxPercentage: 0, // Norwegian VAT
                     })),
                 },
             },
