@@ -108,3 +108,50 @@
     max-width: 100%;
   }
 }
+
+
+/* Santa flyby */
+@keyframes santa-flyby {
+  /* Start (0%) */
+  0% {
+    transform: translate(-20vw, 10vh) rotate(-10deg);
+    opacity: 0;
+  }
+
+  /* Santa becomes visible quickly */
+  4% {
+    opacity: 1;
+  }
+
+  /* 50% of fly path reached within first 4 seconds */
+  20% {
+    transform: translate(50vw, -20vh) rotate(5deg);
+    opacity: 1;
+  }
+
+  /* End of fly path at 40% of animation (4 sec) */
+  40% {
+    transform: translate(120vw, -40vh) rotate(15deg);
+    opacity: 0;
+  }
+
+  /* 40%–100% = pause */
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-santa {
+  position: absolute;
+  top: 25%;
+  left: -30%;
+  width: 180px;
+  pointer-events: none;
+  z-index: 5;
+
+  /* 10s total = 4s fly + 6s pause */
+  animation: santa-flyby 10s linear infinite;
+
+  /* Delay *only* before first run */
+  animation-delay: 6s;
+}
