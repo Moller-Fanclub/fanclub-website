@@ -373,7 +373,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                     title: 'Posten Servicepakke',
                     description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
                     brand: 'POSTEN' as const,
-                    isDefault: true, // No default - shipping added only when selected
+                    isDefault: false, // No default - shipping added only when selected
                     taxRate: 0, // No VAT - we are VAT exempt
                     vippsLogistics: {
                         product: 'SERVICEPAKKE',
