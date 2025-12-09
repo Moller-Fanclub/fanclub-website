@@ -187,7 +187,7 @@ const MerchPage: React.FC = () => {
                                 <FadeInnAnimation key={product.id}>
                                     <MerchCard
                                         id={product.id}
-                                        imageUrl={product.imageUrls[0]}
+                                        imageUrls={product.imageUrls}
                                         title={product.title}
                                         price={product.price}
                                         onNavigate={() => {

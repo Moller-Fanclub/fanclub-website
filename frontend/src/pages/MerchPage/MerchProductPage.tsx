@@ -16,9 +16,47 @@ const MerchProductPage: React.FC = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [addedToCart, setAddedToCart] = useState(false);
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    const [showSizeChart, setShowSizeChart] = useState(false);
+    const [hasSizeChart, setHasSizeChart] = useState(false);
     
     // Compute opening date from config
     const openingDate = config ? new Date(config.openingDate) : null;
+
+    // Derive size chart URL from product's image folder
+    const getSizeChartUrl = (imageUrls: string[]) => {
+        if (!imageUrls || imageUrls.length === 0) return null;
+        const firstImage = imageUrls[0];
+        const folderPath = firstImage.substring(0, firstImage.lastIndexOf('/'));
+        return `${folderPath}/size.png`;
+    };
+
+    // Minimum swipe distance (in px)
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd || !product || product.imageUrls.length <= 1) return;
+        
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+        
+        if (isLeftSwipe) {
+            nextImage();
+        } else if (isRightSwipe) {
+            prevImage();
+        }
+    };
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -34,6 +72,14 @@ const MerchProductPage: React.FC = () => {
                     // Set default size when product loads
                     if (data.sizes && data.sizes.length > 0) {
                         setSelectedSize(data.sizes[0]);
+                    }
+                    // Check if size chart exists
+                    const sizeChartUrl = getSizeChartUrl(data.imageUrls);
+                    if (sizeChartUrl) {
+                        const img = new Image();
+                        img.onload = () => setHasSizeChart(true);
+                        img.onerror = () => setHasSizeChart(false);
+                        img.src = sizeChartUrl;
                     }
                 }
             } catch (err) {
@@ -111,18 +157,29 @@ const MerchProductPage: React.FC = () => {
                 </button>
                 <h1 className="merch-title">{product.title}</h1>
             </header>
-            <div className="carousel-container">
+            <div 
+                className="carousel-container"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+            >
                 <img
                     src={product.imageUrls[currentIndex]}
                     alt={`${product.title} - Image ${currentIndex + 1}`}
                     className="carousel-image"
                 />
-                <button className="carousel-button prev" onClick={prevImage}>
-                    &lt;
-                </button>
-                <button className="carousel-button next" onClick={nextImage}>
-                    &gt;
-                </button>
+                {product.imageUrls.length > 1 && (
+                    <>
+                        <button className="carousel-button prev" onClick={prevImage}>
+                            &lt;
+                        </button>
+                        <button className="carousel-button next" onClick={nextImage}>
+                            &gt;
+                        </button>
+                    </>
+                )}
+            </div>
+            {product.imageUrls.length > 1 && (
                 <div className="carousel-indicators">
                     {product.imageUrls.map((_, index) => (
                         <div
@@ -132,14 +189,34 @@ const MerchProductPage: React.FC = () => {
                         />
                     ))}
                 </div>
-            </div>
+            )}
             <div className="merch-details">
                 <p className="merch-price">{product.price} kr</p>
                 
                 {/* Size Selector */}
                 {product.sizes && product.sizes.length > 0 && (
                     <div className="size-selector">
-                        <label className="size-label">Størrelse:</label>
+                        <div className="size-header" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '15px' }}>
+                            <label className="size-label" style={{ margin: 0 }}>Størrelse:</label>
+                            {hasSizeChart && (
+                                <button 
+                                    onClick={() => setShowSizeChart(true)}
+                                    className="size-chart-button"
+                                    style={{
+                                        background: 'transparent',
+                                        border: '1px solid rgba(255, 255, 255, 0.4)',
+                                        color: 'rgba(255, 255, 255, 0.8)',
+                                        padding: '6px 12px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.9em',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    📏 Størrelsestabell
+                                </button>
+                            )}
+                        </div>
                         <div className="size-buttons">
                             {product.sizes.map(size => (
                                 <button
@@ -206,6 +283,75 @@ const MerchProductPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Size Chart Modal */}
+            {showSizeChart && hasSizeChart && (
+                <div 
+                    className="size-chart-modal"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        padding: '20px'
+                    }}
+                    onClick={() => setShowSizeChart(false)}
+                >
+                    <div 
+                        style={{
+                            position: 'relative',
+                            maxWidth: '90vw',
+                            maxHeight: '90vh',
+                            backgroundColor: '#fff',
+                            borderRadius: '12px',
+                            padding: '20px',
+                            overflow: 'auto'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowSizeChart(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                background: '#333',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '36px',
+                                height: '36px',
+                                fontSize: '1.2em',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ✕
+                        </button>
+                        <h3 style={{ margin: '0 0 16px 0', color: '#333', textAlign: 'center' }}>
+                            Størrelsestabell
+                        </h3>
+                        <img 
+                            src={getSizeChartUrl(product.imageUrls) || ''} 
+                            alt="Størrelsestabell" 
+                            style={{ 
+                                maxWidth: '100%', 
+                                maxHeight: '70vh',
+                                display: 'block',
+                                margin: '0 auto'
+                            }} 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

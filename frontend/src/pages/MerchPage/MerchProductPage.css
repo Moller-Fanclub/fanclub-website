@@ -41,6 +41,26 @@
     color: #fff;
 }
 
+/* Mobile: stack back button above title */
+@media (max-width: 640px) {
+    .merch-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding-top: 10px;
+    }
+    
+    .back-button {
+        position: static;
+        align-self: flex-start;
+    }
+    
+    .merch-title {
+        font-size: 1.8em;
+    }
+}
+
 .carousel-container {
     position: relative;
     width: 100%;
@@ -53,7 +73,8 @@
 }
 
 .carousel-image {
-    width: 50%;
+    width: 100%;
+    max-width: 90%;
     max-height: 500px;
     height: auto;
     object-fit: contain;
@@ -65,18 +86,20 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     color: #fff;
-    border: none;
+    border: 4px solid white;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
     cursor: pointer;
     font-size: 1.5em;
     display: flex;
+
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    z-index: 10;
 }
 
 .carousel-button:hover {
@@ -84,33 +107,48 @@
 }
 
 .carousel-button.prev {
-    left: 20px;
+    left: 10px;
 }
 
 .carousel-button.next {
-    right: 20px;
+    right: 10px;
+}
+
+/* Mobile: smaller buttons positioned inside the image */
+@media (max-width: 640px) {
+    .carousel-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+    }
+    
+    .carousel-button.prev {
+        left:20px;
+    }
+    
+    .carousel-button.next {
+        right: 20px;
+    }
 }
 
 .carousel-indicators {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     gap: 12px;
+    margin-top: 16px;
 }
 
 .indicator {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: #ccc;
+    background-color: rgba(255, 255, 255, 0.4);
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .indicator.active {
-    background-color: #333;
+    background-color: #fff;
 }
 
 .merch-details {
