@@ -6,13 +6,15 @@ interface MerchCardProps {
     imageUrl: string;
     title: string;
     price: string;
+    onNavigate?: () => void;
 }
 
-const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrl, title, price }) => {
+const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrl, title, price, onNavigate }) => {
     return (
         <div className="merch-card-container">
             <Link
                 to={`/merch/${id}`}
+                onClick={onNavigate}
                 className="mx-auto flex max-w-sm cursor-pointer flex-col items-center rounded-xl border border-gray-200 bg-white text-center text-gray-900 no-underline shadow-md transition-transform duration-200 hover:scale-105"
             >
                 <div className="w-full px-4 pt-4">
