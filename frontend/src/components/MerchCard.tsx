@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 interface MerchCardProps {
     id: string;
@@ -10,39 +15,19 @@ interface MerchCardProps {
 }
 
 const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNavigate }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null);
 
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+    const handlePrev = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        swiperInstance?.slidePrev();
     };
 
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+    const handleNext = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        swiperInstance?.slideNext();
     };
-
-    const onTouchEnd = (e: React.TouchEvent) => {
-        if (!touchStart || !touchEnd || imageUrls.length <= 1) return;
-        
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-        
-        if (isLeftSwipe || isRightSwipe) {
-            e.preventDefault();
-            if (isLeftSwipe) {
-                setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
-            } else {
-                setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
-            }
-        }
-    };
-
-    const currentImage = imageUrls[currentIndex] || imageUrls[0];
 
     return (
         <div className="merch-card-container">
@@ -52,33 +37,67 @@ const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNa
                 className="mx-auto flex max-w-sm cursor-pointer flex-col items-center rounded-xl border border-gray-200 bg-white text-center text-gray-900 no-underline shadow-md transition-transform duration-200 hover:scale-105"
             >
                 <div className="w-full px-4 pt-4">
-                    <div 
-                        className="aspect-square w-full max-w-[300px] mx-auto relative"
-                        onTouchStart={onTouchStart}
-                        onTouchMove={onTouchMove}
-                        onTouchEnd={onTouchEnd}
-                    >
-                        <img
-                            src={currentImage}
-                            alt={title}
-                            className="h-full w-full rounded-lg object-cover"
-                        />
-                    </div>
+                    {imageUrls.length > 1 ? (
+                        <Swiper
+                            modules={[Pagination]}
+                            pagination={{ clickable: true }}
+                            loop={true}
+                            allowTouchMove={false}
+                            simulateTouch={false}
+                            className="merch-card-swiper w-full max-w-[300px] mx-auto"
+                            onSwiper={setSwiperInstance}
+                        >
+                            {imageUrls.map((url, index) => (
+                                <SwiperSlide key={index}>
+                                    <div className="aspect-square rounded-lg overflow-hidden">
+                                        <img
+                                            src={url}
+                                            alt={`${title} - Image ${index + 1}`}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    ) : (
+                        <div className="w-full max-w-[300px] mx-auto pb-6">
+                            <div className="aspect-square rounded-lg overflow-hidden">
+                                <img
+                                    src={imageUrls[0]}
+                                    alt={title}
+                                    className="h-full w-full object-cover"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {imageUrls.length > 1 && (
-                    <div className="flex gap-1.5 py-2 md:hidden">
-                        {imageUrls.map((_, index) => (
-                            <div
-                                key={index}
-                                className={`w-2 h-2 rounded-full ${index === currentIndex ? 'bg-gray-800' : 'bg-gray-300'}`}
-                            />
-                        ))}
-                    </div>
-                )}
-
                 <div className="w-full p-4 pt-2">
-                    <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+                    {imageUrls.length > 1 ? (
+                        <div className="flex items-center justify-center gap-2">
+                            <button
+                                onClick={handlePrev}
+                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Previous image"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+                            <button
+                                onClick={handleNext}
+                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Next image"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    ) : (
+                        <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+                    )}
                     <p className="text-md text-gray-600">{price} kr</p>
                 </div>
             </Link>

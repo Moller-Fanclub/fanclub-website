@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import './MerchProductPage.css';
 import { productService, type Product } from "../../services/productService.ts";
 import { useCart } from '../../contexts/CartContext';
@@ -13,11 +18,8 @@ const MerchProductPage: React.FC = () => {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [addedToCart, setAddedToCart] = useState(false);
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const [showSizeChart, setShowSizeChart] = useState(false);
     const [hasSizeChart, setHasSizeChart] = useState(false);
     
@@ -30,32 +32,6 @@ const MerchProductPage: React.FC = () => {
         const firstImage = imageUrls[0];
         const folderPath = firstImage.substring(0, firstImage.lastIndexOf('/'));
         return `${folderPath}/size.png`;
-    };
-
-    // Minimum swipe distance (in px)
-    const minSwipeDistance = 50;
-
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
-    };
-
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
-    };
-
-    const onTouchEnd = () => {
-        if (!touchStart || !touchEnd || !product || product.imageUrls.length <= 1) return;
-        
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-        
-        if (isLeftSwipe) {
-            nextImage();
-        } else if (isRightSwipe) {
-            prevImage();
-        }
     };
 
     useEffect(() => {
@@ -92,16 +68,6 @@ const MerchProductPage: React.FC = () => {
 
         fetchProduct();
     }, [id]);
-
-    const nextImage = () => {
-        if (!product) return;
-        setCurrentIndex((prev) => (prev + 1) % product.imageUrls.length);
-    };
-
-    const prevImage = () => {
-        if (!product) return;
-        setCurrentIndex((prev) => (prev - 1 + product.imageUrls.length) % product.imageUrls.length);
-    };
 
     const handleAddToCart = () => {
         if (!selectedSize || !product || !shopIsOpen) return;
@@ -157,39 +123,25 @@ const MerchProductPage: React.FC = () => {
                 </button>
                 <h1 className="merch-title">{product.title}</h1>
             </header>
-            <div 
-                className="carousel-container"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-            >
-                <img
-                    src={product.imageUrls[currentIndex]}
-                    alt={`${product.title} - Image ${currentIndex + 1}`}
-                    className="carousel-image"
-                />
-                {product.imageUrls.length > 1 && (
-                    <>
-                        <button className="carousel-button prev" onClick={prevImage}>
-                            &lt;
-                        </button>
-                        <button className="carousel-button next" onClick={nextImage}>
-                            &gt;
-                        </button>
-                    </>
-                )}
-            </div>
-            {product.imageUrls.length > 1 && (
-                <div className="carousel-indicators">
-                    {product.imageUrls.map((_, index) => (
-                        <div
-                            key={index}
-                            className={`indicator ${index === currentIndex ? 'active' : ''}`}
-                            onClick={() => setCurrentIndex(index)}
-                        />
+            <div className="carousel-container">
+                <Swiper
+                    modules={[Pagination, Navigation]}
+                    pagination={{ clickable: true }}
+                    navigation={product.imageUrls.length > 1}
+                    loop={product.imageUrls.length > 1}
+                    className="product-swiper"
+                >
+                    {product.imageUrls.map((url, index) => (
+                        <SwiperSlide key={index}>
+                            <img
+                                src={url}
+                                alt={`${product.title} - Image ${index + 1}`}
+                                className="carousel-image"
+                            />
+                        </SwiperSlide>
                     ))}
-                </div>
-            )}
+                </Swiper>
+            </div>
             <div className="merch-details">
                 <p className="merch-price">{product.price} kr</p>
                 

@@ -3,6 +3,7 @@ import MerchCard from "../../components/MerchCard.tsx";
 import Countdown from "../../components/Countdown.tsx";
 import { productService, type Product } from "../../services/productService.ts";
 import { useShopConfig } from "../../hooks/useShopConfig.ts";
+import "./MerchPage.css";
 import PageContainer from "../../components/PageContainer.tsx";
 import FadeInnAnimation from "@/components/FadeInnAnimation.tsx";
 

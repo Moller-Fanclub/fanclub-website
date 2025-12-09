@@ -1,26 +1,13 @@
-.merch-page {
-    min-height: 100vh;
-    background-color: #f5f5f5;
-    padding: 2rem 0;
+
+
+
+/* MerchCard Swiper styles */
+.merch-card-swiper {
+    padding-bottom: 24px !important;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
+.merch-card-swiper .swiper-pagination {
+    bottom: 0 !important;
 }
 
-.page-title {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #333;
-    text-align: center;
-    margin-bottom: 2rem;
-    margin-top: 5rem;
-}
 
-.merch-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
