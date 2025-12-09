@@ -7,7 +7,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let PrismaClient: any;
-let OrderStatus: any;
 
 // Initialization promise to prevent race conditions
 const initPrisma = (async () => {
@@ -16,7 +15,6 @@ const initPrisma = (async () => {
         const prismaModule = await import('@prisma/client');
         if (prismaModule && prismaModule.PrismaClient) {
             PrismaClient = prismaModule.PrismaClient;
-            OrderStatus = prismaModule.OrderStatus;
             return true;
         } else {
             throw new Error('PrismaClient not found in module');
@@ -79,6 +77,7 @@ async function getPrismaClient() {
 export interface CreateOrderData {
     reference: string;
     vippsSessionId?: string;
+    status?: string; // PENDING, RESERVED, PAID, etc.
     customerEmail: string;
     customerName: string;
     customerPhone?: string;
@@ -116,16 +115,16 @@ export interface CreateOrderData {
     shippingPrice: number; // in øre
     totalAmount: number; // in øre
     paymentMethod?: string;
-    paymentState?: string;
     amount: number; // in øre
     currency?: string;
 }
 
 export interface UpdateOrderPaymentData {
     paymentMethod?: string;
-    paymentState?: string;
     status?: OrderStatusType;
     paidAt?: Date;
+    shippingPrice?: number; // in øre
+    totalAmount?: number; // in øre
 }
 
 export interface UpdateOrderCustomerData {
@@ -183,20 +182,13 @@ export class DatabaseService {
                 billingCity: data.billingDetails?.city,
                 billingCountry: data.billingDetails?.country,
                 paymentMethod: data.paymentMethod,
-                paymentState: data.paymentState,
                 amount: data.amount,
                 currency: data.currency || 'NOK',
                 itemsTotal: data.itemsTotal,
                 shippingPrice: data.shippingPrice,
                 totalAmount: data.totalAmount,
-                status: data.paymentState === 'AUTHORIZED' || data.paymentState === 'CAPTURED' 
-                    ? (OrderStatus?.PAID || OrderStatusEnum.PAID)
-                    : data.paymentState
-                    ? (OrderStatus?.PAYMENT_PENDING || OrderStatusEnum.PAYMENT_PENDING)
-                    : (OrderStatus?.PENDING || OrderStatusEnum.PENDING),
-                paidAt: data.paymentState === 'AUTHORIZED' || data.paymentState === 'CAPTURED' 
-                    ? new Date() 
-                    : null,
+                status: data.status || 'PENDING',
+                paidAt: data.status === 'PAID' ? new Date() : null,
                 items: {
                     create: data.items.map(item => ({
                         productId: item.productId,
@@ -206,8 +198,8 @@ export class DatabaseService {
                         unitPrice: item.unitPrice,
                         quantity: item.quantity,
                         totalPrice: item.totalPrice,
-                        taxAmount: item.taxAmount,
-                        taxPercentage: 25, // Norwegian VAT
+                        taxAmount: 0,
+                        taxPercentage: 0, // Norwegian VAT
                     })),
                 },
             },
@@ -241,19 +233,29 @@ export class DatabaseService {
         if (!prismaClient) {
             throw new Error('Database not available. Please set DATABASE_URL and run: npx prisma generate');
         }
-        return await prismaClient.order.update({
+
+        const updateData: any = {
+            paymentMethod: data.paymentMethod,
+            status: data.status,
+            paidAt: data.paidAt,
+            updatedAt: new Date(),
+        };
+
+        if (data.shippingPrice !== undefined) {
+            updateData.shippingPrice = data.shippingPrice;
+        }
+        if (data.totalAmount !== undefined) {
+            updateData.totalAmount = data.totalAmount;
+        }
+
+        const updatedOrder = await prismaClient.order.update({
             where: { reference },
-            data: {
-                paymentMethod: data.paymentMethod,
-                paymentState: data.paymentState,
-                status: data.status,
-                paidAt: data.paidAt,
-                updatedAt: new Date(),
-            },
+            data: updateData,
             include: {
                 items: true,
             },
         });
+        return updatedOrder;
     }
 
     /**

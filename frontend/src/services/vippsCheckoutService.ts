@@ -63,12 +63,33 @@ export interface SessionStatusResponse {
     agreementId: string;
     state: string;
   };
+  shippingDetails?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    streetAddress?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  };
+  billingDetails?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    streetAddress?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  };
   userDetails?: {
     userId: string;
     email?: string;
     mobileNumber?: string;
     address?: any;
   };
+  shippingPrice?: number; // Shipping price in øre (0 for pickup, 9900 for delivery)
 }
 
 export const vippsCheckoutService = {

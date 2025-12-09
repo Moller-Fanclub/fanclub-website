@@ -8,7 +8,7 @@ import "./CheckoutPage.css";
 import { PublicPaths } from "@/lib/routes";
 
 const CheckoutPage: React.FC = () => {
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, clearCart } = useCart();
   const navigate = useNavigate();
   const { config, isOpen: shopIsOpen } = useShopConfig();
   const [isInitializing, setIsInitializing] = useState(false);
@@ -17,7 +17,7 @@ const CheckoutPage: React.FC = () => {
   const checkoutInstanceRef = useRef<VippsCheckoutInstance | null>(null);
 
   // Compute opening date from config
-  const openingDate = config ? new Date(config.openingDate) : null;
+  const closingDate = config ? new Date(config.closingDate) : null;
 
   // Initialize Vipps Checkout when component mounts or items change
   useEffect(() => {
@@ -80,7 +80,7 @@ const CheckoutPage: React.FC = () => {
         language: "nb",
         token: session.token,
         on: (event) => {
-          console.log("Vipps Checkout event:", event);
+          // Handle Vipps checkout events if needed
 
           if (event.name === "vipps.checkout.session.completed") {
             // Payment successful
@@ -182,14 +182,7 @@ const CheckoutPage: React.FC = () => {
           <h2>Butikken er stengt</h2>
           <p>Forhåndsbestillingsperioden er ikke aktiv akkurat nå.</p>
           <p style={{ marginTop: "12px", fontSize: "16px" }}>
-            Neste periode åpner:{" "}
-            <strong>
-              {openingDate?.toLocaleDateString("nb-NO", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </strong>
+            Følg med på Instagram for å få beskjed når neste periode åpner!
           </p>
           <Link
             to={PublicPaths.base}
@@ -234,8 +227,12 @@ const CheckoutPage: React.FC = () => {
                   produseres etter at bestillingsperioden stenger
                 </li>
                 <li>
-                  <strong>Estimert leveringstid:</strong> 2-4 uker etter
-                  bestillingsperioden
+                  <strong>Estimert leveringstid:</strong> 3-4 uker etter {" "}
+                    {closingDate?.toLocaleDateString("nb-NO", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                 </li>
                 <li>
                   Du vil motta e-postoppdateringer om produksjon og utsendelse
@@ -308,55 +305,8 @@ const CheckoutPage: React.FC = () => {
             />
           </div>
 
-          {/* Order Summary */}
-          <div
-            className="checkout-summary-section"
-            style={{ marginTop: "24px" }}
-          >
-            <h2>Bestillingsoversikt</h2>
-            <div className="order-summary">
-              <div className="order-items">
-                {items.map((item, index) => (
-                  <div key={index} className="order-item">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="order-item-image"
-                    />
-                    <div className="order-item-details">
-                      <h4>{item.name}</h4>
-                      {item.size && (
-                        <p className="order-item-size">
-                          Størrelse: {item.size}
-                        </p>
-                      )}
-                      <p className="order-item-quantity">
-                        Antall: {item.quantity}
-                      </p>
-                    </div>
-                    <p className="order-item-price">
-                      {(item.price * item.quantity).toFixed(2)} kr
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="order-total">
-                <div className="total-row">
-                  <span>Delsum:</span>
-                  <span>{totalPrice.toFixed(2)} kr</span>
-                </div>
-                <div className="total-row">
-                  <span>Frakt:</span>
-                  <span>Gratis</span>
-                </div>
-                <div className="total-row total-final">
-                  <span>Totalt:</span>
-                  <span>{totalPrice.toFixed(2)} kr</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Note: Products and order summary are displayed inside the Vipps checkout iframe above */}
+          {/* The separate order summary has been removed to avoid confusion and sync issues */}
         </div>
       </div>
     </div>

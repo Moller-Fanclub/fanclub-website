@@ -12,7 +12,7 @@
   font-size: 2.5rem;
   font-weight: 800;
   text-align: center;
-  color: #111827;
+  color: #ffffff;
   margin-bottom: 2rem;
 }
 
@@ -261,6 +261,14 @@ textarea.form-input {
   font-size: 3rem;
   color: white;
   animation: scaleIn 0.5s ease-out;
+}
+
+/* Error state override */
+.success-checkmark.error-state {
+  background: #FEE2E2 !important;
+  background-image: none !important;
+  color: #DC2626;
+  border: 2px solid #DC2626;
 }
 
 @keyframes scaleIn {

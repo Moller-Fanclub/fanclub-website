@@ -252,7 +252,7 @@ app.post('/api/orders', async (_req: Request, res: Response) => {
             color: firstItem.color || 'N/A',
             quantity: firstItem.quantity || 1,
             price: `${firstItem.price || 0} kr`,
-            shippingPrice: '79 kr',
+            shippingPrice: '99 kr',
             totalPrice: `${total} kr`,
             estimatedDelivery: '3-5 virkedager',
             productImage: firstItem.image || 'https://mollerfan.club/merch/tour-hoodie-back.png'
@@ -291,7 +291,7 @@ if (process.env.NODE_ENV !== 'production') {
                     image: 'https://mollerfan.club/merch/tour-hoodie-front.png'
                 }
             ],
-            shippingPrice: '79 kr',
+            shippingPrice: '99 kr',
             totalPrice: '678 kr',
             estimatedDelivery: '3-5 virkedager',
             productImage: 'https://mollerfan.club/merch/tour-hoodie-front.png'
@@ -325,7 +325,7 @@ if (process.env.NODE_ENV !== 'production') {
             email: req.body.email || 'test@example.com',
             orderNumber: req.body.orderNumber || 'MF-123456',
             items,
-            shippingPrice: req.body.shippingPrice || '79 kr',
+            shippingPrice: req.body.shippingPrice || '99 kr',
             totalPrice: req.body.totalPrice || '678 kr',
             estimatedDelivery: req.body.estimatedDelivery || '3-5 virkedager',
             productImage: req.body.productImage || 'https://mollerfan.club/merch/tour-hoodie-front.png'
