@@ -79,6 +79,7 @@ async function getPrismaClient() {
 export interface CreateOrderData {
     reference: string;
     vippsSessionId?: string;
+    status?: string; // PENDING, RESERVED, PAID, etc.
     customerEmail: string;
     customerName: string;
     customerPhone?: string;
@@ -116,14 +117,12 @@ export interface CreateOrderData {
     shippingPrice: number; // in øre
     totalAmount: number; // in øre
     paymentMethod?: string;
-    paymentState?: string;
     amount: number; // in øre
     currency?: string;
 }
 
 export interface UpdateOrderPaymentData {
     paymentMethod?: string;
-    paymentState?: string;
     status?: OrderStatusType;
     paidAt?: Date;
     shippingPrice?: number; // in øre
@@ -185,20 +184,13 @@ export class DatabaseService {
                 billingCity: data.billingDetails?.city,
                 billingCountry: data.billingDetails?.country,
                 paymentMethod: data.paymentMethod,
-                paymentState: data.paymentState,
                 amount: data.amount,
                 currency: data.currency || 'NOK',
                 itemsTotal: data.itemsTotal,
                 shippingPrice: data.shippingPrice,
                 totalAmount: data.totalAmount,
-                status: data.paymentState === 'AUTHORIZED' || data.paymentState === 'CAPTURED' 
-                    ? (OrderStatus?.PAID || OrderStatusEnum.PAID)
-                    : data.paymentState
-                    ? (OrderStatus?.PAYMENT_PENDING || OrderStatusEnum.PAYMENT_PENDING)
-                    : (OrderStatus?.PENDING || OrderStatusEnum.PENDING),
-                paidAt: data.paymentState === 'AUTHORIZED' || data.paymentState === 'CAPTURED' 
-                    ? new Date() 
-                    : null,
+                status: data.status || 'PENDING',
+                paidAt: data.status === 'PAID' ? new Date() : null,
                 items: {
                     create: data.items.map(item => ({
                         productId: item.productId,
@@ -246,7 +238,6 @@ export class DatabaseService {
 
         const updateData: any = {
             paymentMethod: data.paymentMethod,
-            paymentState: data.paymentState,
             status: data.status,
             paidAt: data.paidAt,
             updatedAt: new Date(),

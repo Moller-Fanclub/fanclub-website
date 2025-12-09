@@ -587,6 +587,31 @@ router.post('/callback', async (req: Request, res: Response) => {
         const callbackData = req.body;
         const { reference, sessionState } = callbackData;
 
+
+        // Determine actual payment state from aggregate amounts
+        const getStateFromAggregate = (paymentDetails: any): string => {
+
+            const { capturedAmount, refundedAmount, cancelledAmount, authorizedAmount } = paymentDetails.aggregate;
+
+            // If captured amount > 0, payment is captured
+            if (capturedAmount?.value > 0) {
+                if (refundedAmount?.value > 0) {
+                    return refundedAmount.value >= capturedAmount.value ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+                }
+                return 'CAPTURED';
+            }
+            // If cancelled amount > 0, payment is cancelled
+            if (cancelledAmount?.value > 0) {
+                return 'CANCELLED';
+            }
+            // If authorized amount > 0 but not captured, payment is reserved
+            if (authorizedAmount?.value > 0) {
+                return 'RESERVED';
+            }
+            // Otherwise use the state from API
+            return paymentDetails.state;
+        };
+
         // Handle terminal states
         if (sessionState === 'PaymentSuccessful') {
             // Get full session details
@@ -679,9 +704,15 @@ router.post('/callback', async (req: Request, res: Response) => {
 
                         // Create order in database
                         try {
+                            // Determine actual payment state from aggregate
+                            const actualPaymentState = getStateFromAggregate(sessionStatus.paymentDetails);
+                            // Map to order status: CAPTURED->PAID, RESERVED->RESERVED, else PENDING
+                            const orderStatus = actualPaymentState === 'CAPTURED' ? 'PAID' : actualPaymentState === 'RESERVED' ? 'RESERVED' : 'PENDING';
+                            
                             order = await databaseService.createOrder({
                                 reference,
                                 vippsSessionId: sessionStatus.sessionId || undefined,
+                                status: orderStatus,
                                 customerEmail,
                                 customerName,
                                 customerPhone: sessionStatus.shippingDetails?.phoneNumber || sessionStatus.billingDetails?.phoneNumber,
@@ -692,7 +723,6 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 shippingPrice,
                                 totalAmount,
                                 paymentMethod: sessionStatus.paymentMethod,
-                                paymentState: sessionStatus.paymentDetails.state,
                                 amount: paymentAmount,
                                 currency: sessionStatus.paymentDetails.amount.currency,
                             });
@@ -718,11 +748,15 @@ router.post('/callback', async (req: Request, res: Response) => {
 
                             // Update payment information, shipping price, and total amount
                             // Shipping price is calculated from actual Vipps payment (0 for pickup, 9900 for shipping)
+                            // Determine actual payment state from aggregate (checks captured/refunded/cancelled amounts)
+                            const actualPaymentState = getStateFromAggregate(sessionStatus.paymentDetails);
+                            // Map to order status: CAPTURED->PAID, RESERVED->RESERVED, else PENDING
+                            const orderStatus = actualPaymentState === 'CAPTURED' ? 'PAID' : actualPaymentState === 'RESERVED' ? 'RESERVED' : 'PENDING';
+                            
                             await databaseService.updateOrderPayment(reference, {
                                 paymentMethod: sessionStatus.paymentMethod,
-                                paymentState: sessionStatus.paymentDetails?.state,
-                                status: 'PAID' as any,
-                                paidAt: new Date(),
+                                status: orderStatus as any,
+                                paidAt: actualPaymentState === 'CAPTURED' ? new Date() : undefined,
                                 shippingPrice, // Actual shipping selected by user (0 or 9900)
                                 totalAmount, // Products + actual shipping
                             });
@@ -802,20 +836,16 @@ router.post('/callback', async (req: Request, res: Response) => {
                 try {
                     const order = await databaseService.getOrderByReference(reference);
                     if (order) {
-                        await databaseService.updateOrderStatus(reference, 'CANCELLED' as any);
+                        await databaseService.updateOrderStatus(reference, 'TERMINATED' as any);
                     }
                 } catch (dbError) {
                     // Order might not exist yet, which is fine
                 }
             }
 
-            // Notify order@mollerfan.club about the failure
-            try {
-                await mailService.sendOrderFailureNotification(reference, sessionState);
-            } catch (emailError) {
-                console.error(`❌ Failed to send failure notification for order ${reference}:`, emailError);
-                // Don't throw - we still want to return 2XX to Vipps
-            }
+            // Log the termination but don't send failure emails
+            // These are normal user actions (closing checkout, timeout, etc.)
+            console.log(`ℹ️  Payment terminated: ${reference} - State: ${sessionState}`);
         }
 
         // Always return 2XX to acknowledge receipt

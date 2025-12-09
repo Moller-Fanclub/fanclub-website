@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { auth } from '../auth.js';
 import { databaseService } from '../services/databaseService.js';
 import { orderCleanupService } from '../services/orderCleanupService.js';
+import { vippsEPaymentService } from '../services/vippsEPaymentService.js';
 
 const router = express.Router();
 
@@ -11,6 +12,12 @@ const router = express.Router();
  */
 async function requireAuth(req: Request, res: Response, next: express.NextFunction): Promise<void> {
     try {
+        // Skip auth in development if SKIP_ADMIN_AUTH is set
+        if (process.env.SKIP_ADMIN_AUTH === 'true') {
+            next();
+            return;
+        }
+
         // Better Auth expects a Request object
         // Convert Express request to a Web API Request-like object
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
@@ -301,6 +308,221 @@ router.get('/stats', requireAuth, async (_req: Request, res: Response) => {
         console.error('Error fetching stats:', error);
         res.status(500).json({
             error: 'Failed to fetch stats',
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return;
+    }
+});
+
+/**
+ * POST /api/admin/orders/:reference/capture
+ * Capture a reserved payment
+ */
+router.post('/orders/:reference/capture', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const { reference } = req.params;
+        
+        // Get order from database
+        const order = await databaseService.getOrderByReference(reference);
+        if (!order) {
+            res.status(404).json({ error: 'Order not found' });
+            return;
+        }
+
+        // Verify order status
+        const paymentDetails = await vippsEPaymentService.getPaymentDetails(reference);
+        if (paymentDetails.state !== 'RESERVED') {
+            res.status(400).json({ 
+                error: 'Invalid payment state',
+                message: `Payment must be in RESERVED state to capture. Current state: ${paymentDetails.state}`
+            });
+            return;
+        }
+
+        // Capture the full amount
+        await vippsEPaymentService.capturePayment(reference, {
+            modificationAmount: {
+                currency: 'NOK',
+                value: order.amount
+            }
+        });
+
+        // Update order status to PAID
+        await databaseService.updateOrderPayment(reference, {
+            status: 'PAID',
+            paidAt: new Date()
+        });
+
+        res.json({ 
+            success: true,
+            message: 'Payment captured successfully',
+            reference
+        });
+        return;
+    } catch (error) {
+        console.error('Error capturing payment:', error);
+        res.status(500).json({
+            error: 'Failed to capture payment',
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return;
+    }
+});
+
+/**
+ * POST /api/admin/orders/:reference/cancel
+ * Cancel a reserved payment
+ */
+router.post('/orders/:reference/cancel', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const { reference } = req.params;
+        
+        // Get order from database
+        const order = await databaseService.getOrderByReference(reference);
+        if (!order) {
+            res.status(404).json({ error: 'Order not found' });
+            return;
+        }
+
+        // Verify order status
+        const paymentDetails = await vippsEPaymentService.getPaymentDetails(reference);
+        if (paymentDetails.state !== 'RESERVED') {
+            res.status(400).json({ 
+                error: 'Invalid payment state',
+                message: `Payment must be in RESERVED state to cancel. Current state: ${paymentDetails.state}`
+            });
+            return;
+        }
+
+        // Cancel the payment
+        await vippsEPaymentService.cancelPayment(reference, 'Cancelled by admin');
+
+        // Update order status to CANCELLED
+        await databaseService.updateOrderPayment(reference, {
+            status: 'CANCELLED'
+        });
+
+        res.json({ 
+            success: true,
+            message: 'Payment cancelled successfully',
+            reference
+        });
+        return;
+    } catch (error) {
+        console.error('Error cancelling payment:', error);
+        res.status(500).json({
+            error: 'Failed to cancel payment',
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return;
+    }
+});
+
+/**
+ * POST /api/admin/orders/:reference/refund
+ * Refund a captured payment
+ */
+router.post('/orders/:reference/refund', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const { reference } = req.params;
+        
+        // Get order from database
+        const order = await databaseService.getOrderByReference(reference);
+        if (!order) {
+            res.status(404).json({ error: 'Order not found' });
+            return;
+        }
+
+        // Verify order status
+        const paymentDetails = await vippsEPaymentService.getPaymentDetails(reference);
+        if (paymentDetails.state !== 'CAPTURED') {
+            res.status(400).json({ 
+                error: 'Invalid payment state',
+                message: `Payment must be in CAPTURED state to refund. Current state: ${paymentDetails.state}`
+            });
+            return;
+        }
+
+        // Refund the full amount
+        await vippsEPaymentService.refundPayment(reference, {
+            modificationAmount: {
+                currency: 'NOK',
+                value: order.amount
+            }
+        });
+
+        // Fetch updated payment details to get actual state
+        const updatedDetails = await vippsEPaymentService.getPaymentDetails(reference);
+        
+        // Update order status based on aggregate
+        await databaseService.updateOrderPayment(reference, {
+            status: updatedDetails.state === 'REFUNDED' ? 'REFUNDED' : 'PAID'
+        });
+
+        res.json({ 
+            success: true,
+            message: 'Payment refunded successfully',
+            reference
+        });
+        return;
+    } catch (error) {
+        console.error('Error refunding payment:', error);
+        res.status(500).json({
+            error: 'Failed to refund payment',
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return;
+    }
+});
+
+/**
+ * POST /api/admin/capture-all
+ * Capture all reserved payments
+ */
+router.post('/capture-all', requireAuth, async (req: Request, res: Response) => {
+    try {
+        // Get all orders and filter for RESERVED status
+        const allOrders = await databaseService.getAllOrders(1000);
+        const orders = allOrders.filter((order: any) => order.status === 'RESERVED');
+        
+        let successful = 0;
+        let failed = 0;
+        const errors: string[] = [];
+
+        for (const order of orders) {
+            try {
+                await vippsEPaymentService.capturePayment(order.reference, {
+                    modificationAmount: {
+                        currency: 'NOK',
+                        value: order.amount
+                    }
+                });
+
+                await databaseService.updateOrderPayment(order.reference, {
+                    status: 'PAID',
+                    paidAt: new Date()
+                });
+
+                successful++;
+            } catch (error) {
+                failed++;
+                errors.push(`${order.reference}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                console.error(`Failed to capture ${order.reference}:`, error);
+            }
+        }
+
+        res.json({ 
+            success: true,
+            successful,
+            failed,
+            total: orders.length,
+            errors: failed > 0 ? errors : undefined
+        });
+        return;
+    } catch (error) {
+        console.error('Error in capture all:', error);
+        res.status(500).json({
+            error: 'Failed to capture payments',
             message: error instanceof Error ? error.message : 'Unknown error',
         });
         return;

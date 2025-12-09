@@ -1,8 +1,10 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import dotenv from 'dotenv';
 import { vippsService } from './vippsService.js';
+import { databaseService } from './databaseService.js';
 
 dotenv.config();
+
 
 // Vipps API Configuration
 const VIPPS_API_BASE_URL = process.env.VIPPS_API_BASE_URL || 'https://apitest.vipps.no';
@@ -21,10 +23,28 @@ interface VippsError {
 }
 
 export interface PaymentDetails {
-    state: 'INITIATED' | 'RESERVED' | 'CAPTURED' | 'CANCELLED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
+    state: 'INITIATED' | 'AUTHORIZED' | 'RESERVED' | 'CAPTURED' | 'CANCELLED' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'TERMINATED';
     amount: {
         currency: string;
         value: number;
+    };
+    aggregate: {
+        authorizedAmount: {
+            currency: string;
+            value: number;
+        };
+        capturedAmount: {
+            currency: string;
+            value: number;
+        };
+        refundedAmount: {
+            currency: string;
+            value: number;
+        };
+        cancelledAmount: {
+            currency: string;
+            value: number;
+        };
     };
     transaction: {
         reference: string;
@@ -51,7 +71,7 @@ export interface CaptureRequest {
 }
 
 export interface RefundRequest {
-    amount: {
+    modificationAmount: {
         currency: string;
         value: number;
     };
@@ -120,7 +140,32 @@ export class VippsEPaymentService {
                 }
             );
 
-            return response.data;
+            // Determine actual state from aggregate amounts
+            const paymentDetails = response.data;
+            
+    
+            const { capturedAmount, refundedAmount, cancelledAmount, authorizedAmount } = paymentDetails.aggregate;
+            
+            // If captured amount > 0, payment is captured
+            if (capturedAmount.value > 0) {
+                if (refundedAmount.value > 0) {
+                    paymentDetails.state = refundedAmount.value >= capturedAmount.value ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+                } else {
+                    paymentDetails.state = 'CAPTURED';
+                }
+            }
+            // If cancelled amount > 0, payment is cancelled
+            else if (cancelledAmount.value > 0) {
+                paymentDetails.state = 'CANCELLED';
+            }
+            // If authorized amount > 0 but not captured, payment is reserved
+            else if (authorizedAmount.value > 0) {
+                paymentDetails.state = 'RESERVED';
+            }
+            // Otherwise use the state from API (INITIATED, TERMINATED, etc.)
+        
+            
+            return paymentDetails;
         } catch (error) {
             const axiosError = error as AxiosError<VippsError>;
             console.error(`❌ Failed to get payment details for ${reference}:`, axiosError.response?.data || axiosError.message);
@@ -138,12 +183,14 @@ export class VippsEPaymentService {
         }
 
         try {
+            const headers = await this.getRequestHeaders();
+            // Add idempotency key for capture (required by Vipps)
+            headers['Idempotency-Key'] = `capture-${reference}-${Date.now()}`;
+            
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/capture`,
                 captureData,
-                {
-                    headers: await this.getRequestHeaders(),
-                }
+                { headers }
             );
 
             console.log(`✅ Captured payment: ${reference}`);
@@ -170,12 +217,14 @@ export class VippsEPaymentService {
                 cancelData.transactionText = transactionText;
             }
 
+            const headers = await this.getRequestHeaders();
+            // Add idempotency key for cancel (required by Vipps)
+            headers['Idempotency-Key'] = `cancel-${reference}-${Date.now()}`;
+
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/cancel`,
                 cancelData,
-                {
-                    headers: await this.getRequestHeaders(),
-                }
+                { headers }
             );
 
             console.log(`✅ Cancelled payment: ${reference}`);
@@ -197,12 +246,14 @@ export class VippsEPaymentService {
         }
 
         try {
+            const headers = await this.getRequestHeaders();
+            // Add idempotency key for refund (required by Vipps)
+            headers['Idempotency-Key'] = `refund-${reference}-${Date.now()}`;
+            
             const response = await this.axiosInstance.post<PaymentDetails>(
                 `/epayment/v1/payments/${reference}/refund`,
                 refundData,
-                {
-                    headers: await this.getRequestHeaders(),
-                }
+                { headers }
             );
 
             console.log(`✅ Refunded payment: ${reference}`);
