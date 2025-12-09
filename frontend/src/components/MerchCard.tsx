@@ -16,6 +16,16 @@ interface MerchCardProps {
 
 const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNavigate }) => {
     const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+    React.useEffect(() => {
+        // Check if device supports touch
+        setIsTouchDevice(() => {
+            return (('ontouchstart' in window) ||
+                    (navigator.maxTouchPoints > 0) ||
+                    (navigator.msMaxTouchPoints > 0));
+        });
+    }, []);
 
     const handlePrev = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -42,8 +52,8 @@ const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNa
                             modules={[Pagination]}
                             pagination={{ clickable: true }}
                             loop={true}
-                            allowTouchMove={false}
-                            simulateTouch={false}
+                            allowTouchMove={!isTouchDevice}
+                            simulateTouch={isTouchDevice}
                             className="merch-card-swiper w-full max-w-[300px] mx-auto"
                             onSwiper={setSwiperInstance}
                         >
