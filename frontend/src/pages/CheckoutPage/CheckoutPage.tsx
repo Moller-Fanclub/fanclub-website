@@ -10,14 +10,12 @@ import { PublicPaths } from "@/lib/routes";
 const CheckoutPage: React.FC = () => {
   const { items, clearCart } = useCart();
   const navigate = useNavigate();
-  const { config, isOpen: shopIsOpen } = useShopConfig();
+  const {isOpen: shopIsOpen } = useShopConfig();
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const checkoutContainerRef = useRef<HTMLDivElement>(null);
   const checkoutInstanceRef = useRef<VippsCheckoutInstance | null>(null);
 
-  // Compute opening date from config
-  const closingDate = config ? new Date(config.closingDate) : null;
 
   // Initialize Vipps Checkout when component mounts or items change
   useEffect(() => {
@@ -219,29 +217,8 @@ const CheckoutPage: React.FC = () => {
             </svg>
             <div>
               <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                📦 Viktig informasjon om forhåndsbestilling
+                📦 Estimert Leveringstid 3-4 uker
               </h3>
-              <ul className="text-blue-900 text-sm leading-relaxed ml-5 list-disc space-y-1">
-                <li>
-                  Dette er en <strong>forhåndsbestilling</strong> - produktene
-                  produseres etter at bestillingsperioden stenger
-                </li>
-                <li>
-                  <strong>Estimert leveringstid:</strong> 3-4 uker etter {" "}
-                    {closingDate?.toLocaleDateString("nb-NO", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                </li>
-                <li>
-                  Du vil motta e-postoppdateringer om produksjon og utsendelse
-                </li>
-                <li>
-                  Alle bestillinger sendes ut samtidig når produktene ankommer
-                  oss
-                </li>
-              </ul>
             </div>
           </div>
         </div>
