@@ -9,6 +9,7 @@ import './MerchProductPage.css';
 import { productService, type Product } from "../../services/productService.ts";
 import { useCart } from '../../contexts/CartContext';
 import { useShopConfig } from '../../hooks/useShopConfig.ts';
+import { flyToCart } from '@/components/utils/flyToChart.ts';
 
 const MerchProductPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -71,7 +72,7 @@ const MerchProductPage: React.FC = () => {
 
     const handleAddToCart = () => {
         if (!selectedSize || !product || !shopIsOpen) return;
-        
+        flyToCart(product.imageUrls[0]); 
         const priceNumber = parseFloat(product.price.replace(/[^0-9.]/g, '')) || 0;
         
         addItem({
