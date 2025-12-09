@@ -54,20 +54,25 @@ function convertCartItemsToOrderLines(cartItems: Array<{
         const unitPrice = item.price;
         const quantity = item.quantity;
         const totalAmountExcludingTax = unitPrice * quantity;
-        const taxPercentage = 0;
-        const totalTaxAmount = totalAmountExcludingTax * (taxPercentage / 100);
-        const totalAmount = totalAmountExcludingTax + totalTaxAmount;
+        // When tax is 0, total equals excluding tax, and tax amount is 0
+        const totalAmount = totalAmountExcludingTax;
 
         // Build product name with size if applicable
         const productName = item.size ? `${item.name} - ${item.size}` : item.name;
 
+        // Calculate amounts in øre (cents) - ensure they're all consistent
+        const totalAmountInOre = Math.round(totalAmount * 100);
+        const totalAmountExcludingTaxInOre = Math.round(totalAmountExcludingTax * 100);
+        const totalTaxAmountInOre = 0; // Explicitly 0 - no tax
+        const taxPercentage = 0; // Explicitly 0 - no tax
+
         const orderLine: OrderLine = {
             name: productName,
             id: `${item.id}-${item.size || 'default'}`,
-            totalAmount: Math.round(totalAmount * 100), // Convert to øre (cents)
-            totalAmountExcludingTax: Math.round(totalAmountExcludingTax * 100),
-            totalTaxAmount: Math.round(totalTaxAmount * 100),
-            taxPercentage,
+            totalAmount: totalAmountInOre,
+            totalAmountExcludingTax: totalAmountExcludingTaxInOre,
+            totalTaxAmount: totalTaxAmountInOre, // Explicitly 0 - no tax
+            taxPercentage, // Explicitly 0 - no tax
             unitInfo: {
                 unitPrice: Math.round(unitPrice * 100),
                 quantity: String(Math.round(quantity)), // Vipps API expects quantity as string
