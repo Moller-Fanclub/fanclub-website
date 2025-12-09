@@ -199,6 +199,7 @@ const CheckoutSuccessPage: React.FC = () => {
                 {/* Only show pickup if shippingPrice is explicitly 0 (in øre) AND payment details exist (callback has run) */}
                 {/* shippingPrice: 0 = pickup, 9900 = delivery (99 kr) */}
                 {/* If shippingPrice is undefined, default to showing delivery address */}
+                shipping price: {orderDetails?.shippingPrice}
                 {orderDetails?.shippingPrice === 0 &&
                 orderDetails?.paymentDetails ? (
                   <>
