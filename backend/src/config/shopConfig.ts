@@ -10,9 +10,9 @@
 
 export const shopConfig = {
   // Testing: Shop is open (opening date in the past)
-  openingDate: '2025-01-01T00:00:00',
+  openingDate: '2025-12-09T00:00:00',
   // Testing: Shop closes far in the future
-  closingDate: '2026-12-31T23:59:59',
+  closingDate: '2025-12-14T23:59:59',
   
   // Production dates (commented out for testing):
   // openingDate: '2025-11-15T00:00:00',
