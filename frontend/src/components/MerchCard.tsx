@@ -22,8 +22,7 @@ const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNa
         // Check if device supports touch
         setIsTouchDevice(() => {
             return (('ontouchstart' in window) ||
-                    (navigator.maxTouchPoints > 0) ||
-                    (navigator.msMaxTouchPoints > 0));
+                    (navigator.maxTouchPoints > 0));
         });
     }, []);
 
