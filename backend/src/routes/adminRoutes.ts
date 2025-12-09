@@ -12,11 +12,6 @@ const router = express.Router();
  */
 async function requireAuth(req: Request, res: Response, next: express.NextFunction): Promise<void> {
     try {
-        // Skip auth in development if SKIP_ADMIN_AUTH is set
-        if (process.env.SKIP_ADMIN_AUTH === 'true') {
-            next();
-            return;
-        }
 
         // Better Auth expects a Request object
         // Convert Express request to a Web API Request-like object
