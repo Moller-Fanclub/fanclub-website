@@ -58,11 +58,11 @@ const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNa
                         >
                             {imageUrls.map((url, index) => (
                                 <SwiperSlide key={index}>
-                                    <div className="aspect-square rounded-lg overflow-hidden">
+                                    <div className="aspect-square rounded-lg overflow-hidden bg-white">
                                         <img
                                             src={url}
                                             alt={`${title} - Image ${index + 1}`}
-                                            className="h-full w-full object-cover"
+                                            className="h-full w-full object-contain"
                                         />
                                     </div>
                                 </SwiperSlide>
@@ -70,11 +70,11 @@ const MerchCard: React.FC<MerchCardProps> = ({ id, imageUrls, title, price, onNa
                         </Swiper>
                     ) : (
                         <div className="w-full max-w-[300px] mx-auto pb-6">
-                            <div className="aspect-square rounded-lg overflow-hidden">
+                            <div className="aspect-square rounded-lg overflow-hidden bg-white">
                                 <img
                                     src={imageUrls[0]}
                                     alt={title}
-                                    className="h-full w-full object-cover"
+                                    className="h-full w-full object-contain"
                                 />
                             </div>
                         </div>
