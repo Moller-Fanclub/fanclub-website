@@ -28,6 +28,7 @@
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.2s;
+    z-index: 100;
 }
 
 .back-button:hover {
@@ -41,6 +42,26 @@
     color: #fff;
 }
 
+/* Mobile: stack back button above title */
+@media (max-width: 640px) {
+    .merch-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding-top: 10px;
+    }
+    
+    .back-button {
+        position: static;
+        align-self: flex-start;
+    }
+    
+    .merch-title {
+        font-size: 1.8em;
+    }
+}
+
 .carousel-container {
     position: relative;
     width: 100%;
@@ -52,67 +73,48 @@
     justify-content: center;
 }
 
-.carousel-image {
-    width: 50%;
-    max-height: 500px;
-    height: auto;
-    object-fit: contain;
-    transition: opacity 0.3s ease-in-out;
-    border-radius: 12px;
+/* Swiper styles */
+.product-swiper {
+    width: 100%;
+    max-width: 90%;
+    padding-bottom: 40px !important;
 }
 
-.carousel-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    font-size: 1.5em;
+.product-swiper .swiper-slide {
+
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
 }
 
-.carousel-button:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-}
-
-.carousel-button.prev {
-    left: 20px;
-}
-
-.carousel-button.next {
-    right: 20px;
-}
-
-.carousel-indicators {
+.product-swiper .swiper-pagination {
+    bottom: 0 !important;
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 12px;
 }
 
-.indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #ccc;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.product-swiper .swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 1;
 }
 
-.indicator.active {
-    background-color: #333;
+.product-swiper .swiper-pagination-bullet-active {
+    background: #007aff;
 }
 
+
+
+
+.carousel-image {
+    width: 100%;
+    max-height: 500px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+/* Mobile: smaller nav buttons */
+
+ 
 .merch-details {
     width: 100%;
     max-width: 800px;

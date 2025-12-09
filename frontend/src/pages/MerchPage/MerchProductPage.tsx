@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import './MerchProductPage.css';
 import { productService, type Product } from "../../services/productService.ts";
 import { useCart } from '../../contexts/CartContext';
@@ -13,12 +18,21 @@ const MerchProductPage: React.FC = () => {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [addedToCart, setAddedToCart] = useState(false);
+    const [showSizeChart, setShowSizeChart] = useState(false);
+    const [hasSizeChart, setHasSizeChart] = useState(false);
     
     // Compute opening date from config
     const openingDate = config ? new Date(config.openingDate) : null;
+
+    // Derive size chart URL from product's image folder
+    const getSizeChartUrl = (imageUrls: string[]) => {
+        if (!imageUrls || imageUrls.length === 0) return null;
+        const firstImage = imageUrls[0];
+        const folderPath = firstImage.substring(0, firstImage.lastIndexOf('/'));
+        return `${folderPath}/size.png`;
+    };
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -35,6 +49,14 @@ const MerchProductPage: React.FC = () => {
                     if (data.sizes && data.sizes.length > 0) {
                         setSelectedSize(data.sizes[0]);
                     }
+                    // Check if size chart exists
+                    const sizeChartUrl = getSizeChartUrl(data.imageUrls);
+                    if (sizeChartUrl) {
+                        const img = new Image();
+                        img.onload = () => setHasSizeChart(true);
+                        img.onerror = () => setHasSizeChart(false);
+                        img.src = sizeChartUrl;
+                    }
                 }
             } catch (err) {
                 setError('Failed to load product');
@@ -46,16 +68,6 @@ const MerchProductPage: React.FC = () => {
 
         fetchProduct();
     }, [id]);
-
-    const nextImage = () => {
-        if (!product) return;
-        setCurrentIndex((prev) => (prev + 1) % product.imageUrls.length);
-    };
-
-    const prevImage = () => {
-        if (!product) return;
-        setCurrentIndex((prev) => (prev - 1 + product.imageUrls.length) % product.imageUrls.length);
-    };
 
     const handleAddToCart = () => {
         if (!selectedSize || !product || !shopIsOpen) return;
@@ -112,26 +124,23 @@ const MerchProductPage: React.FC = () => {
                 <h1 className="merch-title">{product.title}</h1>
             </header>
             <div className="carousel-container">
-                <img
-                    src={product.imageUrls[currentIndex]}
-                    alt={`${product.title} - Image ${currentIndex + 1}`}
-                    className="carousel-image"
-                />
-                <button className="carousel-button prev" onClick={prevImage}>
-                    &lt;
-                </button>
-                <button className="carousel-button next" onClick={nextImage}>
-                    &gt;
-                </button>
-                <div className="carousel-indicators">
-                    {product.imageUrls.map((_, index) => (
-                        <div
-                            key={index}
-                            className={`indicator ${index === currentIndex ? 'active' : ''}`}
-                            onClick={() => setCurrentIndex(index)}
-                        />
+                <Swiper
+                    modules={[Pagination, Navigation]}
+                    pagination={{ clickable: true }}
+                    navigation={product.imageUrls.length > 1}
+                    loop={product.imageUrls.length > 1}
+                    className="product-swiper"
+                >
+                    {product.imageUrls.map((url, index) => (
+                        <SwiperSlide key={index}>
+                            <img
+                                src={url}
+                                alt={`${product.title} - Image ${index + 1}`}
+                                className="carousel-image"
+                            />
+                        </SwiperSlide>
                     ))}
-                </div>
+                </Swiper>
             </div>
             <div className="merch-details">
                 <p className="merch-price">{product.price} kr</p>
@@ -139,7 +148,27 @@ const MerchProductPage: React.FC = () => {
                 {/* Size Selector */}
                 {product.sizes && product.sizes.length > 0 && (
                     <div className="size-selector">
-                        <label className="size-label">Størrelse:</label>
+                        <div className="size-header" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '15px' }}>
+                            <label className="size-label" style={{ margin: 0 }}>Størrelse:</label>
+                            {hasSizeChart && (
+                                <button 
+                                    onClick={() => setShowSizeChart(true)}
+                                    className="size-chart-button"
+                                    style={{
+                                        background: 'transparent',
+                                        border: '1px solid rgba(255, 255, 255, 0.4)',
+                                        color: 'rgba(255, 255, 255, 0.8)',
+                                        padding: '6px 12px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.9em',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    📏 Størrelsestabell
+                                </button>
+                            )}
+                        </div>
                         <div className="size-buttons">
                             {product.sizes.map(size => (
                                 <button
@@ -206,6 +235,75 @@ const MerchProductPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Size Chart Modal */}
+            {showSizeChart && hasSizeChart && (
+                <div 
+                    className="size-chart-modal"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        padding: '20px'
+                    }}
+                    onClick={() => setShowSizeChart(false)}
+                >
+                    <div 
+                        style={{
+                            position: 'relative',
+                            maxWidth: '90vw',
+                            maxHeight: '90vh',
+                            backgroundColor: '#fff',
+                            borderRadius: '12px',
+                            padding: '20px',
+                            overflow: 'auto'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowSizeChart(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                background: '#333',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '36px',
+                                height: '36px',
+                                fontSize: '1.2em',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ✕
+                        </button>
+                        <h3 style={{ margin: '0 0 16px 0', color: '#333', textAlign: 'center' }}>
+                            Størrelsestabell
+                        </h3>
+                        <img 
+                            src={getSizeChartUrl(product.imageUrls) || ''} 
+                            alt="Størrelsestabell" 
+                            style={{ 
+                                maxWidth: '100%', 
+                                maxHeight: '70vh',
+                                display: 'block',
+                                margin: '0 auto'
+                            }} 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

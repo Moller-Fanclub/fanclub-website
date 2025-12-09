@@ -1,17 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import MerchCard from "../../components/MerchCard.tsx";
 import Countdown from "../../components/Countdown.tsx";
 import { productService, type Product } from "../../services/productService.ts";
 import { useShopConfig } from "../../hooks/useShopConfig.ts";
+import "./MerchPage.css";
 import PageContainer from "../../components/PageContainer.tsx";
 import FadeInnAnimation from "@/components/FadeInnAnimation.tsx";
 
+const SCROLL_KEY = 'merchPageScrollPosition';
 
 const MerchPage: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { config, isOpen, isBeforeOpening } = useShopConfig();
+    
+    // Track if we need to restore scroll
+    const [pendingScrollRestore, setPendingScrollRestore] = useState<number | null>(() => {
+        const saved = sessionStorage.getItem(SCROLL_KEY);
+        if (saved) {
+            sessionStorage.removeItem(SCROLL_KEY);
+            return parseInt(saved, 10);
+        }
+        return null;
+    });
+
+    // Restore scroll position after products load
+    useLayoutEffect(() => {
+        if (!loading && products.length > 0 && pendingScrollRestore !== null) {
+            window.scrollTo(0, pendingScrollRestore);
+            setPendingScrollRestore(null);
+        }
+    }, [loading, products, pendingScrollRestore]);
     
     // Compute shop status
     const shopStatus = isBeforeOpening ? 'before' : isOpen ? 'open' : 'closed';
@@ -22,11 +42,11 @@ const MerchPage: React.FC = () => {
     
     // Format date range
     const dateRange = openingDate && closingDate 
-        ? `${openingDate.getDate()}. ${openingDate.toLocaleDateString('nb-NO', { month: 'long' })} - ${closingDate.getDate()}. ${closingDate.toLocaleDateString('nb-NO', { month: 'long' })}`
+        ? `${openingDate.getDate()}. november - ${closingDate.getDate()}. november`
         : '';
     
     // Estimated delivery
-    const estimatedDeliveryWeeks = '2-4 uker';
+    const estimatedDeliveryWeeks = '3-4 uker';
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -131,7 +151,7 @@ const MerchPage: React.FC = () => {
                                 <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Estimert leveringstid: <strong>{estimatedDeliveryWeeks}</strong> etter {closingDate?.getDate()}. {closingDate?.toLocaleDateString('nb-NO', { month: 'long' })}</span>
+                                <span>Estimert leveringstid: <strong>{estimatedDeliveryWeeks}</strong> etter {closingDate?.getDate()}. november</span>
                             </p>
                             <p className="flex items-start">
                                 <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,13 +185,15 @@ const MerchPage: React.FC = () => {
                     {products.map((product) => {
                         if (product.price) {
                             return (
-                                <FadeInnAnimation>
+                                <FadeInnAnimation key={product.id}>
                                     <MerchCard
-                                        key={product.id}
                                         id={product.id}
-                                        imageUrl={product.imageUrls[0]}
+                                        imageUrls={product.imageUrls}
                                         title={product.title}
                                         price={product.price}
+                                        onNavigate={() => {
+                                            sessionStorage.setItem(SCROLL_KEY, window.scrollY.toString());
+                                        }}
                                     />
                                 </FadeInnAnimation>
                             );
