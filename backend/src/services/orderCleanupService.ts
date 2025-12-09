@@ -2,15 +2,15 @@ import { databaseService } from './databaseService.js';
 
 /**
  * Cleanup service for abandoned orders
- * Marks PENDING orders older than a certain time as CANCELLED
+ * Marks PENDING orders older than a certain time as TERMINATED and expires their Vipps sessions
  */
 export class OrderCleanupService {
     /**
-     * Mark old PENDING orders as CANCELLED
-     * @param maxAgeHours - Maximum age in hours before marking as cancelled (default: 24 hours)
+     * Mark old PENDING orders as TERMINATED
+     * @param maxAgeMinutes - Maximum age in minutes before marking as terminated (default: 10 minutes)
      */
-    async cleanupAbandonedOrders(maxAgeHours: number = 24): Promise<{
-        cancelled: number;
+    async cleanupAbandonedOrders(maxAgeMinutes: number = 10): Promise<{
+        terminated: number;
         errors: number;
     }> {
         try {
@@ -21,27 +21,28 @@ export class OrderCleanupService {
             );
 
             const cutoffTime = new Date();
-            cutoffTime.setHours(cutoffTime.getHours() - maxAgeHours);
+            cutoffTime.setMinutes(cutoffTime.getMinutes() - maxAgeMinutes);
 
-            let cancelled = 0;
+            let terminated = 0;
             let errors = 0;
 
             for (const order of pendingOrders) {
                 try {
                     const orderDate = new Date(order.createdAt);
                     if (orderDate < cutoffTime) {
-                        // Order is older than maxAgeHours, mark as cancelled
-                        await databaseService.updateOrderStatus(order.reference, 'CANCELLED' as any);
-                        cancelled++;
-                        console.log(`✅ Marked abandoned order ${order.reference} as CANCELLED`);
+   
+                        
+                        await databaseService.updateOrderStatus(order.reference, 'TERMINATED' as any);
+                        terminated++;
+                        console.log(`✅ Marked abandoned order ${order.reference} as TERMINATED`);
                     }
                 } catch (error) {
-                    console.error(`❌ Error cancelling order ${order.reference}:`, error);
+                    console.error(`❌ Error terminating order ${order.reference}:`, error);
                     errors++;
                 }
             }
 
-            return { cancelled, errors };
+            return { terminated, errors };
         } catch (error) {
             console.error('❌ Error in order cleanup:', error);
             throw error;
@@ -51,7 +52,7 @@ export class OrderCleanupService {
     /**
      * Get statistics about abandoned orders
      */
-    async getAbandonedOrderStats(maxAgeHours: number = 24): Promise<{
+    async getAbandonedOrderStats(maxAgeMinutes: number = 10): Promise<{
         totalPending: number;
         abandoned: number;
         recent: number;
@@ -63,7 +64,7 @@ export class OrderCleanupService {
             );
 
             const cutoffTime = new Date();
-            cutoffTime.setHours(cutoffTime.getHours() - maxAgeHours);
+            cutoffTime.setMinutes(cutoffTime.getMinutes() - maxAgeMinutes);
 
             let abandoned = 0;
             let recent = 0;

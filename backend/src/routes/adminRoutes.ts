@@ -233,17 +233,17 @@ router.patch('/orders/:reference/status', requireAuth, async (req: Request, res:
 
 /**
  * POST /api/admin/orders/cleanup
- * Cleanup abandoned orders (mark old PENDING orders as CANCELLED)
+ * Cleanup abandoned orders (mark old PENDING orders as TERMINATED)
  */
 router.post('/orders/cleanup', requireAuth, async (req: Request, res: Response) => {
     try {
-        const { maxAgeHours = 24 } = req.body;
-        const result = await orderCleanupService.cleanupAbandonedOrders(maxAgeHours);
+        const { maxAgeMinutes = 10 } = req.body;
+        const result = await orderCleanupService.cleanupAbandonedOrders(maxAgeMinutes);
         
         res.json({
             success: true,
             ...result,
-            message: `Marked ${result.cancelled} abandoned orders as CANCELLED`,
+            message: `Marked ${result.terminated} abandoned orders as TERMINATED`,
         });
         return;
     } catch (error) {
@@ -262,8 +262,8 @@ router.post('/orders/cleanup', requireAuth, async (req: Request, res: Response) 
  */
 router.get('/orders/stats/abandoned', requireAuth, async (req: Request, res: Response) => {
     try {
-        const maxAgeHours = parseInt(req.query.maxAgeHours as string) || 24;
-        const stats = await orderCleanupService.getAbandonedOrderStats(maxAgeHours);
+        const maxAgeMinutes = parseInt(req.query.maxAgeMinutes as string) || 10;
+        const stats = await orderCleanupService.getAbandonedOrderStats(maxAgeMinutes);
         
         res.json(stats);
         return;

@@ -66,6 +66,7 @@ export default function AdminDashboardPage() {
   const [cancellingPayment, setCancellingPayment] = useState<string | null>(null);
   const [refundingPayment, setRefundingPayment] = useState<string | null>(null);
   const [captureAllLoading, setCaptureAllLoading] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -192,6 +193,44 @@ export default function AdminDashboardPage() {
       console.error('Error in capture all:', err);
     } finally {
       setCaptureAllLoading(false);
+    }
+  };
+
+  const cleanupAbandonedOrders = async () => {
+    setCleanupLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/cleanup`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ maxAgeMinutes: 10 }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to cleanup orders');
+      }
+
+      const data = await response.json();
+      setSuccessMessage(`Cleaned up ${data.terminated} abandoned orders${data.errors > 0 ? `. ${data.errors} errors.` : '.'}`);
+      
+      // Refresh orders and stats
+      await fetchOrders();
+      await fetchStats();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to cleanup orders';
+      setErrorMessage(message);
+      console.error('Error in cleanup:', err);
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -473,6 +512,14 @@ export default function AdminDashboardPage() {
                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
               >
                 {captureAllLoading ? 'Capturing...' : 'Capture All'}
+              </button>
+              <button
+                onClick={cleanupAbandonedOrders}
+                disabled={cleanupLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                title="Terminate orders older than 10 minutes and expire their Vipps sessions"
+              >
+                {cleanupLoading ? 'Cleaning...' : 'Cleanup Abandoned'}
               </button>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
