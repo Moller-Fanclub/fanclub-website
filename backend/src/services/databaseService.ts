@@ -7,7 +7,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let PrismaClient: any;
-let OrderStatus: any;
 
 // Initialization promise to prevent race conditions
 const initPrisma = (async () => {
@@ -16,7 +15,6 @@ const initPrisma = (async () => {
         const prismaModule = await import('@prisma/client');
         if (prismaModule && prismaModule.PrismaClient) {
             PrismaClient = prismaModule.PrismaClient;
-            OrderStatus = prismaModule.OrderStatus;
             return true;
         } else {
             throw new Error('PrismaClient not found in module');

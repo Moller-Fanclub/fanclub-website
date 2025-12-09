@@ -949,7 +949,7 @@ router.post('/payment/:reference/refund', async (req: Request, res: Response) =>
         }
 
         const refundRequest: RefundRequest = {
-            amount: {
+            modificationAmount: {
                 currency,
                 value: amount,
             },

@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import dotenv from 'dotenv';
 import { vippsService } from './vippsService.js';
-import { databaseService } from './databaseService.js';
 
 dotenv.config();
 

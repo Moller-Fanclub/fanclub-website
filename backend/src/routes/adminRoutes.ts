@@ -479,7 +479,7 @@ router.post('/orders/:reference/refund', requireAuth, async (req: Request, res: 
  * POST /api/admin/capture-all
  * Capture all reserved payments
  */
-router.post('/capture-all', requireAuth, async (req: Request, res: Response) => {
+router.post('/capture-all', requireAuth, async (_req: Request, res: Response) => {
     try {
         // Get all orders and filter for RESERVED status
         const allOrders = await databaseService.getAllOrders(1000);
