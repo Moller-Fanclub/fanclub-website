@@ -213,9 +213,6 @@ const MerchProductPage: React.FC = () => {
                             <p style={{ color: '#7F1D1D', marginBottom: '12px', fontSize: '14px' }}>
                                 Forhåndsbestillingsperioden er ikke aktiv akkurat nå.
                             </p>
-                            <p style={{ color: '#7F1D1D', fontSize: '14px', margin: 0 }}>
-                                Neste periode: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                            </p>
                         </div>
                     </div>
                 )}
