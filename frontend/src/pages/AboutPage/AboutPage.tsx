@@ -42,8 +42,8 @@ const ContactPage: React.FC = () => {
                             </div>
                             <div className="flex flex-col sm:flex-row">
                                 <span className="font-semibold min-w-[180px]">E-post:</span>
-                                <a href="mailto:kontakt@mollerfanclub.no" className="text-blue-400 hover:text-blue-300 hover:underline">
-                                    kontakt@mollerfanclub.no
+                                <a href="mailto:order@mollerfan.club" className="text-blue-400 hover:text-blue-300 hover:underline">
+                                    order@mollerfan.club
                                 </a>
                             </div>
 

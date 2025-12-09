@@ -4,6 +4,7 @@ import { vippsEPaymentService, CaptureRequest, RefundRequest } from '../services
 import { products } from '../data/products.js';
 import { mailService } from '../services/mailService.js';
 import { databaseService } from '../services/databaseService.js';
+import { shippingService } from '../services/shippingService.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -23,6 +24,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL
     || (process.env.VITE_API_URL && process.env.VITE_API_URL.startsWith('http') ? process.env.VITE_API_URL.replace('/api', '') : null)
     || (process.env.NODE_ENV === 'production' ? 'https://mollerfan.club' : 'http://localhost:5173');
 
+// Helper: Get image base URL - use production URLs for localhost since same products exist in prod
+function getImageBaseUrl(): string {
+    // For localhost development, use production URL since same products exist there
+    if (FRONTEND_URL.includes('localhost')) {
+        return 'https://mollerfan.club';
+    }
+    return FRONTEND_URL;
+}
+
 // Validate required environment variables on startup
 if (!VIPPS_MSN) {
     console.error('❌ VIPPS_MSN environment variable is required');
@@ -39,25 +49,30 @@ function convertCartItemsToOrderLines(cartItems: Array<{
     quantity: number;
     image?: string;
     size?: string;
-}>, baseUrl: string = ''): OrderLine[] {
+}>): OrderLine[] {
     return cartItems.map(item => {
         const unitPrice = item.price;
         const quantity = item.quantity;
         const totalAmountExcludingTax = unitPrice * quantity;
-        const taxPercentage = 0;
-        const totalTaxAmount = totalAmountExcludingTax * (taxPercentage / 100);
-        const totalAmount = totalAmountExcludingTax + totalTaxAmount;
+        // When tax is 0, total equals excluding tax, and tax amount is 0
+        const totalAmount = totalAmountExcludingTax;
 
         // Build product name with size if applicable
         const productName = item.size ? `${item.name} - ${item.size}` : item.name;
 
+        // Calculate amounts in øre (cents) - ensure they're all consistent
+        const totalAmountInOre = Math.round(totalAmount * 100);
+        const totalAmountExcludingTaxInOre = Math.round(totalAmountExcludingTax * 100);
+        const totalTaxAmountInOre = 0; // Explicitly 0 - no tax
+        const taxPercentage = 0; // Explicitly 0 - no tax
+
         const orderLine: OrderLine = {
             name: productName,
             id: `${item.id}-${item.size || 'default'}`,
-            totalAmount: Math.round(totalAmount * 100), // Convert to øre (cents)
-            totalAmountExcludingTax: Math.round(totalAmountExcludingTax * 100),
-            totalTaxAmount: Math.round(totalTaxAmount * 100),
-            taxPercentage,
+            totalAmount: totalAmountInOre,
+            totalAmountExcludingTax: totalAmountExcludingTaxInOre,
+            totalTaxAmount: totalTaxAmountInOre, // Explicitly 0 - no tax
+            taxPercentage, // Explicitly 0 - no tax
             unitInfo: {
                 unitPrice: Math.round(unitPrice * 100),
                 quantity: String(Math.round(quantity)), // Vipps API expects quantity as string
@@ -69,13 +84,37 @@ function convertCartItemsToOrderLines(cartItems: Array<{
 
         // Add optional fields only if they exist
         // Note: ProductUrl must be a valid HTTPS URL (Vipps doesn't accept localhost HTTP URLs)
-        // Only include productUrl if it's HTTPS
-        if (baseUrl && baseUrl.startsWith('https://')) {
-            orderLine.productUrl = `${baseUrl}/merch/${item.id}`;
+        // For localhost development, use production URL since same products exist there
+        const productBaseUrl = getImageBaseUrl(); // Use same logic as images
+        if (productBaseUrl && productBaseUrl.startsWith('https://')) {
+            orderLine.productUrl = `${productBaseUrl}/merch/${item.id}`;
         }
-        // For localhost/development, skip productUrl to avoid validation errors
+
+        // Handle image URL - Vipps requires absolute HTTPS URLs for images
+        // For localhost development, use production URLs since same products exist there
         if (item.image) {
-            orderLine.imageUrl = item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`;
+            const imageBaseUrl = getImageBaseUrl();
+
+            if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
+                // Already absolute URL
+                // Convert HTTP to HTTPS (Vipps requires HTTPS)
+                if (item.image.startsWith('http://')) {
+                    // Replace localhost HTTP with production HTTPS
+                    if (item.image.includes('localhost')) {
+                        // Extract image path and use production URL
+                        const imagePath = item.image.replace(/^https?:\/\/[^/]+/, '');
+                        orderLine.imageUrl = `${imageBaseUrl}${imagePath}`;
+                    } else {
+                        orderLine.imageUrl = item.image.replace('http://', 'https://');
+                    }
+                } else {
+                    orderLine.imageUrl = item.image;
+                }
+            } else {
+                // Relative URL - make it absolute using production URL for localhost, or baseUrl for production
+                const imagePath = item.image.startsWith('/') ? item.image : '/' + item.image;
+                orderLine.imageUrl = `${imageBaseUrl}${imagePath}`;
+            }
         }
 
         return orderLine;
@@ -89,9 +128,12 @@ function calculateTotalAmount(orderLines: OrderLine[]): number {
 
 // Helper: Generate unique reference ID
 function generateReference(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `MF-${timestamp}-${random}`;
+    // Short, human-friendly unique id:
+    // - timestamp in base36 for compactness
+    // - 3 char random base36 suffix
+    const ts = Date.now().toString(36).toUpperCase();
+    const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `MF-${ts}-${rand}`;
 }
 
 // Helper: Generate payment description from cart items
@@ -208,11 +250,17 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                     message: `Price mismatch for product ${item.id}`,
                 });
             }
-            validatedItems.push(item);
+            // Ensure image is set from product data if not provided in cart item
+            const validatedItem = {
+                ...item,
+                image: item.image || (product.imageUrls && product.imageUrls[0]) || undefined,
+            };
+            validatedItems.push(validatedItem);
         }
 
         // Convert cart items to Vipps order lines
-        const orderLines = convertCartItemsToOrderLines(validatedItems, FRONTEND_URL);
+        const orderLines = convertCartItemsToOrderLines(validatedItems);
+
 
         // Calculate total amount
         const totalAmount = calculateTotalAmount(orderLines);
@@ -224,10 +272,10 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
         // This ensures we have the order items even if the callback fails
         if (USE_DATABASE) {
             try {
-                // Calculate totals
+                // Calculate totals (products only - shipping will be added by Vipps based on user selection)
                 const itemsTotal = validatedItems.reduce((sum, item) => sum + (item.price * item.quantity * 100), 0); // Convert to øre
-                const shippingPrice = 7900; // 79 kr in øre
-                const totalAmount = itemsTotal + shippingPrice;
+                const shippingPrice = 0; // Will be updated in callback based on actual Vipps selection (0 for pickup, 9900 for shipping)
+                const totalAmount = itemsTotal; // Products only - shipping added by Vipps
 
                 await databaseService.createOrder({
                     reference,
@@ -291,15 +339,59 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             console.warn('⚠️  VIPPS_CALLBACK_AUTHORIZATION_TOKEN not set - callbacks will not be secured');
         }
 
-        // Calculate bottom line (total amount)
-        // Note: Vipps API expects 'orderBottomLine' (camelCase), not 'bottomLine'
-        const orderBottomLine = {
-            currency: 'NOK',
-            amount: totalAmount,
-        };
-
         // Generate descriptive payment description
         const paymentDescription = generatePaymentDescription(validatedItems);
+
+        // Calculate shipping cost (fixed price)
+        const shippingCost = 9900; // 99 kr in øre
+
+        // Configure logistics with fixed shipping options
+        // No address validation - users can enter any address
+        // taxRate: 0 ensures no VAT is applied (we are VAT exempt)
+        const logisticsConfig: CreateCheckoutSessionRequest['logistics'] = {
+            fixedOptions: [
+                {
+                    id: 'pickup-haldens-gate',
+                    priority: 0, // Higher priority (lower number) - appears first
+                    amount: {
+                        value: 0, // 0 kr - free pickup
+                        currency: 'NOK',
+                    },
+                    title: 'Hent hos Møller Fanclub avd Trondheim',
+                    description: 'Hent på Haldens Gate 15, 7014 Trondheim',
+                    brand: 'OTHER' as const, // Use "OTHER" for in-store pickup (not a Posten service)
+                    isDefault: false, // No default - user must select
+                    taxRate: 0, // No VAT - we are VAT exempt
+                },
+                {
+                    id: 'servicepakke-standard',
+                    priority: 1,
+                    amount: {
+                        value: shippingCost,
+                        currency: 'NOK',
+                    },
+                    title: 'Posten Servicepakke',
+                    description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
+                    brand: 'POSTEN' as const,
+                    isDefault: true, // No default - shipping added only when selected
+                    taxRate: 0, // No VAT - we are VAT exempt
+                    vippsLogistics: {
+                        product: 'SERVICEPAKKE',
+                        service: 'STANDARD',
+                    },
+                },
+            ],
+        };
+
+        // Start with products only - shipping will be added by Vipps when:
+        // 1. User selects a shipping option, OR
+        // 2. Dynamic callback returns shipping options
+        // This ensures shipping is NOT in the initial view
+        const initialAmount = totalAmount; // Products only - no shipping included
+        const orderBottomLine = {
+            currency: 'NOK',
+            amount: initialAmount, // Products only - shipping added dynamically
+        };
 
         const sessionRequest: CreateCheckoutSessionRequest = {
             type: 'PAYMENT',
@@ -307,7 +399,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             transaction: {
                 amount: {
                     currency: 'NOK',
-                    value: totalAmount, // Amount in øre
+                    value: initialAmount, // Products only if dynamic callback, products + shipping if fixed only
                 },
                 reference,
                 paymentDescription,
@@ -318,8 +410,13 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
             },
             merchantInfo,
             configuration: {
-                elements: 'PaymentAndContactInfo', // We need address for shipping
+                elements: 'Full', // Use 'Full' to ensure address section is visible and editable
+                shippingDetails: {
+                    isShipping: true, // Explicitly request shipping address collection and make it editable
+                },
+                showOrderSummary: true, // Display order summary with products in the checkout window
             },
+            logistics: logisticsConfig,
         };
 
         // Add customer info if provided (for prefill)
@@ -354,6 +451,43 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
 });
 
 /**
+ * OPTIONS /api/vipps/checkout/shipping-options
+ * Handle CORS preflight for shipping options callback
+ */
+router.options('/checkout/shipping-options', (_req: Request, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+});
+
+/**
+ * POST /api/vipps/checkout/shipping-options
+ * Dynamic shipping options callback from Vipps (optional - not currently used)
+ * Returns fixed shipping options without validation
+ * 
+ * Note: This endpoint is kept for potential future use but is not currently
+ * configured in the session creation. All shipping options are provided as
+ * fixedOptions in the session.
+ */
+router.post('/checkout/shipping-options', async (_req: Request, res: Response) => {
+    try {
+        // Handle CORS
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        // Return fixed shipping options (no validation)
+        const fixedOptions = shippingService.getDefaultShippingOptions();
+        return res.json({ fixedOptions });
+    } catch (error) {
+        console.error('❌ Error in shipping options callback:', error);
+        // Return empty options on error
+        return res.json({ fixedOptions: [] });
+    }
+});
+
+/**
  * GET /api/vipps/checkout/session/:reference
  * Get session status
  */
@@ -361,6 +495,21 @@ router.get('/checkout/session/:reference', async (req: Request, res: Response) =
     try {
         const { reference } = req.params;
         const sessionStatus = await vippsService.getSessionStatus(reference);
+        
+        // Add shipping price from database if order exists
+        if (USE_DATABASE) {
+            try {
+                const order = await databaseService.getOrderByReference(reference);
+                if (order) {
+                    // Add shipping price to response
+                    (sessionStatus as any).shippingPrice = order.shippingPrice;
+                }
+            } catch (dbError) {
+                // If database lookup fails, continue without shipping price
+                console.error(`⚠️ Could not fetch order for shipping price:`, dbError);
+            }
+        }
+        
         res.json(sessionStatus);
     } catch (error) {
         console.error(`❌ Error getting session status for ${req.params.reference}:`, error);
@@ -382,7 +531,7 @@ router.patch('/checkout/session/:reference', async (req: Request, res: Response)
 
         // Convert items if provided
         if (updateData.items) {
-            updateData.orderLines = convertCartItemsToOrderLines(updateData.items, FRONTEND_URL);
+            updateData.orderLines = convertCartItemsToOrderLines(updateData.items);
             updateData.transaction = {
                 amount: {
                     currency: 'NOK',
@@ -438,6 +587,31 @@ router.post('/callback', async (req: Request, res: Response) => {
         const callbackData = req.body;
         const { reference, sessionState } = callbackData;
 
+
+        // Determine actual payment state from aggregate amounts
+        const getStateFromAggregate = (paymentDetails: any): string => {
+
+            const { capturedAmount, refundedAmount, cancelledAmount, authorizedAmount } = paymentDetails.aggregate;
+
+            // If captured amount > 0, payment is captured
+            if (capturedAmount?.value > 0) {
+                if (refundedAmount?.value > 0) {
+                    return refundedAmount.value >= capturedAmount.value ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+                }
+                return 'CAPTURED';
+            }
+            // If cancelled amount > 0, payment is cancelled
+            if (cancelledAmount?.value > 0) {
+                return 'CANCELLED';
+            }
+            // If authorized amount > 0 but not captured, payment is reserved
+            if (authorizedAmount?.value > 0) {
+                return 'RESERVED';
+            }
+            // Otherwise use the state from API
+            return paymentDetails.state;
+        };
+
         // Handle terminal states
         if (sessionState === 'PaymentSuccessful') {
             // Get full session details
@@ -473,7 +647,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                     }> = [];
 
                     let itemsTotal = 0;
-                    const shippingPrice = 7900; // 79 kr in øre
+                    let shippingPrice = 0; // Will be calculated from actual payment amount
                     let totalAmount = 0;
 
                     // Try to get order from database first
@@ -493,27 +667,52 @@ router.post('/callback', async (req: Request, res: Response) => {
                                     totalPrice: item.totalPrice,
                                     taxAmount: item.taxAmount,
                                 }));
-                                itemsTotal = order.itemsTotal;
-                                totalAmount = order.totalAmount;
+
+                                // Use order's itemsTotal, but verify it matches sum of items
+                                const calculatedItemsTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                                itemsTotal = order.itemsTotal; // Products only (from initial order creation)
+
+                                // If itemsTotal doesn't match, use calculated value
+                                if (order.itemsTotal !== calculatedItemsTotal && calculatedItemsTotal > 0) {
+                                    itemsTotal = calculatedItemsTotal;
+                                }
                             }
                         } catch (dbError) {
                             console.error(`⚠️ Database error when retrieving order ${reference}:`, dbError);
                         }
                     }
 
+                    // Calculate actual shipping price from Vipps payment amount
+                    // Payment amount = products + shipping (selected by user: 0 kr for pickup or 99 kr for shipping)
+                    let paymentAmount = 0;
+                    if (sessionStatus.paymentDetails) {
+                        paymentAmount = sessionStatus.paymentDetails.amount.value;
+
+                        // Ensure itemsTotal is valid - recalculate from order items if needed
+                        if (itemsTotal <= 0 && orderItems.length > 0) {
+                            itemsTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                        }
+
+                        // Calculate shipping price: payment amount minus products total
+                        // This will be 0 kr for pickup or 9900 kr (99 kr) for shipping
+                        shippingPrice = paymentAmount - itemsTotal;
+                        totalAmount = paymentAmount;
+                    }
+
                     // If order doesn't exist in database, create it from session data
                     if (!order && sessionStatus.paymentDetails && USE_DATABASE) {
-                        // Extract order items from session (if available in orderSummary)
-                        // Note: Vipps session status might not include order lines, so we'll create a basic order
-                        const paymentAmount = sessionStatus.paymentDetails.amount.value;
-                        itemsTotal = paymentAmount - shippingPrice; // Approximate
-                        totalAmount = paymentAmount;
 
                         // Create order in database
                         try {
+                            // Determine actual payment state from aggregate
+                            const actualPaymentState = getStateFromAggregate(sessionStatus.paymentDetails);
+                            // Map to order status: CAPTURED->PAID, RESERVED->RESERVED, else PENDING
+                            const orderStatus = actualPaymentState === 'CAPTURED' ? 'PAID' : actualPaymentState === 'RESERVED' ? 'RESERVED' : 'PENDING';
+                            
                             order = await databaseService.createOrder({
                                 reference,
                                 vippsSessionId: sessionStatus.sessionId || undefined,
+                                status: orderStatus,
                                 customerEmail,
                                 customerName,
                                 customerPhone: sessionStatus.shippingDetails?.phoneNumber || sessionStatus.billingDetails?.phoneNumber,
@@ -524,7 +723,6 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 shippingPrice,
                                 totalAmount,
                                 paymentMethod: sessionStatus.paymentMethod,
-                                paymentState: sessionStatus.paymentDetails.state,
                                 amount: paymentAmount,
                                 currency: sessionStatus.paymentDetails.amount.currency,
                             });
@@ -547,13 +745,22 @@ router.post('/callback', async (req: Request, res: Response) => {
                     } else if (order && USE_DATABASE) {
                         // Update existing order with payment information and customer details
                         try {
-                            // Update payment information
+
+                            // Update payment information, shipping price, and total amount
+                            // Shipping price is calculated from actual Vipps payment (0 for pickup, 9900 for shipping)
+                            // Determine actual payment state from aggregate (checks captured/refunded/cancelled amounts)
+                            const actualPaymentState = getStateFromAggregate(sessionStatus.paymentDetails);
+                            // Map to order status: CAPTURED->PAID, RESERVED->RESERVED, else PENDING
+                            const orderStatus = actualPaymentState === 'CAPTURED' ? 'PAID' : actualPaymentState === 'RESERVED' ? 'RESERVED' : 'PENDING';
+                            
                             await databaseService.updateOrderPayment(reference, {
                                 paymentMethod: sessionStatus.paymentMethod,
-                                paymentState: sessionStatus.paymentDetails?.state,
-                                status: 'PAID' as any,
-                                paidAt: new Date(),
+                                status: orderStatus as any,
+                                paidAt: actualPaymentState === 'CAPTURED' ? new Date() : undefined,
+                                shippingPrice, // Actual shipping selected by user (0 or 9900)
+                                totalAmount, // Products + actual shipping
                             });
+
                             
                             // Update customer information if it was pending or missing
                             // Always update if email is pending, name is pending, or address fields are null
@@ -611,11 +818,11 @@ router.post('/callback', async (req: Request, res: Response) => {
                             email: customerEmail,
                             orderNumber: reference,
                             items: emailItems,
-                            shippingPrice: `${(shippingPrice / 100).toFixed(0)} kr`,
+                            shippingPrice: `${(shippingPrice / 100).toFixed(0)} kr`, // Not displayed, kept for compatibility
                             totalPrice: `${(totalAmount / 100).toFixed(0)} kr`,
-                            estimatedDelivery: '3-5 virkedager',
                         });
                     }
+                    console.log(`✅ Order processed successfully: ${reference} - Payment: ${sessionStatus.paymentDetails?.state || 'N/A'}`);
                 } catch (emailError) {
                     console.error(`❌ Failed to process order ${reference}:`, emailError);
                     // Don't throw - we still want to return 2XX to Vipps
@@ -629,20 +836,16 @@ router.post('/callback', async (req: Request, res: Response) => {
                 try {
                     const order = await databaseService.getOrderByReference(reference);
                     if (order) {
-                        await databaseService.updateOrderStatus(reference, 'CANCELLED' as any);
+                        await databaseService.updateOrderStatus(reference, 'TERMINATED' as any);
                     }
                 } catch (dbError) {
                     // Order might not exist yet, which is fine
                 }
             }
 
-            // Notify order@mollerfan.club about the failure
-            try {
-                await mailService.sendOrderFailureNotification(reference, sessionState);
-            } catch (emailError) {
-                console.error(`❌ Failed to send failure notification for order ${reference}:`, emailError);
-                // Don't throw - we still want to return 2XX to Vipps
-            }
+            // Log the termination but don't send failure emails
+            // These are normal user actions (closing checkout, timeout, etc.)
+            console.log(`ℹ️  Payment terminated: ${reference} - State: ${sessionState}`);
         }
 
         // Always return 2XX to acknowledge receipt
@@ -746,7 +949,7 @@ router.post('/payment/:reference/refund', async (req: Request, res: Response) =>
         }
 
         const refundRequest: RefundRequest = {
-            amount: {
+            modificationAmount: {
                 currency,
                 value: amount,
             },

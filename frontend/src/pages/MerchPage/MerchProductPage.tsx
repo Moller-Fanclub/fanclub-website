@@ -15,7 +15,7 @@ const MerchProductPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { addItem } = useCart();
-    const { config, isOpen: shopIsOpen } = useShopConfig();
+    const {isOpen: shopIsOpen } = useShopConfig();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -25,7 +25,6 @@ const MerchProductPage: React.FC = () => {
     const [hasSizeChart, setHasSizeChart] = useState(false);
     
     // Compute opening date from config
-    const openingDate = config ? new Date(config.openingDate) : null;
 
     // Derive size chart URL from product's image folder
     const getSizeChartUrl = (imageUrls: string[]) => {
@@ -213,9 +212,6 @@ const MerchProductPage: React.FC = () => {
                             </div>
                             <p style={{ color: '#7F1D1D', marginBottom: '12px', fontSize: '14px' }}>
                                 Forhåndsbestillingsperioden er ikke aktiv akkurat nå.
-                            </p>
-                            <p style={{ color: '#7F1D1D', fontSize: '14px', margin: 0 }}>
-                                Neste periode: <strong>{openingDate?.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                             </p>
                         </div>
                     </div>

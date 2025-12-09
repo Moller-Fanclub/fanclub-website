@@ -34,7 +34,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center gap-8">
           <li><Link to={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</Link></li>
-          <li><Link to={PublicPaths.comingSoon} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</Link></li>
+          <li><Link to={PublicPaths.merch} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Merch</Link></li>
         </ul>
 
         {/* Mobile Menu Button */}

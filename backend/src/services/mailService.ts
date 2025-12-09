@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import axios from 'axios';
+import { shopConfig } from '../config/shopConfig.js';
 
 dotenv.config();
 
@@ -17,9 +18,9 @@ interface OrderEmailData {
     email: string;
     orderNumber: string;
     items: OrderItem[]; // Required - modern structure only
-    shippingPrice: string;
+    shippingPrice: string; // Kept for backwards compatibility but not displayed (included in total)
     totalPrice: string;
-    estimatedDelivery: string;
+    estimatedDelivery?: string; // Optional - no longer displayed
     productImage?: string;
 }
 
@@ -85,26 +86,18 @@ export class MailService {
             throw new Error('Email service is not configured');
         }
 
-        console.log('🔑 getAccessToken() called');
-
         // Return cached token if still valid (with 5 minute buffer)
         const now = Date.now();
         if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
-            console.log('✅ Using cached OAuth2 token');
             return this.cachedAccessToken;
         }
 
-        console.log('🔄 Acquiring new OAuth2 token...');
         try {
             // Use Microsoft Graph scope for Mail.Send permission
             // This is the recommended approach for application-level email sending
             const tokenRequest = {
                 scopes: ['https://graph.microsoft.com/.default']
             };
-
-            console.log(`   Client ID: ${process.env.AZURE_CLIENT_ID?.substring(0, 8)}...`);
-            console.log(`   Tenant ID: ${process.env.AZURE_TENANT_ID?.substring(0, 8)}...`);
-            console.log(`   Scope: ${tokenRequest.scopes[0]}`);
 
             const response = await this.msalClient!.acquireTokenByClientCredential(tokenRequest);
 
@@ -121,12 +114,6 @@ export class MailService {
                 // Default to 1 hour if expiresOn is not available
                 this.tokenExpiresAt = now + 60 * 60 * 1000;
             }
-
-            console.log('✅ OAuth2 access token acquired and cached');
-            if (this.cachedAccessToken) {
-                console.log(`   Token length: ${this.cachedAccessToken.length} characters`);
-            }
-            console.log(`   Token expires at: ${new Date(this.tokenExpiresAt).toISOString()}`);
 
             if (!this.cachedAccessToken) {
                 throw new Error('Failed to cache access token');
@@ -180,9 +167,6 @@ export class MailService {
                             <h2 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 600;">
                                 Takk for din bestilling, ${orderData.name}!
                             </h2>
-                            <p style="margin: 12px 0 0 0; color: #64748b; font-size: 15px; line-height: 1.6;">
-                                Din ordre er nå på vei. Du vil motta en ny e-post med sporingsinformasjon når pakken er sendt.
-                            </p>
                         </td>
                     </tr>
                     
@@ -235,21 +219,10 @@ export class MailService {
                                             <table role="presentation" style="width: 100%; border-collapse: collapse;">
                                                 <tr>
                                                     <td style="padding: 4px 0; color: #64748b; font-size: 14px;">
-                                                        Delsum
-                                                    </td>
-                                                    <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.items.reduce((sum, item) => {
-                                                            const price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
-                                                            return sum + (price * item.quantity);
-                                                        }, 0).toFixed(0) + ' kr'}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 4px 0; color: #64748b; font-size: 14px;">
                                                         Frakt
                                                     </td>
                                                     <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.shippingPrice}
+                                                        ${orderData.shippingPrice && orderData.shippingPrice !== '0 kr' ? orderData.shippingPrice : 'Hentes'}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -270,6 +243,7 @@ export class MailService {
                     </tr>
                     
                     <!-- Shipping Info -->
+                    ${orderData.shippingPrice && orderData.shippingPrice !== '0 kr' ? `
                     <tr>
                         <td style="padding: 0 40px 40px 40px;">
                             <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 6px;">
@@ -277,28 +251,40 @@ export class MailService {
                                     📦 Leveringsinformasjon
                                 </p>
                                 <p style="margin: 8px 0 0 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
-                                    Forventet levering: <strong>${orderData.estimatedDelivery}</strong><br>
+                                    Forventet levering: <strong>${(() => {
+                                        const closingDate = new Date(shopConfig.closingDate);
+                                        return `3-4 uker etter bestillingsperioden stenger ${closingDate.toLocaleDateString("nb-NO", {
+                                            day: "numeric",
+                                            month: "long",
+                                            year: "numeric",
+                                        })}`;
+                                    })()}</strong><br>
                                     Du vil motta sporingsinformasjon på e-post når pakken er sendt.
                                 </p>
                             </div>
                         </td>
                     </tr>
-                    
-                    <!-- CTA Button -->
+                    ` : `
                     <tr>
-                        <td style="padding: 0 40px 40px 40px; text-align: center;">
-                            <a href="https://mollerfan.club/orders/${orderData.orderNumber}" style="display: inline-block; padding: 14px 36px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px;">
-                                Spor din ordre
-                            </a>
+                        <td style="padding: 0 40px 40px 40px;">
+                            <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 6px;">
+                                <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">
+                                    📦 Henteinfo
+                                </p>
+                                <p style="margin: 8px 0 0 0; color: #064e3b; font-size: 14px; line-height: 1.6;">
+                                    Du har valgt å hente varene i Trondheim. Du vil motta en e-post når varene er klare for henting.
+                                </p>
+                            </div>
                         </td>
                     </tr>
+                    `}
                     
                     <!-- Footer -->
                     <tr>
                         <td style="padding: 32px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
                                 Har du spørsmål om din ordre?<br>
-                                Kontakt oss på <a href="mailto:${process.env.EMAIL_USER || 'shop@mollerfan.club'}" style="color: #3b82f6; text-decoration: none;">${process.env.EMAIL_USER || 'support@mollerfan.club'}</a>
+                                Kontakt oss på <a href="mailto:order@mollerfan.club" style="color: #3b82f6; text-decoration: none;">order@mollerfan.club</a>
                             </p>
                             <p style="margin: 0; color: #94a3b8; font-size: 12px; text-align: center;">
                                 © ${new Date().getFullYear()} Møller Fanclub • <a href="https://mollerfan.club" style="color: #3b82f6; text-decoration: none;">mollerfan.club</a>
@@ -328,8 +314,8 @@ export class MailService {
     ): Promise<void> {
         const token = await this.getAccessToken();
 
-        // Get the sender email
-        const senderEmail = process.env.EMAIL_FROM_SHOP!;
+        // Get the sender email - use order@mollerfan.club
+        const senderEmail = 'order@mollerfan.club';
 
         // Prepare recipients
         const toAddresses = Array.isArray(to) ? to : [to];
@@ -372,11 +358,6 @@ export class MailService {
         );
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('📧 Email sent via Microsoft Graph API');
-            console.log(`   To: ${toAddresses.join(', ')}`);
-            if (bccAddresses.length > 0) {
-                console.log(`   BCC: ${bccAddresses.join(', ')}`);
-            }
         }
     }
 
@@ -391,14 +372,32 @@ export class MailService {
             return;
         }
 
+        // Use order@mollerfan.club as sender (must be configured in Azure AD)
+        // EMAIL_FROM_SHOP should be set to order@mollerfan.club
         if (!process.env.EMAIL_FROM_SHOP) {
             console.warn('⚠️  EMAIL_FROM_SHOP not set - skipping order confirmation email');
             return;
         }
 
-        console.log('📧 Preparing to send order confirmation email...');
 
         try {
+            // Calculate delivery date: 3-4 weeks from closing date
+            const closingDate = new Date(shopConfig.closingDate);
+            const deliveryDateStart = new Date(closingDate);
+            deliveryDateStart.setDate(deliveryDateStart.getDate() + 21); // 3 weeks
+            const deliveryDateEnd = new Date(closingDate);
+            deliveryDateEnd.setDate(deliveryDateEnd.getDate() + 28); // 4 weeks
+
+            // Format dates in Norwegian format
+            const formatDate = (date: Date): string => {
+                const day = date.getDate();
+                const month = date.toLocaleDateString('nb-NO', { month: 'long' });
+                const year = date.getFullYear();
+                return `${day}. ${month} ${year}`;
+            };
+
+            const deliveryText = `3-4 uker fra butikkens stenging (${formatDate(deliveryDateStart)} - ${formatDate(deliveryDateEnd)})`;
+
             const textContent = `
 Hei ${orderData.name}!
 
@@ -407,13 +406,12 @@ Takk for din bestilling hos Møller Fanclub!
 Ordrenummer: ${orderData.orderNumber}
 
 ${orderData.items.map(item =>
-    `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} - ${item.price}`
-).join('\n')}
+                `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} - ${item.price}`
+            ).join('\n')}
 
-Frakt: ${orderData.shippingPrice}
 Total: ${orderData.totalPrice}
 
-Din ordre er nå på vei og vil bli levert innen ${orderData.estimatedDelivery}.
+Forventet levering: ${deliveryText}
 
 Med vennlig hilsen,
 Møller Fanclub
@@ -427,10 +425,7 @@ Møller Fanclub
                 'order@mollerfan.club'
             );
 
-            // Email sent successfully - log in production
-            if (process.env.NODE_ENV === 'production') {
-                console.log(`✅ Order confirmation email sent to ${orderData.email} for order ${orderData.orderNumber}`);
-            }
+            console.log(`✅ Order confirmation email sent: Order #${orderData.orderNumber}`);
         } catch (error) {
             console.error(`❌ Failed to send email to ${orderData.email}:`, error);
             if (error instanceof Error) {
@@ -550,9 +545,7 @@ Dette er en automatisk varsling fra Møller Fanclub ordresystem.
                 failureHTML
             );
 
-            if (process.env.NODE_ENV === 'production') {
-                console.log(`✅ Order failure notification sent to order@mollerfan.club for order ${reference}`);
-            }
+            console.log(`✅ Order failure notification sent: Order ${reference} (state: ${sessionState})`);
         } catch (error) {
             console.error(`❌ Failed to send failure notification for order ${reference}:`, error);
             if (error instanceof Error) {

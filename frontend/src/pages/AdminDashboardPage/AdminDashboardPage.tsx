@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession, signOut } from '../../lib/auth-client';
 
@@ -31,7 +31,6 @@ interface Order {
   shippingPrice: number;
   totalAmount: number;
   paymentMethod?: string;
-  paymentState?: string;
   createdAt: string;
   updatedAt: string;
   paidAt?: string;
@@ -62,23 +61,16 @@ export default function AdminDashboardPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [hidePending, setHidePending] = useState(false);
+  const [hideTerminated, setHideTerminated] = useState(false);
+  const [capturingPayment, setCapturingPayment] = useState<string | null>(null);
+  const [cancellingPayment, setCancellingPayment] = useState<string | null>(null);
+  const [refundingPayment, setRefundingPayment] = useState<string | null>(null);
+  const [captureAllLoading, setCaptureAllLoading] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!isPending && !session) {
-      navigate('/admin/login');
-    }
-  }, [session, isPending, navigate]);
-
-  useEffect(() => {
-    if (session) {
-      fetchOrders();
-      fetchStats();
-    }
-  }, [session]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/orders?limit=100`, {
         credentials: 'include',
@@ -100,9 +92,9 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/stats`, {
         credentials: 'include',
@@ -114,6 +106,203 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
+    }
+  }, []);
+
+  // Load orders on mount only once
+  useEffect(() => {
+    if (!isPending && !session) {
+      navigate('/admin/login');
+    }
+  }, [session, isPending, navigate]);
+
+  useEffect(() => {
+    if (session) {
+      fetchOrders();
+      fetchStats();
+    }
+  }, [session, fetchOrders, fetchStats]);
+
+  const capturePayment = async (reference: string) => {
+    setCapturingPayment(reference);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${reference}/capture`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to capture payment');
+      }
+
+      await response.json(); // Consume response
+      setSuccessMessage(`Payment captured successfully for ${reference}`);
+      
+      // Refresh orders
+      await fetchOrders();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to capture payment';
+      setErrorMessage(message);
+      console.error('Error capturing payment:', err);
+    } finally {
+      setCapturingPayment(null);
+    }
+  };
+
+  const captureAllPayments = async () => {
+    setCaptureAllLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/capture-all`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to capture payments');
+      }
+
+      const data = await response.json();
+      setSuccessMessage(`Captured ${data.successful} payments${data.failed > 0 ? `. ${data.failed} failed.` : '.'}`);
+      
+      // Refresh orders and stats
+      await fetchOrders();
+      await fetchStats();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to capture payments';
+      setErrorMessage(message);
+      console.error('Error in capture all:', err);
+    } finally {
+      setCaptureAllLoading(false);
+    }
+  };
+
+  const cleanupAbandonedOrders = async () => {
+    setCleanupLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/cleanup`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ maxAgeMinutes: 10 }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to cleanup orders');
+      }
+
+      const data = await response.json();
+      setSuccessMessage(`Cleaned up ${data.terminated} abandoned orders${data.errors > 0 ? `. ${data.errors} errors.` : '.'}`);
+      
+      // Refresh orders and stats
+      await fetchOrders();
+      await fetchStats();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to cleanup orders';
+      setErrorMessage(message);
+      console.error('Error in cleanup:', err);
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  const cancelPayment = async (reference: string) => {
+    setCancellingPayment(reference);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${reference}/cancel`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to cancel payment');
+      }
+
+      await response.json(); // Consume response
+      setSuccessMessage(`Payment cancelled successfully for ${reference}`);
+      
+      // Refresh orders
+      await fetchOrders();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to cancel payment';
+      setErrorMessage(message);
+      console.error('Error cancelling payment:', err);
+    } finally {
+      setCancellingPayment(null);
+    }
+  };
+
+  const refundPayment = async (reference: string) => {
+    setRefundingPayment(reference);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/${reference}/refund`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to refund payment');
+      }
+
+      await response.json(); // Consume response
+      setSuccessMessage(`Payment refunded successfully for ${reference}`);
+      
+      // Refresh orders
+      await fetchOrders();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refund payment';
+      setErrorMessage(message);
+      console.error('Error refunding payment:', err);
+    } finally {
+      setRefundingPayment(null);
     }
   };
 
@@ -136,20 +325,24 @@ export default function AdminDashboardPage() {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case 'PAID':
         return 'bg-green-500/20 text-green-300 border-green-500';
+      case 'RESERVED':
+        return 'bg-orange-500/20 text-orange-300 border-orange-500';
+      case 'PENDING':
+      case 'PAYMENT_PENDING':
+        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500';
+      case 'TERMINATED':
+        return 'bg-gray-500/20 text-gray-300 border-gray-500';
+      case 'REFUNDED':
+      case 'CANCELLED':
+        return 'bg-red-500/20 text-red-300 border-red-500';
       case 'SHIPPED':
         return 'bg-blue-500/20 text-blue-300 border-blue-500';
       case 'DELIVERED':
         return 'bg-purple-500/20 text-purple-300 border-purple-500';
-      case 'PENDING':
-      case 'PAYMENT_PENDING':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500';
-      case 'CANCELLED':
-      case 'REFUNDED':
-        return 'bg-red-500/20 text-red-300 border-red-500';
       default:
         return 'bg-gray-500/20 text-gray-300 border-gray-500';
     }
@@ -170,10 +363,10 @@ export default function AdminDashboardPage() {
   const getSortedAndFilteredOrders = () => {
     let filtered = [...orders];
 
-    // Filter out PENDING orders if hidePending is true
-    if (hidePending) {
+    // Filter out TERMINATED orders if hideTerminated is true
+    if (hideTerminated) {
       filtered = filtered.filter(
-        (order) => order.status !== 'PENDING' && order.status !== 'PAYMENT_PENDING'
+        (order) => order.status !== 'TERMINATED'
       );
     }
 
@@ -252,10 +445,6 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!session) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
       {/* Header */}
@@ -267,13 +456,15 @@ export default function AdminDashboardPage() {
               <p className="text-gray-300 text-sm">Møller Fanclub Orders</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-gray-300 text-sm">{session.user?.email}</span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
+              <span className="text-gray-300 text-sm">{session?.user?.email || 'Dev Admin'}</span>
+              {session && (
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -315,20 +506,45 @@ export default function AdminDashboardPage() {
           <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Orders</h2>
             <div className="flex items-center gap-4">
+              <button
+                onClick={captureAllPayments}
+                disabled={captureAllLoading}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+              >
+                {captureAllLoading ? 'Capturing...' : 'Capture All'}
+              </button>
+              <button
+                onClick={cleanupAbandonedOrders}
+                disabled={cleanupLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                title="Terminate orders older than 10 minutes and expire their Vipps sessions"
+              >
+                {cleanupLoading ? 'Cleaning...' : 'Cleanup Abandoned'}
+              </button>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={hidePending}
-                  onChange={(e) => setHidePending(e.target.checked)}
+                  checked={hideTerminated}
+                  onChange={(e) => setHideTerminated(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-300">Hide PENDING orders</span>
+                <span className="text-sm text-gray-300">Hide TERMINATED orders</span>
               </label>
             </div>
           </div>
           {error && (
             <div className="px-6 py-4 bg-red-500/20 border-b border-red-500 text-red-200">
               {error}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="px-6 py-4 bg-red-500/20 border-b border-red-500 text-red-200">
+              {errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div className="px-6 py-4 bg-green-500/20 border-b border-green-500 text-green-200">
+              {successMessage}
             </div>
           )}
           <div className="overflow-x-auto">
@@ -418,7 +634,7 @@ export default function AdminDashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">{formatDate(order.createdAt)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4">
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="text-blue-400 hover:text-blue-300"
@@ -535,17 +751,57 @@ export default function AdminDashboardPage() {
                       <span className="text-white ml-2">{selectedOrder.paymentMethod}</span>
                     </div>
                   )}
-                  {selectedOrder.paymentState && (
-                    <div className="text-sm">
-                      <span className="text-gray-400">State:</span>
-                      <span className="text-white ml-2">{selectedOrder.paymentState}</span>
-                    </div>
-                  )}
                   {selectedOrder.paidAt && (
                     <div className="text-sm">
                       <span className="text-gray-400">Paid At:</span>
                       <span className="text-white ml-2">{formatDate(selectedOrder.paidAt)}</span>
                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Actions */}
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Payment Actions</h4>
+                <div className="flex gap-3">
+                  {selectedOrder.status === 'RESERVED' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          capturePayment(selectedOrder.reference);
+                          setSelectedOrder(null);
+                        }}
+                        disabled={capturingPayment === selectedOrder.reference}
+                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                      >
+                        {capturingPayment === selectedOrder.reference ? 'Capturing...' : 'Capture Payment'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          cancelPayment(selectedOrder.reference);
+                          setSelectedOrder(null);
+                        }}
+                        disabled={cancellingPayment === selectedOrder.reference}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                      >
+                        {cancellingPayment === selectedOrder.reference ? 'Cancelling...' : 'Cancel Payment'}
+                      </button>
+                    </>
+                  )}
+                  {selectedOrder.status === 'PAID' && (
+                    <button
+                      onClick={() => {
+                        refundPayment(selectedOrder.reference);
+                        setSelectedOrder(null);
+                      }}
+                      disabled={refundingPayment === selectedOrder.reference}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                    >
+                      {refundingPayment === selectedOrder.reference ? 'Refunding...' : 'Refund Payment'}
+                    </button>
+                  )}
+                  {!['RESERVED', 'PAID'].includes(selectedOrder.status || '') && (
+                    <p className="text-gray-400 text-sm">No payment actions available for this order state.</p>
                   )}
                 </div>
               </div>

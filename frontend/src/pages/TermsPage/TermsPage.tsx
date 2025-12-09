@@ -90,17 +90,13 @@ const TermsPage: React.FC = () => {
                                 5. Betalingen
                             </h2>
                             <p className="text-white/90 mb-3">
-                                Selgeren kan kreve betaling for varen fra det tidspunkt den blir sendt fra selgeren til kjøperen.
-                            </p>
-                            <p className="text-white/90 mb-3">
-                                Dersom kjøperen bruker kredittkort eller debetkort ved betaling, kan selgeren reservere kjøpesummen på kortet ved bestilling. Kortet blir belastet samme dag som varen sendes.
-                            </p>
-                            <p className="text-white/90 mb-3">
-                                Ved betaling med faktura, blir fakturaen til kjøperen utstedt ved forsendelse av varen. Betalingsfristen fremgår av fakturaen og er på minimum 14 dager fra mottak.
+                                Selgeren kan kreve betaling for varen fra det tidspunkt bestillingen fra kjøper settes i produksjon av selgeren.
                             </p>
                             <p className="text-white/90">
-                                Kjøpere under 18 år kan ikke betale med etterfølgende faktura.
+                                Ved betaling vil beløpet reserveres inntil forhåndsbestillingsperioden er over deretter trekkes beløpet fra kjøperens konto. 
                             </p>
+
+
                         </section>
 
                         {/* 6. Levering */}

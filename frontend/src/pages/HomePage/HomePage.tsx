@@ -183,7 +183,7 @@ const HomePage: React.FC = () => {
                 </svg>
               </Link>
               <Link
-                to={PublicPaths.comingSoon}
+                to={PublicPaths.merch}
                 className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-8 py-4 text-lg font-bold text-white border-2 border-white/40 shadow-2xl transition-all duration-300 hover:bg-white/30 hover:scale-105"
               >
                 Kjøp Merch
