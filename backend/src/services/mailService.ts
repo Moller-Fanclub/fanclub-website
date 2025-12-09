@@ -222,7 +222,7 @@ export class MailService {
                                                         Frakt
                                                     </td>
                                                     <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 14px;">
-                                                        ${orderData.shippingPrice && orderData.shippingPrice !== '0' ? orderData.shippingPrice : 'Hentes'}
+                                                        ${orderData.shippingPrice && orderData.shippingPrice !== '0 kr' ? orderData.shippingPrice : 'Hentes'}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -243,7 +243,7 @@ export class MailService {
                     </tr>
                     
                     <!-- Shipping Info -->
-                    ${orderData.shippingPrice && orderData.shippingPrice !== '0' ? `
+                    ${orderData.shippingPrice && orderData.shippingPrice !== '0 kr' ? `
                     <tr>
                         <td style="padding: 0 40px 40px 40px;">
                             <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 6px;">
