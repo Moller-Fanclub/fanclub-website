@@ -25,7 +25,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
         {/* Logo/Brand - Only shown when showBranding is true */}
         {showBranding ? (
           <Link to={PublicPaths.base} className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
-            <img src="/images/MFC.png" alt="Møller Fanclub" className="h-8 hover:opacity-80 transition-opacity" />
+            <img src="/images/LOGO_WHITE.png" alt="Møller Fanclub" className="h-8 hover:opacity-80 transition-opacity" />
           </Link>
         ) : (
           <div></div>
