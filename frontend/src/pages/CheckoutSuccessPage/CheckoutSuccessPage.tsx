@@ -160,7 +160,14 @@ const CheckoutSuccessPage: React.FC = () => {
                 <p style={{ marginTop: "24px" }}>
                   Din betaling er mottatt og bestillingen er bekreftet.
                 </p>
-
+                <p style={{ marginTop: "16px", fontSize: "14px", color: "#666" }}>
+                  Vennligst sjekk e-posten din {orderDetails.billingDetails?.email && (
+                    <>(<strong>{orderDetails.billingDetails.email}</strong>)</>
+                  )}
+                </p>
+                <p style={{ marginTop: "12px", fontSize: "14px", color: "#666", textDecoration: "underline" }}>
+                  Husk å sjekke <strong>søppelpost/spam-mappen</strong> din.
+                </p>
               </>
             ) : (
               <>
