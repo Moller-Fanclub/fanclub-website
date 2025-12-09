@@ -22,13 +22,15 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <Link to={PublicPaths.base} className="hover:opacity-50 transition-opacity">
-            <img
-              src="/images/LOGO_WHITE.png"
-              alt="Møller Fanclub logo"
-              className="h-50 w-auto drop-shadow-md"
-            />
-        </Link>
+        {/* Logo/Brand - Only shown when showBranding is true */}
+        {showBranding ? (
+          <Link to={PublicPaths.base} className="text-white font-bold text-2xl hover:text-blue-200 transition-colors drop-shadow-md">
+            <img src="/images/LOGO_WHITE.png" alt="Møller Fanclub" className="h-8 hover:opacity-80 transition-opacity" />
+          </Link>
+        ) : (
+          <div></div>
+        )}
+        
         {/* Desktop Navigation Links */}
         <ul className="hidden md:flex items-center gap-8">
           <li><Link to={PublicPaths.calender} className="text-white font-semibold text-xl hover:text-blue-200 transition-colors drop-shadow-md">Kalender</Link></li>
