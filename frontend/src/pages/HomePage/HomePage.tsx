@@ -8,6 +8,10 @@ import { Link } from 'react-router-dom';
 import { BlogSection } from './BlogSection/BlogSection.tsx';
 import GoToTop from '@/components/GoToTop.tsx';
 import Snowfall from "react-snowfall";
+import Lottie from "lottie-react";
+
+
+
 
 export const Typewriter: React.FC<{
   text: string;
@@ -53,6 +57,15 @@ const HomePage: React.FC = () => {
     discipline: 'DH',
     resultLink: ''
   });
+
+  const [santaAnimation, setSantaAnimation] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/animations/santa-fly.json")
+      .then((res) => res.json())
+      .then((data) => setSantaAnimation(data));
+  }, []);
+
 
 
   useEffect(() => {
@@ -149,6 +162,14 @@ const HomePage: React.FC = () => {
           }}
         >
           <Snowfall snowflakeCount={200} /> 
+          { santaAnimation && (
+            <Lottie 
+              animationData={santaAnimation}
+              loop={true}
+              className="animate-santa"
+            />
+          )}
+
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/30 to-transparent"></div>
         </div>
