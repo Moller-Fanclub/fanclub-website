@@ -7,6 +7,7 @@ import { PublicPaths } from '@/lib/routes';
 import { Link } from 'react-router-dom';
 import { BlogSection } from './BlogSection/BlogSection.tsx';
 import GoToTop from '@/components/GoToTop.tsx';
+import Snowfall from "react-snowfall";
 
 export const Typewriter: React.FC<{
   text: string;
@@ -147,6 +148,7 @@ const HomePage: React.FC = () => {
             backgroundImage: 'url(/images/bakgrunn.jpg)',
           }}
         >
+          <Snowfall snowflakeCount={200} /> 
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/30 to-transparent"></div>
         </div>
