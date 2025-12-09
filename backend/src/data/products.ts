@@ -12,7 +12,7 @@ export const products: Product[] = [
         id: '69',
         imageUrls: ['/merch/west/front-vest.png', '/merch/west/back-vest.png'],
         title: 'Møller Vest',
-        price: '5',
+        price: '449',
         sizes: ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
         description: 'The vest is back!!!\n\n CE_merket – EN 1150:1999\n Tekstil: 100% polyester \nPassform: Unisex\n Vekt: 130 g/m2\n Størrelser barn: XXS – 4/8 år, XS – 8-12 år, S 12-14 år',
     },
