@@ -154,25 +154,39 @@ const HomePage: React.FC = () => {
 
       {/* Hero Section with Full Background Image */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: 'url(/images/bakgrunn.jpg)',
-          }}
-        >
-          <Snowfall snowflakeCount={100} /> 
-          { santaAnimation && (
-            <Lottie 
-              animationData={santaAnimation}
-              loop={true}
-              className="animate-santa"
-            />
-          )}
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-[0]"
+        style={{ backgroundImage: 'url(/images/bakgrunn.jpg)' }}
+      />
 
-          {/* Gradient Overlay for better text readability */}
-          <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/30 to-transparent"></div>
-        </div>
+      {/* Foreground Image */}
+      <img
+        src="/images/forgrunn.png"
+        alt="foreground"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[5]"
+      />
+
+      {/* Snow + Santa (skal ligge bak forgrunn) */}
+      <div className="absolute inset-0 z-[1]">
+        <Snowfall snowflakeCount={80} /> 
+        {santaAnimation && (
+          <Lottie
+            animationData={santaAnimation}
+            loop={true}
+            className="animate-santa"
+          />
+        )}
+      </div>
+      {/* Snow in front of foreground */}
+      <div className="absolute inset-0 z-[8] pointer-events-none">
+        <Snowfall snowflakeCount={20} />
+      </div>
+
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-linear-to-r from-black/50 via-black/30 to-transparent z-[2]"></div>
+
 
         {/* Hero Content */}
         <div className="relative z-10 flex h-full items-center px-6 sm:px-12 lg:px-24">
