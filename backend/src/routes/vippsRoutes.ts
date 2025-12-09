@@ -347,6 +347,7 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
 
         // Configure logistics with fixed shipping options
         // No address validation - users can enter any address
+        // taxRate: 0 ensures no VAT is applied (we are VAT exempt)
         const logisticsConfig: CreateCheckoutSessionRequest['logistics'] = {
             fixedOptions: [
                 {
@@ -356,10 +357,11 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                         value: 0, // 0 kr - free pickup
                         currency: 'NOK',
                     },
-                    title: 'Hent hos Rory',
+                    title: 'Hent hos Møller Fanclub avd Trondheim',
                     description: 'Hent på Haldens Gate 15, 7014 Trondheim',
                     brand: 'OTHER' as const, // Use "OTHER" for in-store pickup (not a Posten service)
                     isDefault: false, // No default - user must select
+                    taxRate: 0, // No VAT - we are VAT exempt
                 },
                 {
                     id: 'servicepakke-standard',
@@ -371,7 +373,8 @@ router.post('/checkout/session', async (req: Request, res: Response) => {
                     title: 'Posten Servicepakke',
                     description: 'Posten Servicepakke - Alle bestillinger sendes ut samtidig',
                     brand: 'POSTEN' as const,
-                    isDefault: false, // No default - shipping added only when selected
+                    isDefault: true, // No default - shipping added only when selected
+                    taxRate: 0, // No VAT - we are VAT exempt
                     vippsLogistics: {
                         product: 'SERVICEPAKKE',
                         service: 'STANDARD',

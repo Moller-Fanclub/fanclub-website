@@ -117,6 +117,7 @@ export interface CreateCheckoutSessionRequest {
             description: string;
             brand?: 'POSTEN' | 'BRING' | 'OTHER';
             isDefault?: boolean;
+            taxRate?: number; // Tax percentage with 0.01 decimal points. 5000 = 50%. 0 = no tax.
             vippsLogistics?: {
                 product: string;
                 service: string;
