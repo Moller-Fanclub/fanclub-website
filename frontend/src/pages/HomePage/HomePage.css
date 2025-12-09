@@ -20,22 +20,6 @@
 .animation_layer.parallax {
   position: fixed;
 }
-/* Nye bilder */
-#artback {
-  background-image: url(/images/background.png);
-}
-
-#underlag {
-  background-image: url(/images/underlag.png);
-}
-
-#port {
-  background-image: url(/images/port.png);
-}
-
-#fredrik {
-  background-image: url(/images/fredrik.png);
-}
 
 #title {
 
