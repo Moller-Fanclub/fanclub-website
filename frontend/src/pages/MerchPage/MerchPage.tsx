@@ -40,13 +40,9 @@ const MerchPage: React.FC = () => {
     const openingDate = config ? new Date(config.openingDate) : null;
     const closingDate = config ? new Date(config.closingDate) : null;
     
-    // Format date range with dynamic month names
-    const dateRange = openingDate && closingDate 
-        ? `${openingDate.getDate()}. ${openingDate.toLocaleDateString('no-NO', { month: 'long' })} - ${closingDate.getDate()}. ${closingDate.toLocaleDateString('no-NO', { month: 'long' })}`
-        : '';
+
     
     // Estimated delivery
-    const estimatedDeliveryWeeks = '3-4 uker';
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -121,48 +117,6 @@ const MerchPage: React.FC = () => {
                         </div>
                     )}
                     
-                    {/* Info Banner - Only show when shop is open */}
-                    {shopStatus === 'open' && (
-                    <div className="mx-auto max-w-3xl mb-8 rounded-xl bg-white/10 backdrop-blur-md border-2 border-yellow-400/50 p-6 shadow-xl">
-                        <div className="flex items-center justify-center mb-3">
-                            <svg className="h-6 w-6 text-yellow-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h2 className="text-xl font-semibold text-white">
-                                Forhåndsbestillingsperiode
-                            </h2>
-                        </div>
-                        <p className="text-2xl font-bold text-yellow-400 mb-4">
-                            {dateRange}
-                        </p>
-                        <div className="text-left space-y-2 text-white/90">
-                            <p className="flex items-start">
-                                <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Bestill nå - produktene produseres basert på antall bestillinger</span>
-                            </p>
-                            <p className="flex items-start">
-                                <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Alle produkter produseres og sendes ut samtidig i batch</span>
-                            </p>
-                            <p className="flex items-start">
-                                <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Estimert leveringstid: <strong>{estimatedDeliveryWeeks}</strong> etter {closingDate?.getDate()}. {closingDate?.toLocaleDateString('no-NO', { month: 'long' })}</span>
-                            </p>
-                            <p className="flex items-start">
-                                <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Du får e-postoppdateringer når varene er produsert og sent</span>
-                            </p>
-                        </div>
-                    </div>
-                    )}
 
                 </div>
 
