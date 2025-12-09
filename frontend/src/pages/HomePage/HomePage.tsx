@@ -161,7 +161,7 @@ const HomePage: React.FC = () => {
             backgroundImage: 'url(/images/bakgrunn.jpg)',
           }}
         >
-          <Snowfall snowflakeCount={200} /> 
+          <Snowfall snowflakeCount={100} /> 
           { santaAnimation && (
             <Lottie 
               animationData={santaAnimation}

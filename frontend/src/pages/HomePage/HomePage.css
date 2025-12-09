@@ -143,8 +143,8 @@
 
 .animate-santa {
   position: absolute;
-  top: 20%;
-  left: -20%;
+  top: 25%;
+  left: -30%;
   width: 180px;
   pointer-events: none;
   z-index: 5;
