@@ -66,6 +66,7 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://mollerfan.club',
+    'https://www.mollerfan.club',
     FRONTEND_URL,
 ].filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
 
