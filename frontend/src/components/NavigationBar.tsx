@@ -70,7 +70,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ showBranding = false }) =
             </li>
             <li>
               <Link 
-                to={PublicPaths.comingSoon}
+                to={PublicPaths.merch}
                 className="block text-white font-semibold text-lg hover:text-blue-200 transition-colors py-2 drop-shadow-md"
                 onClick={() => setIsMenuOpen(false)}
               >
