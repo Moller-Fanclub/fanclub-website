@@ -18,11 +18,11 @@ export const products: Product[] = [
     },
     {
         id: '4',
-        imageUrls: ['/merch/south-tee/south-front.png'],
+        imageUrls: ['/merch/south-tee/south-front.png', '/merch/south-tee/south-front_w.png'],
         title: 'South Møller Tee',
         price: '299',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: '- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'K XS', 'K S', 'K M', 'K L', 'K XL'],
+        description: '\n Velg K størrelser for kvinne versjon\n\n- Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '69',
@@ -50,11 +50,11 @@ export const products: Product[] = [
     },
     {
         id: '13',
-        imageUrls: ['/merch/art/art-front.png', '/merch/art/art-back.png'],
+        imageUrls: ['/merch/art/art-front.png', '/merch/art/art-back.png', '/merch/art/art-front_w.png', '/merch/art/art-back_w.png'],
         title: 'Art Print',
         price: '399',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: 'I samarbeid med en av norges gjeveste kunstere presenterer vi denne juvelen \n\n - Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'K XS', 'K S', 'K M', 'K L', 'K XL'],
+        description: 'I samarbeid med en av norges gjeveste kunstere presenterer vi denne juvelen \n Velg K størrelser for kvinne versjon\n\n - Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '1',
@@ -74,11 +74,11 @@ export const products: Product[] = [
     },
     {
         id: '8',
-        imageUrls: ['/merch/moooller/moooller_back.png', '/merch/moooller/moooller_front.png'],
+        imageUrls: ['/merch/moooller/moooller_back.png', '/merch/moooller/moooller_front.png', '/merch/moooller/moooller_back_w.png' , '/merch/moooller/moooller_front_w.png'],
         title: 'Møøller',
         price: '399',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-        description: 'Attacking cows? Ku bak, logo foran \n\n - Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'K XS', 'K S', 'K M', 'K L', 'K XL'],
+        description: 'Attacking cows? Ku bak, logo foran\n Velg K størrelser for kvinne versjon \n\n - Normalt snitt for optimal passform\n - Fargetilpasset jersey-nakkebånd\n - Dobbelt søm i livet og på ermene\n - Elastisk 1x1 ribbestrikket krage\n - Satengetikett innsydd på siden\n - Nøytral størrelsesetikett\n - Gjennomsnittlig Stoffkvalitet: 200 g/m²\n - Materiale: 100 % kjemmet økologisk bomull',
     },
     {
         id: '7',

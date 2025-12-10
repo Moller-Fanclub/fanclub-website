@@ -169,17 +169,41 @@ const MerchProductPage: React.FC = () => {
                                 </button>
                             )}
                         </div>
-                        <div className="size-buttons">
-                            {product.sizes.map(size => (
-                                <button
-                                    key={size}
-                                    onClick={() => setSelectedSize(size)}
-                                    className={`size-button ${selectedSize === size ? 'selected' : ''}`}
-                                >
-                                    {size}
-                                </button>
-                            ))}
-                        </div>
+                        {(() => {
+                            const kSizes = product.sizes.filter(s => s.startsWith('K'));
+                            const regularSizes = product.sizes.filter(s => !s.startsWith('K'));
+                            
+                            return (
+                                <>
+                                    {regularSizes.length > 0 && (
+                                        <div className="size-buttons">
+                                            {regularSizes.map(size => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedSize(size)}
+                                                    className={`size-button ${selectedSize === size ? 'selected' : ''}`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {kSizes.length > 0 && (
+                                        <div className="size-buttons" style={{ marginTop: regularSizes.length > 0 ? '12px' : '0' }}>
+                                            {kSizes.map(size => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedSize(size)}
+                                                    className={`size-button ${selectedSize === size ? 'selected' : ''}`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 )}
                 
