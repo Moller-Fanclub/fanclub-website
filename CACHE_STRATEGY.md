@@ -360,8 +360,11 @@ The application **does not use** React Query, SWR, or similar libraries that pro
 ls -la backend/races.json
 
 # 2. Check GitHub Actions workflow status
-# 3. Restart backend server
-cd backend && npm restart
+# 3. Restart backend server (in development)
+cd backend && npm run dev
+
+# Or in production
+cd backend && npm run build && npm start
 ```
 
 ### Cart Not Persisting
