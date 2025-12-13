@@ -148,23 +148,33 @@ interface CartItem {
 ```typescript
 const SCROLL_KEY = 'merchPageScrollPosition';
 
-// On page load - restore scroll position
-useEffect(() => {
+// Track if we need to restore scroll - initialized from sessionStorage
+const [pendingScrollRestore, setPendingScrollRestore] = useState<number | null>(() => {
   const saved = sessionStorage.getItem(SCROLL_KEY);
   if (saved) {
-    window.scrollTo(0, parseInt(saved));
     sessionStorage.removeItem(SCROLL_KEY);
+    return parseInt(saved, 10);
   }
-}, []);
+  return null;
+});
+
+// Restore scroll position after products load (using useLayoutEffect for synchronous DOM update)
+useLayoutEffect(() => {
+  if (!loading && products.length > 0 && pendingScrollRestore !== null) {
+    window.scrollTo(0, pendingScrollRestore);
+    setPendingScrollRestore(null);
+  }
+}, [loading, products, pendingScrollRestore]);
 
 // Before navigation - save scroll position
 sessionStorage.setItem(SCROLL_KEY, window.scrollY.toString());
 ```
 
 ### How it Works
-- Saves scroll position before navigating to a product detail page
-- Restores scroll position when navigating back to the merch page
-- Uses SessionStorage (data cleared when tab is closed)
+- Saves scroll position to sessionStorage before navigating to a product detail page
+- On component initialization, retrieves saved position from sessionStorage and stores in component state
+- Uses `useLayoutEffect` to restore scroll position **after** products have loaded (prevents jumping)
+- SessionStorage entry is removed immediately after reading to prevent stale data
 - Storage key: `'merchPageScrollPosition'`
 
 ### Use Case
@@ -172,7 +182,14 @@ Improves UX by maintaining the user's browsing position when:
 1. User scrolls down the merch page
 2. User clicks on a product to view details
 3. User navigates back using browser back button
-4. Page restores to the exact scroll position
+4. Page waits for products to load before restoring scroll position (prevents content jump)
+5. Scroll position is accurately restored to exact pixel location
+
+### Implementation Details
+- Uses `useLayoutEffect` instead of `useEffect` for synchronous DOM updates
+- Scroll restoration happens only after products are loaded and rendered
+- Prevents visual "jump" that would occur if scrolling before content is ready
+- SessionStorage entry self-cleans immediately after being read
 
 ### Cache Lifetime
 - Persists only for the current browser session
