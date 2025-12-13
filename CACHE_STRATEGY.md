@@ -146,7 +146,7 @@ interface CartItem {
 
 ### Configuration
 ```typescript
-const SCROLL_KEY = 'merchPageScroll';
+const SCROLL_KEY = 'merchPageScrollPosition';
 
 // On page load - restore scroll position
 useEffect(() => {
@@ -165,7 +165,7 @@ sessionStorage.setItem(SCROLL_KEY, window.scrollY.toString());
 - Saves scroll position before navigating to a product detail page
 - Restores scroll position when navigating back to the merch page
 - Uses SessionStorage (data cleared when tab is closed)
-- Storage key: `'merchPageScroll'`
+- Storage key: `'merchPageScrollPosition'`
 
 ### Use Case
 Improves UX by maintaining the user's browsing position when:
@@ -359,10 +359,10 @@ localStorage.removeItem('fanclub-cart')
 ### Scroll Position Not Restoring
 ```javascript
 // Check SessionStorage in browser DevTools
-sessionStorage.getItem('merchPageScroll')
+sessionStorage.getItem('merchPageScrollPosition')
 
 // Clear and test
-sessionStorage.removeItem('merchPageScroll')
+sessionStorage.removeItem('merchPageScrollPosition')
 ```
 
 ---
