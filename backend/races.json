@@ -1,5 +1,29 @@
 [
   {
+    "date": "18-12-2025",
+    "place": "Val Gardena-Groeden",
+    "discipline": "Downhill",
+    "country": "ITA",
+    "category": "World Cup",
+    "position": "DNF",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127339",
+    "season": "2025/2026",
+    "raceId": "127339"
+  },
+  {
+    "date": "16-12-2025",
+    "place": "Val Gardena / Groeden",
+    "discipline": "Downhill",
+    "country": "ITA",
+    "category": "Training",
+    "position": "13",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127353",
+    "season": "2025/2026",
+    "raceId": "127353"
+  },
+  {
     "date": "05-12-2025",
     "place": "Beaver Creek",
     "discipline": "Super G",
@@ -481,7 +505,7 @@
   },
   {
     "date": "21-12-2024",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Downhill",
     "country": "ITA",
     "category": "World Cup",
@@ -493,7 +517,7 @@
   },
   {
     "date": "20-12-2024",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Super G",
     "country": "ITA",
     "category": "World Cup",
@@ -1045,7 +1069,7 @@
   },
   {
     "date": "15-12-2023",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Super G",
     "country": "ITA",
     "category": "World Cup",
