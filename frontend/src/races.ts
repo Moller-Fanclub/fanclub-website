@@ -49,21 +49,21 @@ export const races: Race[] = [
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127341',
     },
     {
-        name: 'Val Gardena Südtirol',
+        name: 'Val Gardena-Groeden Südtirol',
         imagePath: '/images/italy.png',
-        date: new Date('2025-12-18T10:45:00.000Z'), // Europe/Rome local time
+        date: new Date('2025-12-18T12:00:00.000Z'), // Europe/Rome local time
         discipline: 'DH',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127339',
     },
     {
-        name: 'Val Gardena Südtirol',
+        name: 'Val Gardena-Groeden Südtirol',
         imagePath: '/images/italy.png',
         date: new Date('2025-12-19T10:45:00.000Z'), // Europe/Rome local time
         discipline: 'SG',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127357',
     },
     {
-        name: 'Val Gardena Südtirol',
+        name: 'Val Gardena-Groeden Südtirol',
         imagePath: '/images/italy.png',
         date: new Date('2025-12-20T10:45:00.000Z'), // Europe/Rome local time
         discipline: 'DH',
