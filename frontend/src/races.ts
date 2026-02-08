@@ -112,14 +112,14 @@ export const races: Race[] = [
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127404',
     },
     {
-        name: 'Milano-Cortina',
+        name: 'Milano Cortina',
         imagePath: '/images/italy.png',
         date: new Date('2026-02-07T10:30:00.000Z'), // Europe/Rome local time
         discipline: 'DH',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127541',
     },
     {
-        name: 'Milano-Cortina',
+        name: 'Milano Cortina',
         imagePath: '/images/italy.png',
         date: new Date('2026-02-11T10:30:00.000Z'), // Europe/Rome local time
         discipline: 'SG',
