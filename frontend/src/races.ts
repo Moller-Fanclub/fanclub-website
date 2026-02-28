@@ -128,14 +128,14 @@ export const races: Race[] = [
     {
         name: 'Garmisch Partenkirchen',
         imagePath: '/images/germany.png',
-        date: new Date('2026-02-28T10:45:00.000Z'), // Europe/Berlin local time
+        date: new Date('2026-02-28T10:15:00.000Z'), // Europe/Berlin local time
         discipline: 'DH',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127407',
     },
     {
         name: 'Garmisch Partenkirchen',
         imagePath: '/images/germany.png',
-        date: new Date('2026-03-01T10:45:00.000Z'), // Europe/Berlin local time
+        date: new Date('2026-03-01T10:15:00.000Z'), // Europe/Berlin local time
         discipline: 'SG',
         resultLink: 'https://www.fis-ski.com/DB/general/results.html?seasoncode=2026&sectorcode=AL&raceid=127408',
     },
