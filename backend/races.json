@@ -1,5 +1,17 @@
 [
   {
+    "date": "22-03-2026",
+    "place": "Lillehammer",
+    "discipline": "Super G",
+    "country": "NOR",
+    "category": "World Cup",
+    "position": "7",
+    "fisPoints": "36",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127435",
+    "season": "2025/2026",
+    "raceId": "127435"
+  },
+  {
     "date": "13-03-2026",
     "place": "Courchevel",
     "discipline": "Downhill",
