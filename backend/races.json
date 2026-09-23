@@ -1,5 +1,101 @@
 [
   {
+    "date": "22-04-2026",
+    "place": "Hemsedal",
+    "discipline": "Super G",
+    "country": "NOR",
+    "category": "FIS",
+    "position": "8",
+    "fisPoints": "47.40",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=130682",
+    "season": "2025/2026",
+    "raceId": "130682"
+  },
+  {
+    "date": "22-04-2026",
+    "place": "Hemsedal",
+    "discipline": "Super G",
+    "country": "NOR",
+    "category": "National Championships",
+    "position": "2",
+    "fisPoints": "22.15",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131440",
+    "season": "2025/2026",
+    "raceId": "131440"
+  },
+  {
+    "date": "09-04-2026",
+    "place": "Oppdal",
+    "discipline": "Super G",
+    "country": "NOR",
+    "category": "National Championships",
+    "position": "2",
+    "fisPoints": "23.04",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=130764",
+    "season": "2025/2026",
+    "raceId": "130764"
+  },
+  {
+    "date": "08-04-2026",
+    "place": "Oppdal",
+    "discipline": "Downhill",
+    "country": "NOR",
+    "category": "National Championships",
+    "position": "4",
+    "fisPoints": "30.46",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=130761",
+    "season": "2025/2026",
+    "raceId": "130761"
+  },
+  {
+    "date": "08-04-2026",
+    "place": "Oppdal",
+    "discipline": "Downhill",
+    "country": "NOR",
+    "category": "National Championships",
+    "position": "1",
+    "fisPoints": "20.00",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131438",
+    "season": "2025/2026",
+    "raceId": "131438"
+  },
+  {
+    "date": "07-04-2026",
+    "place": "Oppdal",
+    "discipline": "Downhill",
+    "country": "NOR",
+    "category": "Training",
+    "position": "9",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=130757",
+    "season": "2025/2026",
+    "raceId": "130757"
+  },
+  {
+    "date": "07-04-2026",
+    "place": "Oppdal",
+    "discipline": "Downhill",
+    "country": "NOR",
+    "category": "Training",
+    "position": "9",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131434",
+    "season": "2025/2026",
+    "raceId": "131434"
+  },
+  {
+    "date": "22-03-2026",
+    "place": "Lillehammer",
+    "discipline": "Super G",
+    "country": "NOR",
+    "category": "World Cup",
+    "position": "7",
+    "fisPoints": "36",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=127435",
+    "season": "2025/2026",
+    "raceId": "127435"
+  },
+  {
     "date": "13-03-2026",
     "place": "Courchevel",
     "discipline": "Downhill",
@@ -181,7 +277,7 @@
   },
   {
     "date": "16-12-2025",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Downhill",
     "country": "ITA",
     "category": "Training",
@@ -697,7 +793,7 @@
   },
   {
     "date": "18-12-2024",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Downhill",
     "country": "ITA",
     "category": "Training",
@@ -709,7 +805,7 @@
   },
   {
     "date": "17-12-2024",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Downhill",
     "country": "ITA",
     "category": "Training",
@@ -1249,7 +1345,7 @@
   },
   {
     "date": "12-12-2023",
-    "place": "Val Gardena / Groeden",
+    "place": "Val Gardena-Groeden",
     "discipline": "Downhill",
     "country": "ITA",
     "category": "Training",
