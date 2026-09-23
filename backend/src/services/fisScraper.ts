@@ -96,7 +96,7 @@ function parseRaceRow($: cheerio.CheerioAPI, raceElement: any): RaceData | null 
 
 /**
  * Determines which season a race belongs to based on its date
- * Seasons run from October to the following summer/spring
+ * FIS seasons start July 1st (southern hemisphere races in Aug/Sep belong to the upcoming season)
  * Returns season as "YYYY/YYYY" format (e.g., "2024/2025")
  */
 function determineSeason(date: string): string | null {
@@ -107,29 +107,23 @@ function determineSeason(date: string): string | null {
     const month = parseInt(parts[1]);
     const year = parseInt(parts[2]);
     
-    // Seasons start around October and go to the following spring/summer
-    // If month is Oct, Nov, Dec, it's the current season (e.g., Oct 2024 = 2024/2025)
-    // If month is Jan-Sep, it's the previous season (e.g., Jan 2025 = 2024/2025)
-    
-    if (month >= 10) {
-        // Oct-Dec: current season
+    if (month >= 7) {
+        // Jul-Dec: season starting this year (e.g., Sep 2026 = 2026/2027)
         return `${year}/${year + 1}`;
     } else {
-        // Jan-Sep: previous season
+        // Jan-Jun: season that started last year (e.g., Jan 2027 = 2026/2027)
         return `${year - 1}/${year}`;
     }
 }
 
 /**
  * Determines if a race belongs to a specific season
- * For season 2024/2025: races from late 2024 (Oct+) to early 2025
- * For season 2025/2026: races from late 2025 (Oct+) onward
+ * @param season - Start year of the season (e.g. '2026' for 2026/2027) or the full "2026/2027" format
  */
 function isRaceInSeason(date: string, season: string): boolean {
     const raceSeason = determineSeason(date);
-    
-    // Map season parameter to expected format
-    const expectedSeason = season === '2024' ? '2024/2025' : season === '2025' ? '2025/2026' : null;
+    const startYear = parseInt(season);
+    const expectedSeason = season.includes('/') ? season : `${startYear}/${startYear + 1}`;
     
     return raceSeason === expectedSeason;
 }
