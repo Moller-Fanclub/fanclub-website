@@ -1,33 +1,28 @@
-import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { IncomingMessage } from 'http';
+import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const currentSeason= 2026;
-const categories = ['WC', 'OWG'];
+/**
+ * FIS season codes are named after the year the season ends, and a new season starts July 1st.
+ * E.g. the 2026/2027 season has seasoncode 2027 and starts in July 2026.
+ * Can be overridden with the SEASON env variable (e.g. SEASON=2027).
+ */
+function getSeasonCode(now: Date = new Date()): number {
+    const year = now.getUTCFullYear();
+    return now.getUTCMonth() >= 6 ? year + 1 : year;
+}
 
-const ICS_URLS = categories.map(category => 
-    `https://data.fis-ski.com/services/public/icalendar-feed-fis-events.html?seasoncode=${currentSeason}&sectorcode=AL&categorycode=${category}&gendercode=M`
-);
+// WC = World Cup, WSC = World Championships, OWG = Olympic Winter Games
+const categories = ['WC', 'WSC', 'OWG'];
 
-// Timezone offset map (hours from UTC during winter season)
-const TIMEZONE_OFFSETS: { [key: string]: number } = {
-    'America/Denver': -7,
-    'America/New_York': -5,
-    'Europe/Paris': 1,
-    'Europe/Zurich': 1,
-    'Europe/Vienna': 1,
-    'Europe/Rome': 1,
-    'Europe/Oslo': 1,
-    'Europe/Berlin': 1,
-};
-
-
+function getIcsUrl(seasonCode: number, category: string): string {
+    return `https://www.fis-ski.com/DB/services/public/icalendar-feed-fis-events.html?seasoncode=${seasonCode}&sectorcode=AL&categorycode=${category}&gendercode=M`;
+}
 
 interface IncludedRace {
     location: string;
@@ -65,177 +60,205 @@ interface ParsedRace {
     timezone?: string;
 }
 
-function fetchICS(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        https.get(url, (res: IncomingMessage) => {
-            let data = '';
-            
-            res.on('data', (chunk: Buffer) => {
-                data += chunk;
-            });
-            
-            res.on('end', () => {
-                resolve(data);
-            });
-        }).on('error', (err: Error) => {
-            reject(err);
-        });
-    });
+async function fetchText(url: string): Promise<string> {
+    // axios follows redirects (FIS moved the feeds from data.fis-ski.com to www.fis-ski.com)
+    const response = await axios.get<string>(url, { responseType: 'text', timeout: 30000 });
+    return response.data;
 }
 
-async function fetchDisciplineFromResultLink(resultLink: string): Promise<{ discipline: string; date?: string; time?: string; timezone?: string }> {
-    // Extract race ID from result link
-    const raceIdMatch = resultLink.match(/raceid=(\d+)/);
-    if (!raceIdMatch) {
+/**
+ * Fetches an ICS feed. FIS answers 404 for seasons that are over or not published yet,
+ * which we treat as an empty calendar.
+ */
+async function fetchICS(url: string): Promise<string> {
+    try {
+        return await fetchText(url);
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+            return '';
+        }
+        throw error;
+    }
+}
+
+/**
+ * Maps a FIS discipline name (e.g. "Men's Super G", "World Cup Giant Slalom") to our abbreviation
+ */
+function mapDiscipline(text: string): string {
+    const upper = text.toUpperCase();
+    // Check for Giant Slalom BEFORE just Slalom to avoid false matches
+    if (upper.includes('GIANT SLALOM')) return 'GS';
+    if (upper.includes('DOWNHILL')) return 'DH';
+    if (upper.includes('SUPER-G') || upper.includes('SUPER G')) return 'SG';
+    if (upper.includes('COMBINED')) return 'AC';
+    if (upper.includes('SLALOM')) return 'SL';
+    if (upper.includes('PARALLEL')) return 'PAR';
+    return 'Unknown';
+}
+
+/**
+ * Returns the offset (in ms) between UTC and the given IANA timezone at the given instant.
+ * Uses Intl so daylight saving time and any timezone are handled.
+ */
+function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    }).formatToParts(date);
+    const get = (type: string) => Number(parts.find(p => p.type === type)?.value);
+    const asUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'));
+    return asUtc - date.getTime();
+}
+
+/**
+ * Converts a local wall-clock time in the given timezone to a UTC Date
+ */
+function zonedTimeToUtc(year: number, month: number, day: number, hours: number, minutes: number, timeZone: string): Date {
+    const utcGuess = Date.UTC(year, month - 1, day, hours, minutes);
+    const offset = getTimeZoneOffsetMs(new Date(utcGuess), timeZone);
+    return new Date(utcGuess - offset);
+}
+
+async function fetchRaceDetails(resultLink: string): Promise<{ discipline: string; date?: string; time?: string; timezone?: string }> {
+    try {
+        const html = await fetchText(resultLink);
+        const $ = cheerio.load(html);
+
+        // Extract discipline from event-header__kind div
+        const eventHeaderKind = $('.event-header__kind').text().trim();
+        const discipline = eventHeaderKind ? mapDiscipline(eventHeaderKind) : 'Unknown';
+
+        // Extract timezone info from timezone-time div (only present once FIS has published start times)
+        const timezoneDiv = $('.timezone-time');
+        const date = timezoneDiv.attr('data-date');
+        const time = timezoneDiv.attr('data-time');
+        const timezone = timezoneDiv.attr('data-timezone');
+
+        return {
+            discipline,
+            date: date || undefined,
+            time: time || undefined,
+            timezone: timezone || undefined
+        };
+    } catch (error) {
+        console.error(`❌ Error fetching result page ${resultLink}: ${error}`);
         return { discipline: 'Unknown' };
     }
-    
-
-    
-    // Fetch the result page and scrape discipline and time info
-    return new Promise((resolve) => {
-        https.get(resultLink, (res: IncomingMessage) => {
-            let html = '';
-            
-            res.on('data', (chunk: Buffer) => {
-                html += chunk;
-            });
-            
-            res.on('end', () => {
-                try {
-                    const $ = cheerio.load(html);
-                    
-                    // Extract discipline from event-header__kind div
-                    const eventHeaderKind = $('.event-header__kind').text().trim().toUpperCase();
-                    
-                    if (!eventHeaderKind) {
-                        console.log(`⚠️  No event-header__kind found for ${resultLink}`);
-                        resolve({ discipline: 'Unknown' });
-                        return;
-                    }
-                    
-                    // Map discipline names to abbreviations
-                    let discipline = 'Unknown';
-                    // Check for Giant Slalom BEFORE just Slalom to avoid false matches
-                    if (eventHeaderKind.includes('GIANT SLALOM')) {
-                        discipline = 'GS';
-                    } else if (eventHeaderKind.includes('DOWNHILL')) {
-                        discipline = 'DH';
-                    } else if (eventHeaderKind.includes('SUPER-G') || eventHeaderKind.includes('SUPER G')) {
-                        discipline = 'SG';
-                    } else if (eventHeaderKind.includes('SLALOM')) {
-                        discipline = 'SL';
-                    } else if (eventHeaderKind.includes('PARALLEL')) {
-                        discipline = 'PAR';
-                    } else {
-                        console.log(`⚠️  Could not determine discipline from: "${eventHeaderKind}"`);
-                    }
-                    
-                    // Extract timezone info from timezone-time div
-                    const timezoneDiv = $('.timezone-time');
-                    const date = timezoneDiv.attr('data-date');
-                    const time = timezoneDiv.attr('data-time');
-                    const timezone = timezoneDiv.attr('data-timezone');
-                    
-                    resolve({ 
-                        discipline, 
-                        date: date || undefined, 
-                        time: time || undefined, 
-                        timezone: timezone || undefined 
-                    });
-                } catch (error) {
-                    console.error(`❌ Error parsing result page: ${error}`);
-                    resolve({ discipline: 'Unknown' });
-                }
-            });
-        }).on('error', (err: Error) => {
-            console.error(`❌ Error fetching result page: ${err}`);
-            resolve({ discipline: 'Unknown' });
-        });
-    });
 }
 
-async function parseICS(icsContent: string): Promise<ParsedRace[]> {
-    const races: ParsedRace[] = [];
-    const events = icsContent.split('BEGIN:VEVENT');
-    
-    for (let i = 1; i < events.length; i++) {
-        const event = events[i];
-        
-        // Extract fields
-        const summaryMatch = event.match(/SUMMARY:(.+)/);
-        const dtStartMatch = event.match(/DTSTART:(\d{8}T\d{6}Z)/);
-        const locationMatch = event.match(/LOCATION:(.+)/);
-        const descriptionMatch = event.match(/DESCRIPTION:(.+?)(?=\nSUMMARY|\nLOCATION|\nCATEGORIES)/s);
-        if (summaryMatch && dtStartMatch && locationMatch) {
-            const summary = summaryMatch[1].trim();
-            const location = locationMatch[1].trim();
-            const description = descriptionMatch ? descriptionMatch[1] : '';
-            
-            // Parse date from DTSTART (format: 20251128T170000Z)
-            const dateStr = dtStartMatch[1];
-            const year = parseInt(dateStr.substring(0, 4));
-            const month = parseInt(dateStr.substring(4, 6)) - 1; // JS months are 0-indexed
-            const day = parseInt(dateStr.substring(6, 8));
-            
-            // Extract Run 1 time from description if available (format: "Run 1 loc: 09:30")
-            let hours = 0;
-            let minutes = 0;
-            const run1TimeMatch = description.match(/Run 1 loc: (\d{2}):(\d{2})/);
-            if (run1TimeMatch) {
-                hours = parseInt(run1TimeMatch[1]);
-                minutes = parseInt(run1TimeMatch[2]);
-            }
-            
-            const date = new Date(year, month, day, hours, minutes);
-            
-            // Extract result link from description first (we need it to fetch discipline) first (we need it to fetch discipline)
-            let resultLink = '';
-            const resultLinkMatch = description.match(/Result\/Startlist:\s+(https?:\/\/[^\s\\]+)/);
-            if (resultLinkMatch) {
-                resultLink = resultLinkMatch[1].replace(/\\n/g, '');
-            }
-            
-            if (!resultLink) {
-                console.log('⚠️  No result link found for:', location);
-                continue;
-            }
-            
-            // Get clean location name (remove country code in parentheses)
-            const cleanLocation = location.replace(/\s*\(.*?\)\s*$/, '').trim();
-            
-            // Store temporarily with Unknown discipline - we'll fetch it later
-            races.push({
-                name: cleanLocation,
-                date,
-                discipline: 'Unknown',
-                resultLink,
-                summary,
-            });
+/**
+ * Reads a property from an ICS event, ignoring parameters (e.g. "DTSTART;VALUE=DATE:20261128")
+ */
+function getIcsField(event: string, name: string): { value: string; params: string } | null {
+    const match = event.match(new RegExp(`^${name}((?:;[^:\\n]*)?):(.*)$`, 'm'));
+    if (!match) return null;
+    return { params: match[1], value: match[2].trim() };
+}
+
+/**
+ * Parses DTSTART values like "20261128", "20261128T170000Z" or "20261128T170000" (with TZID param)
+ */
+function parseIcsDate(value: string, params: string): Date | null {
+    const match = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+    if (!match) return null;
+
+    const [, year, month, day, hours, minutes, , isUtc] = match;
+    if (!hours) {
+        // All-day event - the exact start time is filled in from the result page when FIS publishes it
+        return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    }
+
+    const tzid = params.match(/TZID=([^;:]+)/)?.[1];
+    if (!isUtc && tzid) {
+        try {
+            return zonedTimeToUtc(Number(year), Number(month), Number(day), Number(hours), Number(minutes), tzid);
+        } catch {
+            console.log(`⚠️  Unknown timezone ${tzid}, treating time as UTC`);
         }
     }
-    
-    // Fetch disciplines for all races
-    console.log(`Fetching discipline info for ${races.length} races...`);
-    for (const race of races) {
-        const result = await fetchDisciplineFromResultLink(race.resultLink);
-        race.discipline = result.discipline;
-        
-        // If we got more precise time/date info from the result page, use it
-        if (result.date && result.time && result.timezone) {
-            const [year, month, day] = result.date.split('-').map(Number);
-            const [hours, minutes] = result.time.split(':').map(Number);
-            
-            // Get timezone offset
-            const tzOffset = TIMEZONE_OFFSETS[result.timezone] || 0;
-            
-            // Create date in UTC by adjusting for timezone offset
-            const utcDate = new Date(Date.UTC(year, month - 1, day, hours - tzOffset, minutes));
-            race.date = utcDate;
-            race.timezone = result.timezone;
+    return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes)));
+}
+
+function parseICS(icsContent: string): ParsedRace[] {
+    const races: ParsedRace[] = [];
+    // Normalize line endings and unfold long lines (RFC 5545: continuation lines start with a space/tab)
+    const unfolded = icsContent.replace(/\r\n?/g, '\n').replace(/\n[ \t]/g, '');
+    const events = unfolded.split('BEGIN:VEVENT').slice(1).map(e => e.split('END:VEVENT')[0]);
+
+    for (const event of events) {
+        const summary = getIcsField(event, 'SUMMARY')?.value;
+        const location = getIcsField(event, 'LOCATION')?.value;
+        const dtStart = getIcsField(event, 'DTSTART');
+        const description = getIcsField(event, 'DESCRIPTION')?.value || '';
+
+        if (!summary || !location || !dtStart) {
+            console.log('⚠️  Skipping event with missing fields:', summary || location || '(unknown)');
+            continue;
         }
-        
-        // Check includedRaces as fallback
+
+        const date = parseIcsDate(dtStart.value, dtStart.params);
+        if (!date) {
+            console.log(`⚠️  Could not parse date "${dtStart.value}" for:`, summary);
+            continue;
+        }
+
+        const resultLinkMatch = description.match(/Result\/Startlist:\s+(https?:\/\/[^\s\\]+)/);
+        if (!resultLinkMatch) {
+            console.log('⚠️  No result link found for:', location);
+            continue;
+        }
+
+        // Get clean location name (remove country code in parentheses)
+        const cleanLocation = location.replace(/\s*\(.*?\)\s*$/, '').trim();
+
+        races.push({
+            name: cleanLocation,
+            date,
+            // Summary looks like "Copper Mountain, CO (USA) - Alpine Skiing World Cup Super G"
+            discipline: mapDiscipline(summary),
+            resultLink: resultLinkMatch[1],
+            summary,
+        });
+    }
+
+    return races;
+}
+
+function isWantedRace(race: ParsedRace): boolean {
+    if (race.discipline === 'Unknown') {
+        return false;
+    }
+
+    // Keep if it's DH, SG, or explicitly included
+    const isDhOrSg = race.discipline === 'DH' || race.discipline === 'SG';
+    const isIncluded = includedRaces.some(r =>
+        r.location === race.name && r.discipline === race.discipline
+    );
+    if (!isDhOrSg && !isIncluded) {
+        return false;
+    }
+
+    // Check excluded list
+    if (excludedRaces.find(r => r.location === race.name && r.discipline === race.discipline)) {
+        console.log('⚠️  Excluding race:', race.name, race.discipline);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Filters to the races we care about and fetches exact start times from the result pages
+ */
+async function selectAndEnrichRaces(races: ParsedRace[]): Promise<ParsedRace[]> {
+    for (const race of races) {
+        // Check includedRaces as fallback when the summary didn't tell us the discipline
         if (race.discipline === 'Unknown') {
             const includedRace = includedRaces.find(r => r.location === race.name);
             if (includedRace) {
@@ -243,39 +266,40 @@ async function parseICS(icsContent: string): Promise<ParsedRace[]> {
             }
         }
     }
-    
-    // Filter: include DH, SG, and races in includedRaces list
-    const validRaces = races.filter(race => {
+
+    const candidates = races.filter(race => race.discipline === 'Unknown' || isWantedRace(race));
+
+    console.log(`Fetching details for ${candidates.length} races...`);
+    for (const race of candidates) {
+        const details = await fetchRaceDetails(race.resultLink);
+        if (race.discipline === 'Unknown') {
+            race.discipline = details.discipline;
+        }
+
+        // If we got more precise time/date info from the result page, use it
+        if (details.date && details.time && details.timezone) {
+            const [year, month, day] = details.date.split('-').map(Number);
+            const [hours, minutes] = details.time.split(':').map(Number);
+            try {
+                race.date = zonedTimeToUtc(year, month, day, hours, minutes, details.timezone);
+                race.timezone = details.timezone;
+            } catch {
+                console.log(`⚠️  Unknown timezone ${details.timezone} for ${race.name}, keeping calendar date`);
+            }
+        }
+    }
+
+    const validRaces = candidates.filter(race => {
         if (race.discipline === 'Unknown') {
             console.log('⚠️  Skipping race with unknown discipline:', race.name);
             return false;
         }
-        
-        // Check if it's DH or SG
-        const isDhOrSg = race.discipline === 'DH' || race.discipline === 'SG';
-        
-        // Check if it's in the included races list
-        const isIncluded = includedRaces.some(r => 
-            r.location === race.name && r.discipline === race.discipline
-        );
-        
-        // Keep if it's DH, SG, or explicitly included
-        if (!isDhOrSg && !isIncluded) {
-            return false;
-        }
-        
-        // Check excluded list
-        if (excludedRaces.find(r => r.location === race.name && r.discipline === race.discipline)) {
-            console.log('⚠️  Excluding race:', race.name, race.discipline);
-            return false;
-        }
-        
-        return true;
+        return isWantedRace(race);
     });
-    
+
     // Sort by date
     validRaces.sort((a, b) => a.date.getTime() - b.date.getTime());
-    
+
     return validRaces;
 }
 
@@ -289,15 +313,23 @@ function getCountryImagePath(summary: string): string {
         'FRA': '/images/france.png',
         'NOR': '/images/norway.png',
     };
-    
-    // Extract country code from location string (e.g., "Copper Mt. (USA)")
+
+    // Extract country code from summary string (e.g., "Copper Mountain, CO (USA) - ...")
     const countryMatch = summary.match(/\(([A-Z]{3})\)/);
     if (countryMatch) {
         const countryCode = countryMatch[1];
+        if (!countryMap[countryCode]) {
+            console.log(`⚠️  No image for country ${countryCode} (${summary}), add one to countryMap`);
+        }
         return countryMap[countryCode] || '/images/default.png';
     }
-    
+
     return '/images/default.png';
+}
+
+// Escapes a value for a single-quoted TS string (e.g. "Val d'Isere")
+function toTsString(value: string): string {
+    return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
 function generateRacesArray(races: ParsedRace[]): string {
@@ -305,73 +337,109 @@ function generateRacesArray(races: ParsedRace[]): string {
         // Format date - use toISOString to preserve UTC time
         const isoString = race.date.toISOString();
         const imagePath = getCountryImagePath(race.summary);
-        
+
         const timezoneComment = race.timezone ? ` // ${race.timezone} local time` : '';
-        
+
         return `    {
-        name: '${race.name}',
-        imagePath: '${imagePath}',
+        name: ${toTsString(race.name)},
+        imagePath: ${toTsString(imagePath)},
         date: new Date('${isoString}'),${timezoneComment}
-        discipline: '${race.discipline}',
-        resultLink: '${race.resultLink}',
+        discipline: ${toTsString(race.discipline)},
+        resultLink: ${toTsString(race.resultLink)},
     }`;
     }).join(',\n');
 }
 
+/**
+ * Fetches and parses all calendars for a season. Returns null if FIS has no events for it.
+ */
+async function fetchSeasonRaces(seasonCode: number): Promise<ParsedRace[] | null> {
+    console.log(`Fetching FIS calendars for season ${seasonCode - 1}/${seasonCode} (seasoncode ${seasonCode})...`);
+
+    // Fetch all ICS calendars in parallel
+    const icsContents = await Promise.all(categories.map(category => fetchICS(getIcsUrl(seasonCode, category))));
+
+    // Parse all calendars and merge races
+    let allRaces: ParsedRace[] = [];
+    let totalEvents = 0;
+
+    for (let index = 0; index < icsContents.length; index++) {
+        const icsContent = icsContents[index];
+        const eventCount = icsContent.split('BEGIN:VEVENT').length - 1;
+        totalEvents += eventCount;
+        const races = parseICS(icsContent);
+        console.log(`  - ${categories[index]}: ${races.length}/${eventCount} events parsed`);
+        allRaces = allRaces.concat(races);
+    }
+
+    if (totalEvents === 0) {
+        return null;
+    }
+
+    if (allRaces.length === 0) {
+        // The feed has events but we couldn't read any of them - FIS probably changed the format
+        throw new Error(`Calendars contain ${totalEvents} events but none could be parsed. Has the ICS format changed?`);
+    }
+
+    return allRaces;
+}
+
 async function main() {
     try {
-        console.log('Fetching FIS calendars...');
-        
-        // Fetch all ICS calendars in parallel
-        const icsPromises = ICS_URLS.map(url => fetchICS(url));
-        const icsContents = await Promise.all(icsPromises);
-        
-        console.log(`Fetched ${icsContents.length} calendars (${categories.join(', ')})`);
-        
-        // Load existing race disciplines from races.json
-        
-        // Parse all calendars and merge races
-        console.log('Parsing calendars...');
-        let allRaces: ParsedRace[] = [];
-        
-        for (let index = 0; index < icsContents.length; index++) {
-            const icsContent = icsContents[index];
-            console.log(`\nProcessing ${categories[index]} calendar...`);
-            const races = await parseICS(icsContent);
-            console.log(`  - ${categories[index]}: ${races.length} races`);
-            allRaces = allRaces.concat(races);
+        // Try the current season first, then the next one (e.g. in May/June when the
+        // finished season's feed is gone but next season's calendar may already be out)
+        const seasonCandidates = process.env.SEASON
+            ? [Number(process.env.SEASON)]
+            : [getSeasonCode(), getSeasonCode() + 1];
+
+        let allRaces: ParsedRace[] | null = null;
+        for (const seasonCode of seasonCandidates) {
+            allRaces = await fetchSeasonRaces(seasonCode);
+            if (allRaces) break;
+            console.log(`ℹ️  No calendar published for seasoncode ${seasonCode}`);
         }
-        
+
+        if (!allRaces) {
+            // Never wipe the calendar - keep showing last season until the next one is published
+            console.log('ℹ️  No calendar found, leaving races.ts untouched');
+            return;
+        }
+
+        const validRaces = await selectAndEnrichRaces(allRaces);
+
         // Remove duplicates (same location and discipline on same date)
-        const uniqueRaces = allRaces.filter((race, index, self) =>
+        const uniqueRaces = validRaces.filter((race, index, self) =>
             index === self.findIndex((r) => (
-                r.name === race.name && 
-                r.discipline === race.discipline && 
+                r.name === race.name &&
+                r.discipline === race.discipline &&
                 r.date.getTime() === race.date.getTime()
             ))
         );
-        
-        // Sort by date
-        uniqueRaces.sort((a, b) => a.date.getTime() - b.date.getTime());
-        
-        console.log(`Found ${uniqueRaces.length} unique races (removed ${allRaces.length - uniqueRaces.length} duplicates)`);
-        
+
+        console.log(`Found ${uniqueRaces.length} unique races (removed ${validRaces.length - uniqueRaces.length} duplicates)`);
+
+        if (uniqueRaces.length === 0) {
+            // Never wipe the calendar - e.g. early summer before FIS has published the next season
+            console.log('ℹ️  No DH/SG races in the calendar, leaving races.ts untouched');
+            return;
+        }
+
         console.log('Updating races.ts...');
         const racesArrayCode = generateRacesArray(uniqueRaces);
-        
+
         const outputPath = path.join(__dirname, '../../frontend/src/races.ts');
-        
+
         // Read existing file
         const existingContent = fs.readFileSync(outputPath, 'utf-8');
-        
+
         // Replace only the races array content
         const updatedContent = existingContent.replace(
             /export const races: Race\[\] = \[[^\]]*\];/s,
             `export const races: Race[] = [\n${racesArrayCode}\n];`
         );
-        
+
         fs.writeFileSync(outputPath, updatedContent, 'utf-8');
-        
+
         console.log(`Successfully updated ${outputPath}`);
         console.log('\nRaces added:');
         uniqueRaces.forEach(race => {

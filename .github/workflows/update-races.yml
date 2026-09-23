@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   update-races:
@@ -53,3 +54,13 @@ jobs:
       - name: No changes
         if: steps.git-check.outputs.changed != 'true'
         run: echo "No changes to races.ts detected"
+
+      # GitHub disables scheduled workflows after 60 days without repo activity.
+      # Re-enabling them resets that timer, so the off-season doesn't silently stop the sync.
+      - name: Keep scheduled workflows alive
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT repos/${{ github.repository }}/actions/workflows/update-races.yml/enable
+          gh api -X PUT repos/${{ github.repository }}/actions/workflows/updateRaces.yml/enable

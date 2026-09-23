@@ -1,5 +1,41 @@
 [
   {
+    "date": "02-09-2026",
+    "place": "La Parva",
+    "discipline": "Downhill",
+    "country": "CHI",
+    "category": "South American Cup",
+    "position": "DNF1",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131524",
+    "season": "2026/2027",
+    "raceId": "131524"
+  },
+  {
+    "date": "01-09-2026",
+    "place": "La Parva",
+    "discipline": "Downhill",
+    "country": "CHI",
+    "category": "Training",
+    "position": "9",
+    "fisPoints": "",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131519",
+    "season": "2026/2027",
+    "raceId": "131519"
+  },
+  {
+    "date": "01-09-2026",
+    "place": "La Parva",
+    "discipline": "Downhill",
+    "country": "CHI",
+    "category": "South American Cup",
+    "position": "12",
+    "fisPoints": "22",
+    "link": "https://www.fis-ski.com/DB/general/results.html?sectorcode=AL&competitorid=213729&raceid=131522",
+    "season": "2026/2027",
+    "raceId": "131522"
+  },
+  {
     "date": "22-04-2026",
     "place": "Hemsedal",
     "discipline": "Super G",
