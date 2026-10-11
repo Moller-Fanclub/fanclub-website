@@ -5,101 +5,78 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+    env:
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm ci
-        # Generate Prisma Client (needed for build)
-        npx prisma generate || echo "⚠️ Prisma not configured yet - database will be disabled"
-        
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-        
-    - name: Build backend
-      run: |
-        cd backend
-        npm run build
-        
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
-      env:
-        VITE_API_URL: /api
-        
-    - name: Install backend production dependencies only
-      run: |
-        cd backend
-        npm ci --production
-        
-    - name: Create backend .env file
-      run: |
-        cd backend
-        {
-          echo "PORT=${PORT:-3001}"
-          echo "NODE_ENV=${NODE_ENV:-production}"
-          echo "EMAIL_USER=${{ secrets.EMAIL_USER }}"
-          echo "EMAIL_FROM_SHOP=${{ secrets.EMAIL_FROM_SHOP }}"
-          echo "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}"
-          echo "AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}"
-          echo "AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}"
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
-          echo "VIPPS_CLIENT_ID=${{ secrets.VIPPS_CLIENT_ID }}"
-          echo "VIPPS_CLIENT_SECRET=${{ secrets.VIPPS_CLIENT_SECRET }}"
-          echo "VIPPS_SUBSCRIPTION_KEY=${{ secrets.VIPPS_SUBSCRIPTION_KEY }}"
-          echo "VIPPS_MSN=${{ secrets.VIPPS_MSN }}"
-          echo "VIPPS_CALLBACK_URL=${{ secrets.VIPPS_CALLBACK_URL }}"
-          echo "VIPPS_CALLBACK_AUTHORIZATION_TOKEN=${{ secrets.VIPPS_CALLBACK_AUTHORIZATION_TOKEN }}"
-          echo "VIPPS_API_BASE_URL=${{ secrets.VIPPS_API_BASE_URL }}"
-          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
-          echo "BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}"
-          echo "BETTER_AUTH_URL=${{ secrets.BETTER_AUTH_URL || secrets.FRONTEND_URL || 'https://mollerfan.club' }}"
-        } > .env
-        
-    - name: Deploy to server
-      uses: easingthemes/ssh-deploy@v5.1.0
-      with:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
-        REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-        SOURCE: "./"
-        TARGET: ${{ secrets.DEPLOY_PATH }}
-        EXCLUDE: "/node_modules/, /.git/, /.github/, /frontend/node_modules/, /backend/src/, /backend/tsconfig.json"
-        SCRIPT_AFTER: |
-          source ~/.nvm/nvm.sh
-          cd ${{ secrets.DEPLOY_PATH }}/backend
-          
-          # Set secure file permissions (read/write for owner only)
-          chmod 600 .env
-          
-          # Install Prisma CLI if DATABASE_URL is set (needed for migrations)
-          if grep -q "DATABASE_URL=" .env; then
-            echo "📦 Installing Prisma CLI..."
-            npm install prisma --save-dev --no-save || echo "⚠️ Prisma install failed"
-            
-            echo "📦 Generating Prisma Client..."
-            npx prisma generate || echo "⚠️ Prisma generation failed - check DATABASE_URL"
-            
-            echo "🔄 Running database migrations..."
-            npx prisma migrate deploy || echo "⚠️ Migration failed - database may need manual setup"
-          else
-            echo "ℹ️ DATABASE_URL not set - skipping database setup"
-          fi
+    - uses: actions/checkout@v4
 
-          # Restart application
-          pm2 restart fanclub-backend || pm2 start dist/src/server.js --name fanclub-backend
+    - name: Install cloudflared
+      run: |
+        curl -fsSL -o /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        sudo dpkg -i /tmp/cloudflared.deb
+
+    - name: Configure SSH over Cloudflare Access
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+        chmod 600 ~/.ssh/id_deploy
+        cat > ~/.ssh/config <<CFG
+        Host deploy
+          HostName ${{ secrets.SSH_HOSTNAME }}
+          User ${{ secrets.DEPLOY_USER }}
+          IdentityFile ~/.ssh/id_deploy
+          StrictHostKeyChecking accept-new
+          ProxyCommand cloudflared access ssh --hostname %h --id ${{ secrets.CF_ACCESS_CLIENT_ID }} --secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        CFG
+        sed -i 's/^        //' ~/.ssh/config
+
+    - name: Sync source
+      run: |
+        rsync -az --delete \
+          --exclude '.git' --exclude '.github' --exclude 'node_modules' \
+          --exclude 'dist' --exclude '.env' --exclude 'studio-moller-fanclub' \
+          ./ deploy:"$DEPLOY_PATH"/
+
+    - name: Write .env on server from secrets
+      env:
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+        FRONTEND_URL: ${{ secrets.FRONTEND_URL || 'https://mollerfan.club' }}
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_FROM_SHOP: ${{ secrets.EMAIL_FROM_SHOP }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        VIPPS_CLIENT_ID: ${{ secrets.VIPPS_CLIENT_ID }}
+        VIPPS_CLIENT_SECRET: ${{ secrets.VIPPS_CLIENT_SECRET }}
+        VIPPS_SUBSCRIPTION_KEY: ${{ secrets.VIPPS_SUBSCRIPTION_KEY }}
+        VIPPS_MSN: ${{ secrets.VIPPS_MSN }}
+        VIPPS_CALLBACK_URL: ${{ secrets.VIPPS_CALLBACK_URL }}
+        VIPPS_CALLBACK_AUTHORIZATION_TOKEN: ${{ secrets.VIPPS_CALLBACK_AUTHORIZATION_TOKEN }}
+        VIPPS_API_BASE_URL: ${{ secrets.VIPPS_API_BASE_URL }}
+        BRING_API_KEY: ${{ secrets.BRING_API_KEY }}
+        BRING_API_UID: ${{ secrets.BRING_API_UID }}
+        BRING_CUSTOMER_NUMBER: ${{ secrets.BRING_CUSTOMER_NUMBER }}
+        SENDER_POSTAL_CODE: ${{ secrets.SENDER_POSTAL_CODE }}
+      run: |
+        {
+          for v in POSTGRES_PASSWORD BETTER_AUTH_SECRET FRONTEND_URL EMAIL_USER EMAIL_FROM_SHOP \
+                   AZURE_CLIENT_ID AZURE_CLIENT_SECRET AZURE_TENANT_ID \
+                   VIPPS_CLIENT_ID VIPPS_CLIENT_SECRET VIPPS_SUBSCRIPTION_KEY VIPPS_MSN \
+                   VIPPS_CALLBACK_URL VIPPS_CALLBACK_AUTHORIZATION_TOKEN VIPPS_API_BASE_URL \
+                   BRING_API_KEY BRING_API_UID BRING_CUSTOMER_NUMBER SENDER_POSTAL_CODE; do
+            printf '%s=%s\n' "$v" "${!v}"
+          done
+          printf 'BETTER_AUTH_URL=%s\n' "$FRONTEND_URL"
+        } | ssh deploy "umask 077 && cat > $DEPLOY_PATH/.env"
+
+    - name: Build and restart
+      run: |
+        ssh deploy "cd $DEPLOY_PATH && docker compose up -d --build --remove-orphans && docker image prune -f"

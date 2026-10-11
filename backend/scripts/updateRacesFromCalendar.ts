@@ -8,11 +8,18 @@ import * as cheerio from 'cheerio';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const currentSeason= 2026;
-const categories = ['WC', 'OWG'];
+// FIS season code = year the season ends (2026/27 season -> 2027).
+// New season starts from July. Override with SEASON=2027 env var.
+function getCurrentSeason(now: Date = new Date()): number {
+    return now.getMonth() >= 6 ? now.getFullYear() + 1 : now.getFullYear();
+}
+
+const currentSeason = Number(process.env.SEASON) || getCurrentSeason();
+// WC = World Cup, OWG = Olympics, WSC = World Championships
+const categories = ['WC', 'OWG', 'WSC'];
 
 const ICS_URLS = categories.map(category => 
-    `https://data.fis-ski.com/services/public/icalendar-feed-fis-events.html?seasoncode=${currentSeason}&sectorcode=AL&categorycode=${category}&gendercode=M`
+    `https://www.fis-ski.com/DB/services/public/icalendar-feed-fis-events.html?seasoncode=${currentSeason}&sectorcode=AL&categorycode=${category}&gendercode=M`
 );
 
 // Timezone offset map (hours from UTC during winter season)
@@ -41,10 +48,7 @@ interface ExcludedRace {
 
 // Races that are NOT DH/SG but should be included (e.g., specific GS/SL races)
 const includedRaces: IncludedRace[] = [
-    {
-        location: 'Soelden',
-        discipline: 'GS',
-    },
+    // { location: 'Soelden', discipline: 'GS' }
 ];
 
 
@@ -65,22 +69,25 @@ interface ParsedRace {
     timezone?: string;
 }
 
-function fetchICS(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        https.get(url, (res: IncomingMessage) => {
-            let data = '';
-            
-            res.on('data', (chunk: Buffer) => {
-                data += chunk;
-            });
-            
-            res.on('end', () => {
-                resolve(data);
-            });
-        }).on('error', (err: Error) => {
-            reject(err);
-        });
-    });
+async function fetchICS(url: string): Promise<string> {
+    // fetch follows redirects (FIS moved data.fis-ski.com -> www.fis-ski.com/DB)
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+    }
+    return res.text();
+}
+
+// Map discipline names to abbreviations
+function disciplineFromText(text: string): string {
+    const upper = text.toUpperCase();
+    // Check for Giant Slalom BEFORE just Slalom to avoid false matches
+    if (upper.includes('GIANT SLALOM')) return 'GS';
+    if (upper.includes('DOWNHILL')) return 'DH';
+    if (upper.includes('SUPER-G') || upper.includes('SUPER G')) return 'SG';
+    if (upper.includes('SLALOM')) return 'SL';
+    if (upper.includes('PARALLEL')) return 'PAR';
+    return 'Unknown';
 }
 
 async function fetchDisciplineFromResultLink(resultLink: string): Promise<{ discipline: string; date?: string; time?: string; timezone?: string }> {
@@ -114,20 +121,8 @@ async function fetchDisciplineFromResultLink(resultLink: string): Promise<{ disc
                         return;
                     }
                     
-                    // Map discipline names to abbreviations
-                    let discipline = 'Unknown';
-                    // Check for Giant Slalom BEFORE just Slalom to avoid false matches
-                    if (eventHeaderKind.includes('GIANT SLALOM')) {
-                        discipline = 'GS';
-                    } else if (eventHeaderKind.includes('DOWNHILL')) {
-                        discipline = 'DH';
-                    } else if (eventHeaderKind.includes('SUPER-G') || eventHeaderKind.includes('SUPER G')) {
-                        discipline = 'SG';
-                    } else if (eventHeaderKind.includes('SLALOM')) {
-                        discipline = 'SL';
-                    } else if (eventHeaderKind.includes('PARALLEL')) {
-                        discipline = 'PAR';
-                    } else {
+                    const discipline = disciplineFromText(eventHeaderKind);
+                    if (discipline === 'Unknown') {
                         console.log(`⚠️  Could not determine discipline from: "${eventHeaderKind}"`);
                     }
                     
@@ -164,7 +159,8 @@ async function parseICS(icsContent: string): Promise<ParsedRace[]> {
         
         // Extract fields
         const summaryMatch = event.match(/SUMMARY:(.+)/);
-        const dtStartMatch = event.match(/DTSTART:(\d{8}T\d{6}Z)/);
+        // Timed (DTSTART:20251128T170000Z) or all-day (DTSTART;VALUE=DATE:20261025)
+        const dtStartMatch = event.match(/DTSTART(?:;VALUE=DATE)?:(\d{8})/);
         const locationMatch = event.match(/LOCATION:(.+)/);
         const descriptionMatch = event.match(/DESCRIPTION:(.+?)(?=\nSUMMARY|\nLOCATION|\nCATEGORIES)/s);
         if (summaryMatch && dtStartMatch && locationMatch) {
@@ -172,7 +168,7 @@ async function parseICS(icsContent: string): Promise<ParsedRace[]> {
             const location = locationMatch[1].trim();
             const description = descriptionMatch ? descriptionMatch[1] : '';
             
-            // Parse date from DTSTART (format: 20251128T170000Z)
+            // Parse date from DTSTART (first 8 chars: YYYYMMDD)
             const dateStr = dtStartMatch[1];
             const year = parseInt(dateStr.substring(0, 4));
             const month = parseInt(dateStr.substring(4, 6)) - 1; // JS months are 0-indexed
@@ -219,7 +215,10 @@ async function parseICS(icsContent: string): Promise<ParsedRace[]> {
     console.log(`Fetching discipline info for ${races.length} races...`);
     for (const race of races) {
         const result = await fetchDisciplineFromResultLink(race.resultLink);
-        race.discipline = result.discipline;
+        // Result page header is empty until FIS publishes it - fall back to ICS summary
+        race.discipline = result.discipline !== 'Unknown'
+            ? result.discipline
+            : disciplineFromText(race.summary);
         
         // If we got more precise time/date info from the result page, use it
         if (result.date && result.time && result.timezone) {
@@ -320,7 +319,7 @@ function generateRacesArray(races: ParsedRace[]): string {
 
 async function main() {
     try {
-        console.log('Fetching FIS calendars...');
+        console.log(`Fetching FIS calendars for season ${currentSeason}...`);
         
         // Fetch all ICS calendars in parallel
         const icsPromises = ICS_URLS.map(url => fetchICS(url));
@@ -355,6 +354,12 @@ async function main() {
         uniqueRaces.sort((a, b) => a.date.getTime() - b.date.getTime());
         
         console.log(`Found ${uniqueRaces.length} unique races (removed ${allRaces.length - uniqueRaces.length} duplicates)`);
+        
+        // Never wipe races.ts on an empty/broken feed
+        if (uniqueRaces.length === 0) {
+            console.error(`No races found for season ${currentSeason}. Leaving races.ts untouched.`);
+            process.exit(1);
+        }
         
         console.log('Updating races.ts...');
         const racesArrayCode = generateRacesArray(uniqueRaces);

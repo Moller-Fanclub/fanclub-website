@@ -14,6 +14,8 @@ import adminRoutes from './routes/adminRoutes.js';
 dotenv.config();
 
 const app = express();
+// Behind Cloudflare tunnel + Caddy
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 // Interface for FIS race results

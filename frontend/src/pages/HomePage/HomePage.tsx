@@ -47,6 +47,13 @@
     return <span className={className}>{displayed}</span>;
   };
 
+  // Julesesong: 1. desember – 6. januar
+  const isChristmasSeason = (date: Date = new Date()) => {
+    const month = date.getMonth();
+    const day = date.getDate();
+    return month === 11 || (month === 0 && day <= 6);
+  };
+
   const HomePage: React.FC = () => {
     const [countdown, setCountdown] = useState("60d 0h 0m");
     const [isAnimating, setIsAnimating] = useState(false);
@@ -61,6 +68,7 @@
     const [santaAnimation, setSantaAnimation] = useState<any>(null);
 
     useEffect(() => {
+      if (!isChristmasSeason()) return;
       fetch("/animations/santa-fly.json")
         .then((res) => res.json())
         .then((data) => setSantaAnimation(data));
