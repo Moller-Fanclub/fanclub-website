@@ -19,8 +19,8 @@ jobs:
 
     - name: Install cloudflared
       run: |
-        curl -fsSL -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-        sudo dpkg -i cloudflared.deb
+        curl -fsSL -o /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        sudo dpkg -i /tmp/cloudflared.deb
 
     - name: Configure SSH over Cloudflare Access
       run: |
